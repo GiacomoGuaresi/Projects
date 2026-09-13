@@ -9,7 +9,7 @@
 
 ## Fase 1 · Fondamenta ← *prossima*
 - [x] `git init`, LICENSE MIT
-- [ ] Repository pubblico `Projects` su GitHub
+- [x] Repository pubblico `Projects` su GitHub, variabili impostate, Pages attivo, primo deploy riuscito
 - [x] Scaffold Vite + React + TS + Tailwind, Vitest
 - [x] `.env.local` con le variabili di produzione di Grocery
 - [x] `supabase/sql/001_schema.sql`: schema `projects`, tabelle, viste, trigger, funzione di rinomina, RLS, grant
