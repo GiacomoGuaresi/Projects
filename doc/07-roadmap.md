@@ -7,7 +7,7 @@
 - [x] Scelta dei tag
 - [x] Documentazione senza punti aperti
 
-## Fase 1 · Fondamenta ← *prossima*
+## Fase 1 · Fondamenta ✅
 - [x] `git init`, LICENSE MIT
 - [x] Repository pubblico `Projects` su GitHub, variabili impostate, Pages attivo, primo deploy riuscito
 - [x] Scaffold Vite + React + TS + Tailwind, Vitest
@@ -16,18 +16,28 @@
 - [x] Script applicato al progetto di produzione e verificato (RLS, policy, permessi di `anon`)
 - [x] Schema `projects` esposto nella Data API
 - [x] Accesso con passphrase verificato in locale
-- [ ] Sessione condivisa con Grocery verificata online
-- [ ] **Nel repo Grocery**: cookie di sessione da `/Grocery/` a `/`, per condividere la sessione ([05](05-sicurezza.md))
+- [x] Sessione condivisa con Grocery verificata online (cookie di Grocery portato su `/`)
+- [x] **Nel repo Grocery**: cookie di sessione da `/Grocery/` a `/`, per condividere la sessione ([05](05-sicurezza.md))
 
-## Fase 2 · MVP
-- [ ] Dominio puro con test: tag, icona progetto, ordinamento, filtri, suggerimenti, rinomina
-- [ ] Layout come Grocery: intestazione salvia con + a destra, menu laterale a scomparsa, "Installa l'app"
-- [ ] Sfondo doodle a tema casa (`npm run sfondo`)
-- [ ] Dashboard (In corso / Da fare / Bloccate)
-- [ ] Pagina Attività con filtri, "Mostra completate", paginazione
-- [ ] Modifica inline con dialogo "solo questa / tutte" sul progetto
-- [ ] Modale descrizione, modale diario con modifica delle voci
-- [ ] Palette salvia, responsive mobile/desktop, animazioni brevi
+## Fase 2 · MVP ← *in corso*
+
+Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **prova in locale** e un commit. Si passa al successivo solo dopo la prova.
+
+- [x] **2.1 · Dominio puro con test**: tag, icona e suggerimenti del progetto, "solo questa / tutte", ordinamento e sezioni, filtri, paginazione, checklist Markdown (`src/dominio/`)
+- [ ] **2.2 · Dati**: query tipizzate su `attivita_elenco` (elenco, crea, modifica, elimina, rinomina progetto). Prova: la verifica provvisoria della Fase 1 elenca i titoli veri
+- [ ] **2.3 · Guscio**: intestazione salvia con ☰ e +, menu laterale (Dashboard, Attività), routing con hash, pagine vuote. Prova: navigazione su mobile e desktop
+- [ ] **2.4 · Dashboard in sola lettura**: tre sezioni collassabili con conteggio; riga (desktop) e card (mobile) con icona del progetto, titolo con badge dei tag, stato, stelle, barra
+- [ ] **2.5 · Nuova attività**: modale con titolo, progetto, stato, priorità; dal + e dal menu
+- [ ] **2.6 · Modifica inline**: titolo, stato (conferma per *Completo*), priorità, avanzamento
+- [ ] **2.7 · Cambio del progetto**: campo con suggerimenti e dialogo "solo questa / tutte"
+- [ ] **2.8 · Pagina Attività**: elenco completo, elimina con conferma
+- [ ] **2.9 · Filtri**: testo, stato, priorità, progetto, "Mostra completate", *Azzera*, paginazione 25/50/100 (e 50 per sezione in dashboard)
+- [ ] **2.10 · Descrizione**: modale Markdown con checklist, modifica; descrizione e aiuto sintassi nel modale "Nuova attività"
+- [ ] **2.11 · Diario, lettura e aggiunta**: modale con le voci in ordine, la più recente evidenziata, Cmd/Ctrl+Invio
+- [ ] **2.12 · Diario, modifica ed eliminazione** delle voci ("modificata")
+- [ ] **2.13 · Sfondo doodle** a tema casa (`npm run sfondo`)
+- [ ] **2.14 · "Installa l'app"** nel menu, come Grocery
+- [ ] **2.15 · Rifinitura**: colori di stati e tag, animazioni brevi, controllo responsive
 
 ## Fase 3 · Pubblicazione
 - [x] Workflow `pubblica.yml`
