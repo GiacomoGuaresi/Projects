@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { applicaModifica } from './attivita'
+import { applicaModifica, statoSuccessivo } from './attivita'
 import { attivita } from './esempi'
 
 const adesso = new Date('2026-09-13T10:00:00Z')
+
+describe('statoSuccessivo', () => {
+  it('da fare → in corso → completo; completo e bloccato tornano in corso', () => {
+    expect(statoSuccessivo('da_fare')).toBe('in_corso')
+    expect(statoSuccessivo('in_corso')).toBe('completo')
+    expect(statoSuccessivo('completo')).toBe('in_corso')
+    expect(statoSuccessivo('bloccato')).toBe('in_corso')
+  })
+})
 
 describe('applicaModifica', () => {
   it('cambia i campi richiesti e segna la modifica', () => {

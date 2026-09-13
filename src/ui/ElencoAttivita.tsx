@@ -19,7 +19,7 @@ interface Props {
   attivita: readonly Attivita[]
   progetti: readonly ProgettoInUso[]
   azioni: AzioniAttivita
-  /** Il pulsante elimina c'è solo nella pagina Attività, non in dashboard. */
+  /** Il pulsante elimina c'è solo nella pagina Attività, non in Per stato. */
   conElimina?: boolean
 }
 

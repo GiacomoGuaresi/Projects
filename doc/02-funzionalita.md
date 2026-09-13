@@ -49,7 +49,8 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 
 | Funzione | Stato |
 |---|---|
-| **Dashboard**: sezioni "In corso", "Da fare", "Bloccate" | ✅ |
+| **Dashboard**: una card per progetto, dettagli in un modale | ✅ |
+| **Per stato**: sezioni "In corso", "Da fare", "Bloccate" | ✅ |
 | **Attività**: elenco completo con filtri (testo, stato, priorità, progetto) e paginazione | ✅ |
 | Completate nascoste di default, interruttore **"Mostra completate"** | ✅ |
 | Selettore delle colonne visibili | ❌ (eventualmente in futuro) |

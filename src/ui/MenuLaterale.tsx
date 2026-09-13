@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Download, LayoutDashboard, ListChecks, Plus, X, type LucideIcon } from 'lucide-react'
+import { Download, LayoutDashboard, LayoutList, ListChecks, Plus, X, type LucideIcon } from 'lucide-react'
 import { indirizzi, type Rotta } from './rotta'
 
 /** Da questa larghezza il menu è sempre aperto: la stessa soglia di `lg:`. */
@@ -7,6 +7,7 @@ const SEMPRE_APERTO = '(min-width: 1024px)'
 
 const sezioni: { rotta: Rotta; etichetta: string; icona: LucideIcon }[] = [
   { rotta: 'dashboard', etichetta: 'Dashboard', icona: LayoutDashboard },
+  { rotta: 'stato', etichetta: 'Per stato', icona: LayoutList },
   { rotta: 'attivita', etichetta: 'Attività', icona: ListChecks },
 ]
 

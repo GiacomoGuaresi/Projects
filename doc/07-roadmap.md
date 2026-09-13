@@ -45,6 +45,9 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 - [ ] Checklist di sicurezza ([05](05-sicurezza.md)): tutto verificato tranne gli URL di redirect di Auth, da controllare sulla dashboard
 - [ ] README con screenshot
 
+## Dopo l'MVP
+- [ ] **Dashboard per progetto**: una card per progetto con tutte le attività (completate grigie e barrate) e aggiunta rapida nel progetto, modale dettagli con tutti i campi modificabili; la vecchia dashboard diventa la pagina **Per stato**
+
 ## Fase 4 · Assistente IA
 - [ ] Scelta del provider con tier gratuito
 - [ ] Edge Function con i tool: crea, modifica, elimina attività; aggiungi voce di diario

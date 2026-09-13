@@ -41,7 +41,7 @@ flowchart LR
 | Linguaggio | TypeScript | |
 | UI | React 19 | |
 | Build | Vite, `base: '/Projects/'` | |
-| Routing | hash router: `#/` (Dashboard), `#/attivita` | niente problemi con le rotte profonde su GitHub Pages |
+| Routing | hash router: `#/` (Dashboard, card per progetto), `#/stato` (Per stato), `#/attivita` | niente problemi con le rotte profonde su GitHub Pages |
 | Stile | **Tailwind CSS**, con la palette definita nel tema | |
 | Icone | lucide-react | stesso set di disegni di Grocery (che li copia a mano in `Icona.tsx`): coerenza visiva tra le due app |
 | Markdown | react-markdown + remark-gfm + remark-breaks | |
@@ -55,7 +55,7 @@ flowchart LR
 Come in Grocery, i test coprono la **logica pura**, non i componenti:
 - parsing dei tag nel titolo;
 - iniziali e colore dell'icona del progetto;
-- ordinamento e raggruppamento della dashboard;
+- ordinamento e raggruppamento della Dashboard (per progetto) e della pagina Per stato;
 - filtri della pagina Attività, compreso "Mostra completate";
 - suggerimenti dei progetti (deduplica, maiuscole e minuscole);
 - decisione se chiedere "solo questa / tutte" al cambio di progetto.

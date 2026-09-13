@@ -2,21 +2,24 @@ import { useSyncExternalStore } from 'react'
 
 /**
  * Le pagine, raggiunte con l'hash (doc/03-architettura.md): `#/` è la
- * Dashboard, `#/attivita` la pagina Attività, `#/installa` le istruzioni per
+ * Dashboard con le card per progetto, `#/stato` la pagina Per stato con le
+ * sezioni, `#/attivita` la pagina Attività, `#/installa` le istruzioni per
  * installare l'app. Con l'hash GitHub Pages non vede mai le rotte, quindi non
  * serve un 404.html.
  */
-export type Rotta = 'dashboard' | 'attivita' | 'installa'
+export type Rotta = 'dashboard' | 'stato' | 'attivita' | 'installa'
 
 export const indirizzi: Record<Rotta, string> = {
   dashboard: '#/',
+  stato: '#/stato',
   attivita: '#/attivita',
   installa: '#/installa',
 }
 
-/** Qualunque hash sconosciuto porta alla Dashboard. */
+/** Qualunque hash sconosciuto (anche il vecchio `#/progetti`) porta alla Dashboard. */
 function leggi(): Rotta {
   const hash = window.location.hash
+  if (hash.startsWith(indirizzi.stato)) return 'stato'
   if (hash.startsWith(indirizzi.attivita)) return 'attivita'
   if (hash.startsWith(indirizzi.installa)) return 'installa'
   return 'dashboard'

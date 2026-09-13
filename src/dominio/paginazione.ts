@@ -1,4 +1,4 @@
-// La paginazione di dashboard (50 per sezione) e pagina Attività (25/50/100).
+// La paginazione della pagina Per stato (50 per sezione) e pagina Attività (25/50/100).
 
 export interface Pagina<T> {
   elementi: T[]

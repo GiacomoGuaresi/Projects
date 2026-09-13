@@ -23,7 +23,7 @@ const campo =
 /**
  * La pagina Attività (doc/08-interfaccia.md): tutte le attività con i filtri
  * (testo, stato, priorità, progetto), "Mostra completate" spento di default,
- * Azzera e paginazione da 25/50/100. Ordine come la dashboard, completate in
+ * Azzera e paginazione da 25/50/100. Ordine come la pagina Per stato, completate in
  * fondo dalla più recente; qui si può anche eliminare.
  */
 export function PaginaAttivita({ attivita, progetti, azioni }: Props) {

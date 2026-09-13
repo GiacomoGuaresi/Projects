@@ -2,7 +2,16 @@
 // supabase/sql/001_schema.sql), ripetute qui per mostrare subito il risultato
 // di una modifica, prima che arrivi la riga salvata.
 
-import type { Attivita, Modifica } from './tipi'
+import type { Attivita, Modifica, Stato } from './tipi'
+
+/**
+ * Lo stato a cui passa un'attività toccando la sua icona nella Dashboard
+ * (doc/08-interfaccia.md): da fare → in corso → completo; una completa o
+ * bloccata torna in corso.
+ */
+export function statoSuccessivo(stato: Stato): Stato {
+  return stato === 'in_corso' ? 'completo' : 'in_corso'
+}
 
 export function applicaModifica(attivita: Attivita, modifica: Modifica, adesso = new Date()): Attivita {
   const nuova = { ...attivita, ...modifica }

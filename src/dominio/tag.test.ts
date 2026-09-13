@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pezziTitolo, TAG, titoloSenzaTag, trovaTag } from './tag'
+import { inserisciTag, pezziTitolo, suggerisciTag, TAG, tagInCorso, titoloSenzaTag, trovaTag } from './tag'
 
 describe('trovaTag', () => {
   it('ignora maiuscole, minuscole e spazi', () => {
@@ -47,6 +47,47 @@ describe('pezziTitolo', () => {
 
   it('un titolo senza tag è un solo pezzo', () => {
     expect(pezziTitolo('  Pulire  i vetri ')).toEqual([{ tipo: 'testo', testo: 'Pulire i vetri' }])
+  })
+})
+
+describe('tagInCorso', () => {
+  it('trova il tag aperto prima del cursore', () => {
+    expect(tagInCorso('Caldaia <gua', 12)).toEqual({ da: 8, a: 12, testo: 'gua' })
+    expect(tagInCorso('<', 1)).toEqual({ da: 0, a: 1, testo: '' })
+  })
+
+  it('niente se il tag è già chiuso prima del cursore, o se non c\'è "<"', () => {
+    expect(tagInCorso('<guasto> Caldaia', 16)).toBeNull()
+    expect(tagInCorso('Caldaia', 7)).toBeNull()
+  })
+
+  it('correggendo dentro un tag chiuso, il tag arriva fino al ">"', () => {
+    expect(tagInCorso('<gua> Caldaia', 3)).toEqual({ da: 0, a: 5, testo: 'gu' })
+  })
+})
+
+describe('suggerisciTag', () => {
+  it('prima quelli che iniziano col testo, poi quelli che lo contengono, senza i riservati', () => {
+    expect(suggerisciTag('cu').map((t) => t.nome)).toEqual(['cucito', 'cucina'])
+    expect(suggerisciTag('st').map((t) => t.nome)).toEqual(['guasto', 'estate'])
+    expect(suggerisciTag('in').map((t) => t.nome)).toEqual(['inverno', 'cucina'])
+    expect(suggerisciTag('').some((t) => t.riservato)).toBe(false)
+    expect(suggerisciTag('IA')).toEqual([])
+  })
+})
+
+describe('inserisciTag', () => {
+  it('sostituisce il tag in corso con quello scelto, in maiuscolo, e mette il cursore dopo lo spazio', () => {
+    const titolo = 'Caldaia <gua'
+    expect(inserisciTag(titolo, tagInCorso(titolo, 12)!, 'guasto')).toEqual({
+      titolo: 'Caldaia <GUASTO> ',
+      cursore: 17,
+    })
+  })
+
+  it('non raddoppia lo spazio e sostituisce anche un tag già chiuso', () => {
+    const titolo = '<gua> Caldaia'
+    expect(inserisciTag(titolo, tagInCorso(titolo, 3)!, 'guasto')).toEqual({ titolo: '<GUASTO> Caldaia', cursore: 9 })
   })
 })
 

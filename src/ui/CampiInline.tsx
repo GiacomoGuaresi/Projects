@@ -2,13 +2,14 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Check } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import { InputProgetto } from './InputProgetto'
+import { InputTitolo } from './InputTitolo'
 import { ProgettoConIcona } from './ProgettoConIcona'
 import { TitoloConTag } from './TitoloConTag'
 
 const campo =
   'rounded-lg border border-bordo bg-white px-2 py-1 focus:outline-2 focus:-outline-offset-1 focus:outline-salvia'
 
-/** Il titolo: clic → campo di testo; Invio o clic fuori salva, Esc annulla. */
+/** Il titolo: clic → campo di testo con i suggerimenti dei tag; Invio o clic fuori salva, Esc annulla. */
 export function CampoTitolo({ titolo, onSalva }: { titolo: string; onSalva: (titolo: string) => void }) {
   const [bozza, setBozza] = useState<string | null>(null)
   // Invio chiude il campo, e il campo che sparisce può perdere il fuoco:
@@ -40,23 +41,15 @@ export function CampoTitolo({ titolo, onSalva }: { titolo: string; onSalva: (tit
   }
 
   return (
-    <input
-      aria-label="Titolo"
+    <InputTitolo
+      etichetta="Titolo"
       className={`${campo} w-full`}
       autoFocus
-      value={bozza}
-      onChange={(e) => setBozza(e.target.value)}
+      valore={bozza}
+      onCambia={setBozza}
       onBlur={() => chiudi(true)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-          chiudi(true)
-        }
-        if (e.key === 'Escape') {
-          e.preventDefault()
-          chiudi(false)
-        }
-      }}
+      onConferma={() => chiudi(true)}
+      onAnnulla={() => chiudi(false)}
     />
   )
 }

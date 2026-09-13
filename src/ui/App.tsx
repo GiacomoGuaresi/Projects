@@ -12,9 +12,11 @@ import { DialogoProgetto } from './DialogoProgetto'
 import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
 import { ModaleDescrizione } from './ModaleDescrizione'
+import { ModaleDettagli } from './ModaleDettagli'
 import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
 import { PaginaAttivita } from './PaginaAttivita'
+import { PaginaPerStato } from './PaginaPerStato'
 import { indirizzi, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 
@@ -43,10 +45,12 @@ export function App() {
   // I modali seguono l'attività per id, così mostrano sempre la versione aggiornata.
   const [descrizioneDi, setDescrizioneDi] = useState<number | null>(null)
   const [diarioDi, setDiarioDi] = useState<number | null>(null)
+  const [dettagliDi, setDettagliDi] = useState<number | null>(null)
   const trova = (id: number | null) =>
     stato.fase === 'pronto' && id !== null ? (stato.attivita.find((a) => a.id === id) ?? null) : null
   const descrizioneAperta = trova(descrizioneDi)
   const diarioAperto = trova(diarioDi)
+  const dettagliAperti = trova(dettagliDi)
 
   const azioni: AzioniAttivita = {
     /** Passare a "Completo" chiede conferma; il resto si salva subito. */
@@ -115,7 +119,20 @@ export function App() {
       <main className="mx-auto w-full max-w-[1200px] flex-1 p-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:col-start-2">
         {rotta === 'dashboard' && (
           <ConAttivita stato={stato} onRiprova={ricarica}>
-            {(attivita) => <Dashboard attivita={attivita} progetti={progetti} azioni={azioni} />}
+            {(attivita) => (
+              <Dashboard
+                attivita={attivita}
+                onDettagli={(a) => setDettagliDi(a.id)}
+                onDiario={azioni.apriDiario}
+                onModifica={azioni.modifica}
+                onCrea={crea}
+              />
+            )}
+          </ConAttivita>
+        )}
+        {rotta === 'stato' && (
+          <ConAttivita stato={stato} onRiprova={ricarica}>
+            {(attivita) => <PaginaPerStato attivita={attivita} progetti={progetti} azioni={azioni} />}
           </ConAttivita>
         )}
         {rotta === 'attivita' && (
@@ -126,6 +143,16 @@ export function App() {
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
+      {/* Descrizione, diario e conferme si aprono dopo, quindi sopra i dettagli. */}
+      {dettagliAperti && (
+        <ModaleDettagli
+          key={dettagliAperti.id}
+          attivita={dettagliAperti}
+          progetti={progetti}
+          azioni={azioni}
+          onChiudi={() => setDettagliDi(null)}
+        />
+      )}
       {daCompletare && (
         <Conferma
           titolo="Attività completa?"
@@ -138,7 +165,7 @@ export function App() {
         >
           <p>
             Segnare <strong>{titoloSenzaTag(daCompletare.attivita.titolo) || daCompletare.attivita.titolo}</strong>{' '}
-            come completa? L'avanzamento va al 100% e l'attività esce dalla dashboard.
+            come completa? L'avanzamento va al 100%.
           </p>
         </Conferma>
       )}
@@ -182,6 +209,8 @@ export function App() {
           onAnnulla={() => setDaEliminare(null)}
           onConferma={() => {
             void elimina(daEliminare.id)
+            // Se l'eliminazione non riesce l'attività torna: i dettagli non devono riaprirsi da soli.
+            if (dettagliDi === daEliminare.id) setDettagliDi(null)
             setDaEliminare(null)
           }}
         >

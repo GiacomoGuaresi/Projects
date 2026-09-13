@@ -28,6 +28,7 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Gruppo | Voce | Icona Lucide |
 |---|---|---|
 | Sezioni | **Dashboard** | `layout-dashboard` |
+| Sezioni | **Per stato** | `layout-list` |
 | Sezioni | **Attività** | `list-checks` |
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
@@ -50,7 +51,7 @@ Stessa schermata di Grocery:
 - se Supabase non è raggiungibile per mancanza di configurazione, un avviso dedicato;
 - con la sessione condivisa, chi è già entrato in Grocery non vede questa schermata.
 
-## Dashboard
+## Per stato
 
 Tre sezioni collassabili, ciascuna con il conteggio tra parentesi:
 
@@ -65,11 +66,37 @@ Tre sezioni collassabili, ciascuna con il conteggio tra parentesi:
 - Righe e card identiche alla pagina Attività, ma senza il pulsante elimina.
 - Quando un'attività cambia stato, passa subito nella sezione giusta (o sparisce, se completata) con un'animazione breve.
 
+## Dashboard
+
+La pagina iniziale (`#/`).
+
+- In alto il titolo **"Progetti"** con il numero di card e, accanto, una fila di **interruttori on/off** a pillola (acceso: salvia chiaro; spento: bianco con bordo). Ognuno è ricordato in un **cookie** (percorso `/Projects/`, durata un anno).
+  - **In corso** (`play`, cookie `projects_in_corso`, spento di default): acceso mostra **solo** le attività in corso e **ha la precedenza** sugli altri interruttori, che restano com'erano ma attenuati e non toccabili. Le card senza attività in corso spariscono; l'aggiunta rapida crea l'attività già *In corso* ("Aggiungi attività in corso"). Spento, la vista torna normale.
+  - **Completi** (`circle-check`, cookie `projects_completi`, acceso di default): spento nasconde le attività completate dalle card; il conto `completate/totale` non cambia e le card restano, con l'aggiunta rapida.
+
+- Una **card per progetto** con **tutte** le sue attività, completate comprese.
+- Card in ordine di progetto (A→Z, senza distinguere maiuscole e minuscole), la card **"Senza progetto"** in fondo. Da PC (almeno 1024px) **due colonne sfalsate**, come il disegno di `layout-dashboard`: ogni card è alta quanto il suo contenuto e quella sotto le sta subito sotto, senza allinearsi alle righe dell'altra colonna. Sotto, una colonna sola.
+- Intestazione della card: icona e nome del progetto, attività **completate sul totale** del progetto (es. `4/10`).
+- Dentro la card: prima *In corso*, poi *Da fare*, poi *Bloccate*; a parità di stato priorità decrescente, poi titolo.
+- **Toccare l'icona dello stato** a inizio riga lo fa avanzare: *Da fare* → *In corso* → *Completo* (con la solita conferma); *Completo* e *Bloccato* → *In corso*. Gli altri cambi di stato si fanno nel modale dettagli.
+- Ogni attività mostra **solo** l'icona dello stato (con i colori dello stato), il titolo con i badge e il pulsante **Diario** (`book-open`, evidenziato se ha voci, apre il modale diario); **toccare un punto qualsiasi della riga** fuori dal pulsante apre il modale dettagli; ogni modifica, stato compreso, si fa nel modale dettagli.
+- Il **bordo inferiore** di ogni riga è l'**avanzamento**: una linea salvia larga quanto la percentuale, sopra la linea divisoria; al 100% non si mostra.
+- Le **completate** stanno in fondo alla card, dalla più recente, con il titolo **grigio e barrato**.
+- **Aggiunta rapida** come ultima riga di ogni card: campo "Aggiungi attività" (`plus`); Invio (o il pulsante + che compare scrivendo) crea un'attività *Da fare*, 3 stelle, nel **progetto della card** (nessun progetto nella card "Senza progetto"). Il campo si svuota e resta pronto per la successiva; Esc lo svuota. Un errore di salvataggio compare sotto il campo, con il testo conservato.
+
+## Modale dettagli
+
+Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
+- Campi modificabili con le stesse regole delle righe: **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Priorità**, **Stato** (conferma per *Completo*), **Avanzamento**.
+- **Descrizione** resa in Markdown, con *Modifica* / *Aggiungi* che apre il modale descrizione sopra.
+- Date di creazione, modifica e completamento; pulsante **Diario** (evidenziato se ha voci) che apre il modale diario sopra.
+- In fondo, pulsante **Elimina** (`trash-2`, rosso) con la stessa conferma della pagina Attività; eliminata l'attività, il modale si chiude.
+
 ## Pagina Attività
 
 - **Filtri**: testo (cerca nel titolo e nel progetto), stato, priorità, progetto (con suggerimenti), pulsante *Azzera*.
 - Interruttore **"Mostra completate"**, spento di default. Scegliere *Completo* nel filtro di stato lo accende da solo.
-- Ordinamento: come la dashboard. Con le completate visibili, queste vanno in fondo, dalla più recente.
+- Ordinamento: come la pagina Per stato. Con le completate visibili, queste vanno in fondo, dalla più recente.
 - Paginazione con scelta di 25 / 50 / 100 righe.
 - Colonne fisse, senza selettore.
 
@@ -104,7 +131,7 @@ Nel modale "Nuova attività" non c'è nessun dialogo.
 
 ## Modale "Nuova attività"
 
-Campi: **Titolo** (obbligatorio, con aiuto sui tag), **Progetto** (facoltativo, con suggerimenti), **Stato** (default *Da fare*), **Priorità** (default 3 stelle), **Descrizione** (Markdown, con anteprima e aiuto sulla sintassi). Invio nel titolo crea l'attività. A schermo intero su mobile.
+Campi: **Titolo** (obbligatorio, con i suggerimenti dei tag e sotto la sola scritta "Scrivi < per aggiungere un tag"), **Progetto** (facoltativo, con suggerimenti), **Stato** (default *Da fare*), **Priorità** (default 3 stelle), **Descrizione** (Markdown, con anteprima e aiuto sulla sintassi). Invio nel titolo crea l'attività. A schermo intero su mobile.
 
 ## Modale descrizione
 
@@ -155,7 +182,7 @@ Lista fissa nel codice (`src/dominio/tag.ts`).
 | `ia` | `sparkles` | viola | *riservato*: lo aggiungerà l'assistente IA (fase 4) |
 
 - Un tag non in elenco appare come badge neutro (`tag`, grigio).
-- Il modale "Nuova attività" mostra l'elenco dei tag disponibili.
+- **Suggerimenti**: in ogni campo del titolo (modale "Nuova attività", modifica inline, modale dettagli), scrivendo `<` compare l'elenco dei tag (badge e uso), filtrato da ciò che segue, prima quelli che iniziano così; mai i riservati. Frecce per scorrere, Invio, Tab o tocco per scegliere, Esc per chiudere l'elenco. Il tag scelto sostituisce quello in corso, in maiuscolo e seguito da uno spazio.
 - Scartati: tag che duplicano uno stato (bloccato, in attesa) o un progetto (casa, giardino, auto), e acquisto, appuntamento, pratiche, pagamento.
 
 ## Palette *(colori del tema Tailwind, da rifinire in fase di UI)*

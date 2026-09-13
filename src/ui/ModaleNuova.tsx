@@ -1,12 +1,11 @@
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { normalizzaProgetto, type ProgettoInUso } from '../dominio/progetto'
-import { TAG, trovaTag, pezziTitolo } from '../dominio/tag'
 import type { Attivita, NuovaAttivita, Stato } from '../dominio/tipi'
 import { EditorMarkdown } from './EditorMarkdown'
 import { InputProgetto } from './InputProgetto'
+import { AiutoTag, InputTitolo } from './InputTitolo'
 import { Modale } from './Modale'
 import { SceltaPriorita, SceltaStato } from './Scelte'
-import { TitoloConTag } from './TitoloConTag'
 
 interface Props {
   progetti: readonly ProgettoInUso[]
@@ -19,7 +18,7 @@ const campo =
 
 /**
  * Il modale "Nuova attività" (doc/08-interfaccia.md): titolo obbligatorio con
- * i tag disponibili, progetto facoltativo con i progetti già usati, stato,
+ * i suggerimenti dei tag, progetto facoltativo con i progetti già usati, stato,
  * priorità e descrizione in Markdown. Invio nel titolo crea. A schermo intero
  * su mobile.
  */
@@ -31,7 +30,6 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
   const [descrizione, setDescrizione] = useState('')
   const [inCorso, setInCorso] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
-  const campoTitolo = useRef<HTMLInputElement>(null)
   const id = useId()
 
   const invia = async (evento: FormEvent) => {
@@ -52,13 +50,6 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
       setErrore((e as Error).message)
       setInCorso(false)
     }
-  }
-
-  /** Un tocco sul tag lo mette in testa al titolo, se non c'è già. */
-  const aggiungiTag = (nome: string) => {
-    const presente = pezziTitolo(titolo).some((p) => p.tipo === 'tag' && trovaTag(p.nome)?.nome === nome)
-    if (!presente) setTitolo(`<${nome.toUpperCase()}> ${titolo.trimStart()}`)
-    campoTitolo.current?.focus()
   }
 
   return (
@@ -91,29 +82,8 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
           <label className="text-xs text-testo-tenue" htmlFor={`${id}-titolo`}>
             Titolo
           </label>
-          <input
-            id={`${id}-titolo`}
-            ref={campoTitolo}
-            className={campo}
-            autoFocus
-            required
-            value={titolo}
-            onChange={(e) => setTitolo(e.target.value)}
-          />
-          <div className="flex flex-wrap items-center gap-1.5 text-xs text-testo-tenue">
-            Tag:
-            {TAG.filter((tag) => !tag.riservato).map((tag) => (
-              <button
-                key={tag.nome}
-                type="button"
-                title={tag.uso}
-                className="rounded-full hover:opacity-80"
-                onClick={() => aggiungiTag(tag.nome)}
-              >
-                <TitoloConTag titolo={`<${tag.nome}>`} />
-              </button>
-            ))}
-          </div>
+          <InputTitolo id={`${id}-titolo`} className={campo} autoFocus valore={titolo} onCambia={setTitolo} />
+          <AiutoTag />
         </div>
 
         <div className="flex flex-col gap-1.5">

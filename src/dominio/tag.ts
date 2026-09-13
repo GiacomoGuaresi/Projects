@@ -72,6 +72,50 @@ export function pezziTitolo(titolo: string): Pezzo[] {
   return pezzi
 }
 
+// Suggerimenti mentre si scrive -----------------------------------------------------
+
+/** Il tag che si sta scrivendo nel titolo: da `da` (il "<") ad `a`, con il testo già scritto. */
+export interface TagInCorso {
+  da: number
+  a: number
+  testo: string
+}
+
+/**
+ * Il tag su cui sta il cursore: un "<" prima del cursore non ancora chiuso. Se
+ * più avanti c'è già il ">" (si corregge un tag), il tag arriva fin lì.
+ */
+export function tagInCorso(titolo: string, cursore: number): TagInCorso | null {
+  const prima = titolo.slice(0, cursore)
+  const apre = prima.lastIndexOf('<')
+  if (apre < 0) return null
+  const testo = prima.slice(apre + 1)
+  if (testo.includes('>')) return null
+  const dopo = titolo.slice(cursore)
+  const confine = dopo.search(/[<>]/)
+  const a = confine >= 0 && dopo[confine] === '>' ? cursore + confine + 1 : cursore
+  return { da: apre, a, testo }
+}
+
+/** I tag da proporre per il testo scritto dopo "<": prima quelli che iniziano così. Mai i riservati. */
+export function suggerisciTag(testo: string): Tag[] {
+  const cerca = spazi(testo).toLowerCase()
+  const inizia = (tag: Tag) => (tag.nome.startsWith(cerca) ? 1 : 0)
+  return TAG.filter((tag) => !tag.riservato && tag.nome.includes(cerca)).sort((a, b) => inizia(b) - inizia(a))
+}
+
+/**
+ * Il titolo con il tag scelto al posto di quello in corso, in maiuscolo e
+ * seguito da uno spazio, e dove rimettere il cursore: subito dopo lo spazio.
+ */
+export function inserisciTag(titolo: string, inCorso: TagInCorso, nome: string): { titolo: string; cursore: number } {
+  const prima = titolo.slice(0, inCorso.da)
+  const dopo = titolo.slice(inCorso.a)
+  const tag = `<${nome.toUpperCase()}>`
+  const spazio = dopo.startsWith(' ') ? '' : ' '
+  return { titolo: prima + tag + spazio + dopo, cursore: prima.length + tag.length + 1 }
+}
+
 /** Il titolo senza i tag: serve a ordinare per titolo. */
 export function titoloSenzaTag(titolo: string): string {
   return pezziTitolo(titolo)

@@ -1,68 +1,269 @@
-import { useId, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
-import { sezioniDashboard, type SezioneDashboard } from '../dominio/ordinamento'
-import { pagina } from '../dominio/paginazione'
-import type { ProgettoInUso } from '../dominio/progetto'
-import type { Attivita } from '../dominio/tipi'
-import { ElencoAttivita, type AzioniAttivita } from './ElencoAttivita'
-import { Paginazione } from './Paginazione'
+import { useState } from 'react'
+import { BookOpen, CircleCheck, Play, Plus, type LucideIcon } from 'lucide-react'
+import { statoSuccessivo } from '../dominio/attivita'
+import { schedeProgetti } from '../dominio/ordinamento'
+import type { Attivita, Modifica, NuovaAttivita, Stato } from '../dominio/tipi'
+import { useInterruttore } from './preferenze'
+import { ProgettoConIcona } from './ProgettoConIcona'
+import { infoStati } from './stati'
+import { TitoloConTag } from './TitoloConTag'
 
 interface Props {
   attivita: readonly Attivita[]
-  progetti: readonly ProgettoInUso[]
-  azioni: AzioniAttivita
+  /** Apre il modale con tutti i campi dell'attività. */
+  onDettagli: (attivita: Attivita) => void
+  onDiario: (attivita: Attivita) => void
+  /** Il cambio di stato dall'icona; chi riceve chiede conferma per *Completo*. */
+  onModifica: (attivita: Attivita, modifica: Modifica) => void
+  /** Crea l'attività; se non riesce lancia l'errore. */
+  onCrea: (nuova: NuovaAttivita) => Promise<unknown>
 }
 
-/** Righe per pagina in ogni sezione (doc/08-interfaccia.md). */
-const PER_SEZIONE = 50
-
 /**
- * La dashboard (doc/08-interfaccia.md): le attività aperte in tre sezioni
- * collassabili, "In corso" aperta e le altre chiuse, 50 righe per pagina.
+ * La Dashboard (doc/08-interfaccia.md): una card per progetto con le sue
+ * attività, le completate in fondo grigie e barrate. Ogni attività mostra solo
+ * stato, titolo e il pulsante del diario; toccando la riga si aprono i
+ * dettagli, dove si modifica tutto. In fondo alla card l'aggiunta rapida.
  */
-export function Dashboard({ attivita, progetti, azioni }: Props) {
+export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }: Props) {
+  const [soloInCorso, setSoloInCorso] = useInterruttore('projects_in_corso', false)
+  const [mostraCompleti, setMostraCompleti] = useInterruttore('projects_completi', true)
+  // "In corso" vince sugli altri interruttori; e mostra solo le card che ne hanno.
+  const mostrate = schedeProgetti(attivita)
+    .map((scheda) => ({
+      ...scheda,
+      visibili: soloInCorso
+        ? scheda.attivita.filter((a) => a.stato === 'in_corso')
+        : mostraCompleti
+          ? scheda.attivita
+          : scheda.attivita.filter((a) => a.stato !== 'completo'),
+    }))
+    .filter((scheda) => !soloInCorso || scheda.visibili.length > 0)
+
   return (
     <div className="flex flex-col gap-3">
-      {sezioniDashboard(attivita).map((sezione) => (
-        <Sezione key={sezione.stato} sezione={sezione} progetti={progetti} azioni={azioni} />
-      ))}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1">
+        <h2 className="flex items-baseline gap-2 text-lg font-semibold">
+          Progetti <span className="text-sm font-normal text-testo-tenue">({mostrate.length})</span>
+        </h2>
+        {/* Gli interruttori della vista, ognuno ricordato in un cookie. */}
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Mostra">
+          <Interruttore etichetta="In corso" icona={Play} acceso={soloInCorso} onCambia={setSoloInCorso} />
+          <Interruttore
+            etichetta="Completi"
+            icona={CircleCheck}
+            acceso={mostraCompleti}
+            onCambia={setMostraCompleti}
+            ignorato={soloInCorso}
+          />
+        </div>
+      </div>
+
+      {mostrate.length === 0 ? (
+        <p className="px-2 py-3 text-testo-tenue">
+          {soloInCorso ? 'Nessuna attività in corso.' : 'Nessuna attività: aggiungine una con il +.'}
+        </p>
+      ) : (
+        // Da PC due colonne sfalsate (come l'icona `layout-dashboard`): ogni card è alta quanto il suo contenuto.
+        <div className="gap-3 lg:columns-2">
+          {mostrate.map((scheda) => (
+            <section
+              key={scheda.chiave}
+              className="animate-entra mb-3 break-inside-avoid rounded-[11px] border border-bordo bg-white"
+            >
+              <h3 className="flex items-center gap-2 border-b border-bordo px-3 py-2 font-semibold">
+                <span className="min-w-0 flex-1">
+                  {scheda.progetto === null ? (
+                    <span className="text-testo-tenue">Senza progetto</span>
+                  ) : (
+                    <ProgettoConIcona progetto={scheda.progetto} />
+                  )}
+                </span>
+                <span
+                  className="text-sm font-normal text-testo-tenue"
+                  title="Attività completate sul totale del progetto"
+                >
+                  {scheda.completate}/{scheda.attivita.length}
+                </span>
+              </h3>
+              <ul className="divide-y divide-bordo">
+                {/* Il conto resta sul totale anche con gli interruttori che nascondono attività. */}
+                {scheda.visibili.map((a) => {
+                  const { etichetta, icona: Icona, colori } = infoStati[a.stato]
+                  return (
+                    // Un'attività che cambia stato si sposta nella card, con un'animazione breve.
+                    <li key={a.id} className="animate-entra relative flex items-center gap-1 pr-2 pl-1.5">
+                      {/* Il bordo sotto la riga è l'avanzamento: copre la linea divisoria, sparisce al 100%. */}
+                      {a.avanzamento < 100 && (
+                        <span
+                          className="pointer-events-none absolute -bottom-px left-0 z-1 h-0.5 bg-salvia transition-[width] duration-200 motion-reduce:transition-none"
+                          style={{ width: `${a.avanzamento}%` }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      {/* L'icona dello stato lo porta al successivo; passare a Completo chiede conferma. */}
+                      <button
+                        type="button"
+                        aria-label={`${etichetta}: passa a ${infoStati[statoSuccessivo(a.stato)].etichetta}`}
+                        title={`${etichetta} → ${infoStati[statoSuccessivo(a.stato)].etichetta}`}
+                        className="grid size-8 shrink-0 place-items-center rounded-lg hover:bg-fondo active:bg-bordo"
+                        onClick={() => onModifica(a, { stato: statoSuccessivo(a.stato) })}
+                      >
+                        <span className={`grid size-6 place-items-center rounded-md ${colori}`}>
+                          <Icona className="size-3.5" aria-hidden="true" />
+                        </span>
+                      </button>
+                      {/* Il resto della riga apre i dettagli, tranne il pulsante del diario. */}
+                      <button
+                        type="button"
+                        title="Dettagli"
+                        className="flex min-w-0 flex-1 items-center self-stretch rounded-lg px-1 py-1.5 text-left hover:bg-fondo active:bg-bordo"
+                        onClick={() => onDettagli(a)}
+                      >
+                        {/* Completa: grigia e barrata. I pezzi del titolo sono flex item, quindi la riga va su ognuno. */}
+                        <span
+                          className={`min-w-0 flex-1 break-words ${a.stato === 'completo' ? 'text-testo-tenue [&_span]:line-through' : ''}`}
+                        >
+                          <TitoloConTag titolo={a.titolo} />
+                        </span>
+                      </button>
+                      {/* Evidenziato se il diario ha delle voci. */}
+                      <button
+                        type="button"
+                        aria-label="Diario"
+                        title="Diario"
+                        className={`grid size-8 shrink-0 place-items-center rounded-lg ${a.ha_diario ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
+                        onClick={() => onDiario(a)}
+                      >
+                        <BookOpen className="size-4" aria-hidden="true" />
+                      </button>
+                    </li>
+                  )
+                })}
+                <li>
+                  {/* Con "In corso" acceso la nuova attività nasce in corso, così resta visibile. */}
+                  <AggiuntaRapida
+                    progetto={scheda.progetto}
+                    stato={soloInCorso ? 'in_corso' : 'da_fare'}
+                    onCrea={onCrea}
+                  />
+                </li>
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
-function Sezione({ sezione, progetti, azioni }: Omit<Props, 'attivita'> & { sezione: SezioneDashboard }) {
-  const [aperta, setAperta] = useState(sezione.apertaDiDefault)
-  const [numero, setNumero] = useState(1)
-  const contenuto = useId()
-  const corrente = pagina(sezione.attivita, numero, PER_SEZIONE)
+interface InterruttoreProps {
+  etichetta: string
+  icona: LucideIcon
+  acceso: boolean
+  onCambia: (acceso: boolean) => void
+  /** Un altro interruttore ha la precedenza: questo resta com'è ma non conta, e si mostra attenuato. */
+  ignorato?: boolean
+}
+
+/** Un interruttore on/off a pillola: pieno salvia chiaro quando è acceso. */
+function Interruttore({ etichetta, icona: Icona, acceso, onCambia, ignorato = false }: InterruttoreProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={acceso}
+      disabled={ignorato}
+      title={ignorato ? `Non conta finché "In corso" è acceso` : undefined}
+      className={`flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-sm disabled:opacity-50 ${
+        acceso
+          ? 'border-transparent bg-pastello font-semibold text-salvia-scura'
+          : 'border-bordo bg-white text-testo-tenue enabled:hover:bg-fondo'
+      }`}
+      onClick={() => onCambia(!acceso)}
+    >
+      <Icona className="size-4" aria-hidden="true" />
+      {etichetta}
+    </button>
+  )
+}
+
+interface AggiuntaRapidaProps {
+  progetto: string | null
+  stato: Extract<Stato, 'da_fare' | 'in_corso'>
+  onCrea: Props['onCrea']
+}
+
+/**
+ * L'ultima riga della card: un titolo e Invio creano un'attività *Da fare* con
+ * 3 stelle nel progetto della card. Il campo resta aperto per aggiungerne
+ * un'altra; Esc lo svuota.
+ */
+function AggiuntaRapida({ progetto, stato, onCrea }: AggiuntaRapidaProps) {
+  const [titolo, setTitolo] = useState('')
+  const [invio, setInvio] = useState(false)
+  const [errore, setErrore] = useState<string | null>(null)
+
+  const crea = async () => {
+    const pulito = titolo.trim()
+    if (!pulito || invio) return
+    setInvio(true)
+    setErrore(null)
+    try {
+      await onCrea({ titolo: pulito, descrizione: null, progetto, stato, priorita: 3 })
+      setTitolo('')
+    } catch (e) {
+      setErrore((e as Error).message)
+    } finally {
+      setInvio(false)
+    }
+  }
 
   return (
-    <section>
-      <h2>
-        <button
-          type="button"
-          className="flex min-h-11 w-full items-center gap-1.5 rounded-[11px] px-1 text-left text-base font-semibold hover:bg-white/60"
-          aria-expanded={aperta}
-          aria-controls={contenuto}
-          onClick={() => setAperta(!aperta)}
-        >
-          <ChevronRight
-            className={`size-5 text-testo-tenue transition-transform duration-200 motion-reduce:transition-none ${aperta ? 'rotate-90' : ''}`}
-            aria-hidden="true"
-          />
-          {sezione.titolo} <span className="font-normal text-testo-tenue">({sezione.attivita.length})</span>
-        </button>
-      </h2>
-      <div id={contenuto} hidden={!aperta} className="flex flex-col gap-2 pt-1">
-        {sezione.attivita.length === 0 ? (
-          <p className="px-2 py-3 text-testo-tenue">Nessuna attività.</p>
-        ) : (
-          <>
-            <ElencoAttivita attivita={corrente.elementi} progetti={progetti} azioni={azioni} />
-            {corrente.pagine > 1 && <Paginazione pagina={corrente} onPagina={setNumero} />}
-          </>
+    <form
+      className="flex flex-col"
+      onSubmit={(e) => {
+        e.preventDefault()
+        void crea()
+      }}
+    >
+      {/* Allineata alle righe: il + sta sotto le icone dello stato. */}
+      <label className="flex items-center gap-1 py-1 pr-2 pl-1.5 text-testo-tenue focus-within:text-testo">
+        <span className="grid size-8 shrink-0 place-items-center" aria-hidden="true">
+          <Plus className="size-4" />
+        </span>
+        <input
+          aria-label={progetto === null ? 'Nuova attività senza progetto' : `Nuova attività in ${progetto}`}
+          placeholder={stato === 'in_corso' ? 'Aggiungi attività in corso' : 'Aggiungi attività'}
+          enterKeyHint="done"
+          className="min-h-9 min-w-0 flex-1 bg-transparent text-base text-testo outline-none placeholder:text-testo-tenue"
+          value={titolo}
+          // readOnly e non disabled: il fuoco resta nel campo, pronto per la prossima.
+          readOnly={invio}
+          onChange={(e) => setTitolo(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              setTitolo('')
+              setErrore(null)
+            }
+          }}
+        />
+        {titolo.trim() && (
+          <button
+            type="submit"
+            disabled={invio}
+            className="grid size-8 shrink-0 place-items-center rounded-lg bg-salvia text-panna hover:bg-salvia-scura"
+            aria-label="Aggiungi"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+          </button>
         )}
-      </div>
-    </section>
+      </label>
+      {errore && (
+        <p className="px-3 pb-2 text-sm text-pericolo" role="alert">
+          {errore}
+        </p>
+      )}
+    </form>
   )
 }

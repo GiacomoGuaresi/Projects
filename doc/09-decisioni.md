@@ -26,6 +26,7 @@
 | 2026-09-13 | Voci di diario **modificabili**; **nessun autore** (account condiviso) | deciso |
 | 2026-09-13 | Tag: **lista fissa nel codice**, ridotta: **urgente, fai da te, guasto, idea**, più `ia` riservato all'assistente | deciso |
 | 2026-09-13 | Dashboard con **In corso**, **Da fare** e **Bloccate** in tre sezioni, UX simile alla vecchia | deciso |
+| 2026-09-13 | La **Dashboard** diventa la vista a card per progetto; le tre sezioni per stato passano alla pagina **Per stato** (`#/stato`) | deciso |
 | 2026-09-13 | Pagina Attività: completate **nascoste di default**, interruttore "Mostra completate" | deciso |
 | 2026-09-13 | Cambio del progetto su un'attività esistente: dialogo **"solo questa / tutte"**; "tutte" = rinomina (anche unione con un progetto esistente) | deciso |
 | 2026-09-13 | **Nessun selettore delle colonne** (poche colonne; eventualmente in futuro) | deciso |

@@ -11,7 +11,7 @@ export type StatoElenco =
 
 /**
  * Tutte le attività, lette una volta all'apertura: sono poche centinaia, e
- * dashboard e pagina Attività le filtrano in memoria. Le modifiche passano da
+ * le pagine le filtrano in memoria. Le modifiche passano da
  * qui, che aggiorna l'elenco con la riga salvata.
  */
 export function useAttivita() {
