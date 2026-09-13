@@ -10,6 +10,7 @@ import { DialogoProgetto } from './DialogoProgetto'
 import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
 import { ModaleDescrizione } from './ModaleDescrizione'
+import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
 import { PaginaAttivita } from './PaginaAttivita'
 import { useRotta } from './rotta'
@@ -33,12 +34,16 @@ export function App() {
   )
   const [daEliminare, setDaEliminare] = useState<Attivita | null>(null)
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
-  const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, avviso, chiudiAvviso } = useAttivita()
+  const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, segnaDiario, avviso, chiudiAvviso } =
+    useAttivita()
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
-  // Il modale segue l'attività per id, così mostra sempre la versione aggiornata.
+  // I modali seguono l'attività per id, così mostrano sempre la versione aggiornata.
   const [descrizioneDi, setDescrizioneDi] = useState<number | null>(null)
-  const descrizioneAperta =
-    stato.fase === 'pronto' && descrizioneDi !== null ? (stato.attivita.find((a) => a.id === descrizioneDi) ?? null) : null
+  const [diarioDi, setDiarioDi] = useState<number | null>(null)
+  const trova = (id: number | null) =>
+    stato.fase === 'pronto' && id !== null ? (stato.attivita.find((a) => a.id === id) ?? null) : null
+  const descrizioneAperta = trova(descrizioneDi)
+  const diarioAperto = trova(diarioDi)
 
   const azioni: AzioniAttivita = {
     /** Passare a "Completo" chiede conferma; il resto si salva subito. */
@@ -57,6 +62,7 @@ export function App() {
     },
     elimina: setDaEliminare,
     apriDescrizione: (attivita) => setDescrizioneDi(attivita.id),
+    apriDiario: (attivita) => setDiarioDi(attivita.id),
   }
 
   return (
@@ -144,6 +150,14 @@ export function App() {
           attivita={descrizioneAperta}
           onSalva={(descrizione) => void modifica(descrizioneAperta.id, { descrizione })}
           onChiudi={() => setDescrizioneDi(null)}
+        />
+      )}
+      {diarioAperto && (
+        <ModaleDiario
+          key={diarioAperto.id}
+          attivita={diarioAperto}
+          onVoceAggiunta={() => segnaDiario(diarioAperto.id, true)}
+          onChiudi={() => setDiarioDi(null)}
         />
       )}
       {daEliminare && (

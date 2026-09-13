@@ -33,7 +33,7 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 - [x] **2.8 · Pagina Attività**: elenco completo, elimina con conferma
 - [x] **2.9 · Filtri**: testo, stato, priorità, progetto, "Mostra completate", *Azzera*, paginazione 25/50/100 (e 50 per sezione in dashboard)
 - [x] **2.10 · Descrizione**: modale Markdown con checklist, modifica; descrizione e aiuto sintassi nel modale "Nuova attività"
-- [ ] **2.11 · Diario, lettura e aggiunta**: modale con le voci in ordine, la più recente evidenziata, Cmd/Ctrl+Invio
+- [x] **2.11 · Diario, lettura e aggiunta**: modale con le voci in ordine, la più recente evidenziata, Cmd/Ctrl+Invio
 - [ ] **2.12 · Diario, modifica ed eliminazione** delle voci ("modificata")
 - [ ] **2.13 · Sfondo doodle** a tema casa (`npm run sfondo`)
 - [ ] **2.14 · "Installa l'app"** nel menu, come Grocery

@@ -94,7 +94,12 @@ export function useAttivita() {
     [ricarica],
   )
 
+  /** Il diario ha (o non ha più) voci: l'icona nell'elenco lo mostra. */
+  const segnaDiario = useCallback((id: number, haDiario: boolean) => {
+    aggiorna((elenco) => elenco.map((a) => (a.id === id ? { ...a, ha_diario: haDiario } : a)))
+  }, [])
+
   const chiudiAvviso = useCallback(() => setAvviso(null), [])
 
-  return { stato, ricarica, crea, modifica, rinominaProgetto, elimina, avviso, chiudiAvviso }
+  return { stato, ricarica, crea, modifica, rinominaProgetto, elimina, segnaDiario, avviso, chiudiAvviso }
 }

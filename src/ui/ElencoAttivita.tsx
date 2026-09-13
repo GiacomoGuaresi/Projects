@@ -1,4 +1,4 @@
-import { FileText, Trash2 } from 'lucide-react'
+import { BookOpen, FileText, Trash2 } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import type { Attivita, Modifica } from '../dominio/tipi'
 import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
@@ -12,6 +12,7 @@ export interface AzioniAttivita {
   /** Chiede conferma prima di eliminare. */
   elimina: (attivita: Attivita) => void
   apriDescrizione: (attivita: Attivita) => void
+  apriDiario: (attivita: Attivita) => void
 }
 
 interface Props {
@@ -28,8 +29,6 @@ const icona = 'grid size-8 shrink-0 place-items-center rounded-lg'
  * Le attività come tabella da desktop (da 1280px, dove le colonne ci stanno) e
  * come card sotto (doc/08-interfaccia.md, "Riga e card"), con la modifica
  * inline di tutti i campi e le azioni.
- *
- * Il diario arriva con lo step 2.11 (doc/07-roadmap.md).
  */
 export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false }: Props) {
   const campi = (a: Attivita) => ({
@@ -64,6 +63,16 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
         >
           <FileText className="size-4" aria-hidden="true" />
         </button>
+        {/* Evidenziata se il diario ha delle voci. */}
+        <button
+          type="button"
+          aria-label="Diario"
+          title="Diario"
+          className={`${icona} ${a.ha_diario ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
+          onClick={() => azioni.apriDiario(a)}
+        >
+          <BookOpen className="size-4" aria-hidden="true" />
+        </button>
         {conElimina && (
           <button
             type="button"
@@ -91,7 +100,7 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
               <th className="w-40 px-3 py-2 font-medium">Stato</th>
               <th className="w-40 px-3 py-2 font-medium">Priorità</th>
               <th className="w-56 px-3 py-2 font-medium">Avanzamento</th>
-              <th className={`${conElimina ? 'w-24' : 'w-14'} px-3 py-2`}>
+              <th className={`${conElimina ? 'w-32' : 'w-24'} px-3 py-2`}>
                 <span className="sr-only">Azioni</span>
               </th>
             </tr>

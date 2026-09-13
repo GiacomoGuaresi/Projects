@@ -4,15 +4,10 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
+import { fallita } from './errore'
 
 /** Una riga della tabella: la vista `attivita_elenco` aggiunge `ha_diario`. */
 export type RigaAttivita = Omit<Attivita, 'ha_diario'>
-
-/** Un errore di Supabase, con un messaggio che dice cosa non è riuscito. */
-function fallita(cosa: string, errore: { message: string; code?: string }): Error {
-  console.error(cosa, errore)
-  return new Error(`${cosa}: ${errore.message}`, { cause: errore })
-}
 
 export class AttivitaSupabase {
   constructor(private readonly client: SupabaseClient) {}
