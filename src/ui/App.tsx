@@ -10,6 +10,7 @@ import { DialogoProgetto } from './DialogoProgetto'
 import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
 import { ModaleNuova } from './ModaleNuova'
+import { PaginaAttivita } from './PaginaAttivita'
 import { useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 
@@ -18,8 +19,8 @@ import { useAttivita, type StatoElenco } from './useAttivita'
  * da bordo a bordo con ☰ a sinistra e + a destra, menu laterale, contenuto
  * largo al massimo 1200px. Da 1024px il menu è una colonna fissa e ☰ sparisce.
  *
- * Step 2.7 (doc/07-roadmap.md): dashboard con modifica inline, cambio del
- * progetto e "Nuova attività". La pagina Attività è ancora vuota.
+ * Qui stanno anche i dialoghi che partono dalle righe: conferma di "Completo",
+ * "solo questa / tutte" sul progetto, conferma dell'eliminazione.
  */
 export function App() {
   const rotta = useRotta()
@@ -29,8 +30,9 @@ export function App() {
   const [cambio, setCambio] = useState<{ attivita: Attivita; da: string; a: string | null; quante: number } | null>(
     null,
   )
+  const [daEliminare, setDaEliminare] = useState<Attivita | null>(null)
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
-  const { stato, ricarica, crea, modifica, rinominaProgetto, avviso, chiudiAvviso } = useAttivita()
+  const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, avviso, chiudiAvviso } = useAttivita()
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
 
   const azioni: AzioniAttivita = {
@@ -48,6 +50,7 @@ export function App() {
       if (esito.tipo === 'salva') void modifica(attivita.id, { progetto: esito.progetto })
       if (esito.tipo === 'chiedi') setCambio({ attivita, da: esito.da, a: esito.a, quante: esito.quante })
     },
+    elimina: setDaEliminare,
   }
 
   return (
@@ -91,10 +94,9 @@ export function App() {
           </ConAttivita>
         )}
         {rotta === 'attivita' && (
-          <>
-            <h2 className="mb-3 text-lg font-semibold">Attività</h2>
-            <p className="text-testo-tenue">Pagina vuota: il contenuto arriva con lo step 2.8.</p>
-          </>
+          <ConAttivita stato={stato} onRiprova={ricarica}>
+            {(attivita) => <PaginaAttivita attivita={attivita} progetti={progetti} azioni={azioni} />}
+          </ConAttivita>
         )}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
@@ -129,6 +131,23 @@ export function App() {
             setCambio(null)
           }}
         />
+      )}
+      {daEliminare && (
+        <Conferma
+          titolo="Eliminare l'attività?"
+          conferma="Elimina"
+          pericolo
+          onAnnulla={() => setDaEliminare(null)}
+          onConferma={() => {
+            void elimina(daEliminare.id)
+            setDaEliminare(null)
+          }}
+        >
+          <p>
+            Eliminare <strong>{titoloSenzaTag(daEliminare.titolo) || daEliminare.titolo}</strong>? Si perdono anche
+            descrizione e diario, e non si può tornare indietro.
+          </p>
+        </Conferma>
       )}
       {avviso && <Avviso messaggio={avviso} onChiudi={chiudiAvviso} />}
     </div>

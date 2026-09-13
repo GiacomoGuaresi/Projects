@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import type { Attivita, Modifica } from '../dominio/tipi'
 import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
@@ -8,12 +9,16 @@ export interface AzioniAttivita {
   modifica: (attivita: Attivita, modifica: Modifica) => void
   /** Il testo scritto nel campo progetto. */
   cambiaProgetto: (attivita: Attivita, testo: string) => void
+  /** Chiede conferma prima di eliminare. */
+  elimina: (attivita: Attivita) => void
 }
 
 interface Props {
   attivita: readonly Attivita[]
   progetti: readonly ProgettoInUso[]
   azioni: AzioniAttivita
+  /** Il pulsante elimina c'è solo nella pagina Attività, non in dashboard. */
+  conElimina?: boolean
 }
 
 /**
@@ -21,10 +26,9 @@ interface Props {
  * come card sotto (doc/08-interfaccia.md, "Riga e card"), con la modifica
  * inline di tutti i campi.
  *
- * Le azioni (descrizione, diario, elimina) arrivano con gli step successivi
- * (doc/07-roadmap.md).
+ * Descrizione e diario arrivano con gli step successivi (doc/07-roadmap.md).
  */
-export function ElencoAttivita({ attivita, progetti, azioni }: Props) {
+export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false }: Props) {
   const campi = (a: Attivita) => ({
     progetto: (
       <CampoProgetto
@@ -45,6 +49,17 @@ export function ElencoAttivita({ attivita, progetti, azioni }: Props) {
         onSalva={(avanzamento) => azioni.modifica(a, { avanzamento })}
       />
     ),
+    elimina: conElimina && (
+      <button
+        type="button"
+        aria-label="Elimina"
+        title="Elimina"
+        className="grid size-8 shrink-0 place-items-center rounded-lg text-testo-tenue hover:bg-fondo hover:text-pericolo"
+        onClick={() => azioni.elimina(a)}
+      >
+        <Trash2 className="size-4" aria-hidden="true" />
+      </button>
+    ),
   })
 
   return (
@@ -59,6 +74,11 @@ export function ElencoAttivita({ attivita, progetti, azioni }: Props) {
               <th className="w-40 px-3 py-2 font-medium">Stato</th>
               <th className="w-40 px-3 py-2 font-medium">Priorità</th>
               <th className="w-56 px-3 py-2 font-medium">Avanzamento</th>
+              {conElimina && (
+                <th className="w-12 px-3 py-2">
+                  <span className="sr-only">Azioni</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-bordo">
@@ -71,6 +91,7 @@ export function ElencoAttivita({ attivita, progetti, azioni }: Props) {
                   <td className="px-3 py-1.5">{c.stato}</td>
                   <td className="px-3 py-1.5">{c.priorita}</td>
                   <td className="px-3 py-1.5">{c.avanzamento}</td>
+                  {conElimina && <td className="px-2 py-1.5">{c.elimina}</td>}
                 </tr>
               )
             })}
@@ -83,7 +104,10 @@ export function ElencoAttivita({ attivita, progetti, azioni }: Props) {
           const c = campi(a)
           return (
             <li key={a.id} className="flex flex-col gap-1.5 rounded-[11px] border border-bordo bg-white p-3">
-              <div className="text-xs text-testo-tenue">{c.progetto}</div>
+              <div className="flex items-center gap-2 text-xs text-testo-tenue">
+                <div className="min-w-0 flex-1">{c.progetto}</div>
+                {c.elimina}
+              </div>
               <div className="font-medium">{c.titolo}</div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 {c.stato}

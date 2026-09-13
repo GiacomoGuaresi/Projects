@@ -1,9 +1,11 @@
 import { useId, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { sezioniDashboard, type SezioneDashboard } from '../dominio/ordinamento'
+import { pagina } from '../dominio/paginazione'
 import type { ProgettoInUso } from '../dominio/progetto'
 import type { Attivita } from '../dominio/tipi'
 import { ElencoAttivita, type AzioniAttivita } from './ElencoAttivita'
+import { Paginazione } from './Paginazione'
 
 interface Props {
   attivita: readonly Attivita[]
@@ -11,9 +13,12 @@ interface Props {
   azioni: AzioniAttivita
 }
 
+/** Righe per pagina in ogni sezione (doc/08-interfaccia.md). */
+const PER_SEZIONE = 50
+
 /**
  * La dashboard (doc/08-interfaccia.md): le attività aperte in tre sezioni
- * collassabili, "In corso" aperta e le altre chiuse.
+ * collassabili, "In corso" aperta e le altre chiuse, 50 righe per pagina.
  */
 export function Dashboard({ attivita, progetti, azioni }: Props) {
   return (
@@ -27,7 +32,9 @@ export function Dashboard({ attivita, progetti, azioni }: Props) {
 
 function Sezione({ sezione, progetti, azioni }: Omit<Props, 'attivita'> & { sezione: SezioneDashboard }) {
   const [aperta, setAperta] = useState(sezione.apertaDiDefault)
+  const [numero, setNumero] = useState(1)
   const contenuto = useId()
+  const corrente = pagina(sezione.attivita, numero, PER_SEZIONE)
 
   return (
     <section>
@@ -46,11 +53,14 @@ function Sezione({ sezione, progetti, azioni }: Omit<Props, 'attivita'> & { sezi
           {sezione.titolo} <span className="font-normal text-testo-tenue">({sezione.attivita.length})</span>
         </button>
       </h2>
-      <div id={contenuto} hidden={!aperta} className="pt-1">
+      <div id={contenuto} hidden={!aperta} className="flex flex-col gap-2 pt-1">
         {sezione.attivita.length === 0 ? (
           <p className="px-2 py-3 text-testo-tenue">Nessuna attività.</p>
         ) : (
-          <ElencoAttivita attivita={sezione.attivita} progetti={progetti} azioni={azioni} />
+          <>
+            <ElencoAttivita attivita={corrente.elementi} progetti={progetti} azioni={azioni} />
+            {corrente.pagine > 1 && <Paginazione pagina={corrente} onPagina={setNumero} />}
+          </>
         )}
       </div>
     </section>

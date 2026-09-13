@@ -80,7 +80,21 @@ export function useAttivita() {
     [ricarica],
   )
 
+  /** Toglie subito l'attività dall'elenco; se non riesce avvisa e rilegge tutto. */
+  const elimina = useCallback(
+    async (id: number) => {
+      aggiorna((elenco) => elenco.filter((a) => a.id !== id))
+      try {
+        await attivita().elimina(id)
+      } catch (errore) {
+        setAvviso((errore as Error).message)
+        void ricarica()
+      }
+    },
+    [ricarica],
+  )
+
   const chiudiAvviso = useCallback(() => setAvviso(null), [])
 
-  return { stato, ricarica, crea, modifica, rinominaProgetto, avviso, chiudiAvviso }
+  return { stato, ricarica, crea, modifica, rinominaProgetto, elimina, avviso, chiudiAvviso }
 }

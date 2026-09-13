@@ -30,8 +30,8 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 - [x] **2.5 · Nuova attività**: modale con titolo, progetto, stato, priorità; dal + e dal menu
 - [x] **2.6 · Modifica inline**: titolo, stato (conferma per *Completo*), priorità, avanzamento
 - [x] **2.7 · Cambio del progetto**: campo con suggerimenti e dialogo "solo questa / tutte"
-- [ ] **2.8 · Pagina Attività**: elenco completo, elimina con conferma
-- [ ] **2.9 · Filtri**: testo, stato, priorità, progetto, "Mostra completate", *Azzera*, paginazione 25/50/100 (e 50 per sezione in dashboard)
+- [x] **2.8 · Pagina Attività**: elenco completo, elimina con conferma
+- [x] **2.9 · Filtri**: testo, stato, priorità, progetto, "Mostra completate", *Azzera*, paginazione 25/50/100 (e 50 per sezione in dashboard)
 - [ ] **2.10 · Descrizione**: modale Markdown con checklist, modifica; descrizione e aiuto sintassi nel modale "Nuova attività"
 - [ ] **2.11 · Diario, lettura e aggiunta**: modale con le voci in ordine, la più recente evidenziata, Cmd/Ctrl+Invio
 - [ ] **2.12 · Diario, modifica ed eliminazione** delle voci ("modificata")
