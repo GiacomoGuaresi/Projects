@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { attivita } from '../dati'
-import type { Attivita, NuovaAttivita } from '../dominio/tipi'
+import { applicaModifica } from '../dominio/attivita'
+import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 
 export type StatoElenco =
   | { fase: 'caricamento' }
@@ -14,6 +15,8 @@ export type StatoElenco =
  */
 export function useAttivita() {
   const [stato, setStato] = useState<StatoElenco>({ fase: 'caricamento' })
+  /** Una modifica non salvata, da mostrare a chi usa l'app. */
+  const [avviso, setAvviso] = useState<string | null>(null)
 
   const ricarica = useCallback(async () => {
     setStato((prima) => (prima.fase === 'pronto' ? prima : { fase: 'caricamento' }))
@@ -28,12 +31,35 @@ export function useAttivita() {
     void ricarica()
   }, [ricarica])
 
+  const aggiorna = (cambia: (elenco: Attivita[]) => Attivita[]) =>
+    setStato((prima) => (prima.fase === 'pronto' ? { ...prima, attivita: cambia(prima.attivita) } : prima))
+
   /** Crea l'attività; se non riesce lancia l'errore, e chi chiama lo mostra. */
   const crea = useCallback(async (nuova: NuovaAttivita) => {
     const creata = await attivita().crea(nuova)
-    setStato((prima) => (prima.fase === 'pronto' ? { ...prima, attivita: [...prima.attivita, creata] } : prima))
+    aggiorna((elenco) => [...elenco, creata])
     return creata
   }, [])
 
-  return { stato, ricarica, crea }
+  /**
+   * Mostra subito il risultato (con le regole del database), poi lo sostituisce
+   * con la riga salvata. Se il salvataggio non riesce avvisa e rilegge tutto.
+   */
+  const modifica = useCallback(
+    async (id: number, cambi: Modifica) => {
+      aggiorna((elenco) => elenco.map((a) => (a.id === id ? applicaModifica(a, cambi) : a)))
+      try {
+        const riga = await attivita().modifica(id, cambi)
+        aggiorna((elenco) => elenco.map((a) => (a.id === id ? { ...riga, ha_diario: a.ha_diario } : a)))
+      } catch (errore) {
+        setAvviso((errore as Error).message)
+        void ricarica()
+      }
+    },
+    [ricarica],
+  )
+
+  const chiudiAvviso = useCallback(() => setAvviso(null), [])
+
+  return { stato, ricarica, crea, modifica, avviso, chiudiAvviso }
 }
