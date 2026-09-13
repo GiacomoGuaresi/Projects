@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { LayoutDashboard, ListChecks, X, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Plus, X, type LucideIcon } from 'lucide-react'
 import { indirizzi, type Rotta } from './rotta'
 
 /** Da questa larghezza il menu è sempre aperto: la stessa soglia di `lg:`. */
@@ -14,6 +14,8 @@ interface Props {
   aperto: boolean
   corrente: Rotta
   onChiudi: () => void
+  /** L'azione "Nuova attività", staccata dalle sezioni. */
+  onNuova: () => void
 }
 
 /**
@@ -23,7 +25,7 @@ interface Props {
  * sotto non scorre, e alla chiusura il fuoco torna dov'era. Da desktop è una
  * colonna fissa, sempre visibile.
  */
-export function MenuLaterale({ aperto, corrente, onChiudi }: Props) {
+export function MenuLaterale({ aperto, corrente, onChiudi, onNuova }: Props) {
   const pannello = useRef<HTMLElement>(null)
 
   // Se la finestra si allarga col menu aperto lo si chiude, così la pagina
@@ -102,6 +104,15 @@ export function MenuLaterale({ aperto, corrente, onChiudi }: Props) {
             </li>
           ))}
         </ul>
+        <hr className="mx-1 my-2 border-bordo" />
+        <button
+          type="button"
+          onClick={onNuova}
+          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left font-semibold text-salvia-scura hover:bg-fondo active:bg-bordo"
+        >
+          <Plus className="size-[18px]" aria-hidden="true" />
+          Nuova attività
+        </button>
       </nav>
     </>
   )

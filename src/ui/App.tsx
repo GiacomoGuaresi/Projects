@@ -1,8 +1,10 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { ListChecks, Menu, Plus } from 'lucide-react'
+import { progettiInUso } from '../dominio/progetto'
 import type { Attivita } from '../dominio/tipi'
 import { Dashboard } from './Dashboard'
 import { MenuLaterale } from './MenuLaterale'
+import { ModaleNuova } from './ModaleNuova'
 import { useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 
@@ -11,14 +13,16 @@ import { useAttivita, type StatoElenco } from './useAttivita'
  * da bordo a bordo con ☰ a sinistra e + a destra, menu laterale, contenuto
  * largo al massimo 1200px. Da 1024px il menu è una colonna fissa e ☰ sparisce.
  *
- * Step 2.4 (doc/07-roadmap.md): dashboard in sola lettura. La pagina Attività
- * è ancora vuota e il + non apre nulla (step 2.5).
+ * Step 2.5 (doc/07-roadmap.md): dashboard in sola lettura e "Nuova attività".
+ * La pagina Attività è ancora vuota.
  */
 export function App() {
   const rotta = useRotta()
   const [menuAperto, setMenuAperto] = useState(false)
+  const [nuovaAperta, setNuovaAperta] = useState(false)
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
-  const { stato, ricarica } = useAttivita()
+  const { stato, ricarica, crea } = useAttivita()
+  const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
 
   return (
     <div className="flex min-h-dvh flex-col lg:grid lg:grid-cols-[256px_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
@@ -36,17 +40,24 @@ export function App() {
         <ListChecks className="size-[22px] shrink-0" aria-hidden="true" />
         <h1 className="ml-1 text-lg font-semibold tracking-[0.01em]">Projects</h1>
         <button
-          className="ml-auto flex min-h-9 items-center gap-1.5 rounded-[11px] px-2.5 font-semibold hover:bg-salvia-scura active:bg-salvia-scura disabled:opacity-60 disabled:hover:bg-transparent"
+          className="ml-auto flex min-h-9 items-center gap-1.5 rounded-[11px] px-2.5 font-semibold hover:bg-salvia-scura active:bg-salvia-scura"
           type="button"
           aria-label="Nuova attività"
-          title="Arriva con lo step 2.5"
-          disabled
+          onClick={() => setNuovaAperta(true)}
         >
           <Plus className="size-[22px]" aria-hidden="true" />
           <span className="hidden lg:inline">Nuova attività</span>
         </button>
       </header>
-      <MenuLaterale aperto={menuAperto} corrente={rotta} onChiudi={chiudiMenu} />
+      <MenuLaterale
+        aperto={menuAperto}
+        corrente={rotta}
+        onChiudi={chiudiMenu}
+        onNuova={() => {
+          setMenuAperto(false)
+          setNuovaAperta(true)
+        }}
+      />
       <main className="mx-auto w-full max-w-[1200px] flex-1 p-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:col-start-2">
         {rotta === 'dashboard' && (
           <ConAttivita stato={stato} onRiprova={ricarica}>
@@ -60,6 +71,7 @@ export function App() {
           </>
         )}
       </main>
+      {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
     </div>
   )
 }

@@ -24,10 +24,10 @@
 Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **prova in locale** e un commit. Si passa al successivo solo dopo la prova.
 
 - [x] **2.1 · Dominio puro con test**: tag, icona e suggerimenti del progetto, "solo questa / tutte", ordinamento e sezioni, filtri, paginazione, checklist Markdown (`src/dominio/`)
-- [ ] **2.2 · Dati**: query tipizzate su `attivita_elenco` (elenco, crea, modifica, elimina, rinomina progetto). Prova: la verifica provvisoria della Fase 1 elenca i titoli veri
-- [ ] **2.3 · Guscio**: intestazione salvia con ☰ e +, menu laterale (Dashboard, Attività), routing con hash, pagine vuote. Prova: navigazione su mobile e desktop
-- [ ] **2.4 · Dashboard in sola lettura**: tre sezioni collassabili con conteggio; riga (desktop) e card (mobile) con icona del progetto, titolo con badge dei tag, stato, stelle, barra
-- [ ] **2.5 · Nuova attività**: modale con titolo, progetto, stato, priorità; dal + e dal menu
+- [x] **2.2 · Dati**: query tipizzate su `attivita_elenco` (elenco, crea, modifica, elimina, rinomina progetto). Prova: la verifica provvisoria della Fase 1 elenca i titoli veri
+- [x] **2.3 · Guscio**: intestazione salvia con ☰ e +, menu laterale (Dashboard, Attività), routing con hash, pagine vuote. Prova: navigazione su mobile e desktop
+- [x] **2.4 · Dashboard in sola lettura**: tre sezioni collassabili con conteggio; riga (desktop) e card (mobile) con icona del progetto, titolo con badge dei tag, stato, stelle, barra
+- [x] **2.5 · Nuova attività**: modale con titolo, progetto, stato, priorità; dal + e dal menu
 - [ ] **2.6 · Modifica inline**: titolo, stato (conferma per *Completo*), priorità, avanzamento
 - [ ] **2.7 · Cambio del progetto**: campo con suggerimenti e dialogo "solo questa / tutte"
 - [ ] **2.8 · Pagina Attività**: elenco completo, elimina con conferma
