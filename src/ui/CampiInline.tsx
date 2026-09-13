@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Check } from 'lucide-react'
+import type { ProgettoInUso } from '../dominio/progetto'
+import { InputProgetto } from './InputProgetto'
+import { ProgettoConIcona } from './ProgettoConIcona'
 import { TitoloConTag } from './TitoloConTag'
 
 const campo =
@@ -54,6 +57,60 @@ export function CampoTitolo({ titolo, onSalva }: { titolo: string; onSalva: (tit
           chiudi(false)
         }
       }}
+    />
+  )
+}
+
+interface CampoProgettoProps {
+  progetto: string | null
+  progetti: readonly ProgettoInUso[]
+  /** Il testo scritto: decide chi riceve se salvare o chiedere "solo questa / tutte". */
+  onSalva: (testo: string) => void
+}
+
+/**
+ * Il progetto: clic → campo con suggerimenti; scegliere un suggerimento, Invio
+ * o clic fuori salvano, Esc annulla.
+ */
+export function CampoProgetto({ progetto, progetti, onSalva }: CampoProgettoProps) {
+  const [bozza, setBozza] = useState<string | null>(null)
+  const aperto = useRef(false)
+
+  if (bozza === null) {
+    return (
+      <button
+        type="button"
+        title="Modifica il progetto"
+        className="-mx-1 flex w-[calc(100%+8px)] min-w-0 rounded-lg px-1 py-0.5 text-left hover:bg-fondo"
+        onClick={() => {
+          aperto.current = true
+          setBozza(progetto ?? '')
+        }}
+      >
+        <ProgettoConIcona progetto={progetto} />
+      </button>
+    )
+  }
+
+  const chiudi = (salva: boolean, testo: string) => {
+    if (!aperto.current) return
+    aperto.current = false
+    setBozza(null)
+    if (salva) onSalva(testo)
+  }
+
+  return (
+    <InputProgetto
+      etichetta="Progetto"
+      className={`${campo} w-full`}
+      autoFocus
+      valore={bozza}
+      onCambia={setBozza}
+      progetti={progetti}
+      onScegli={(scelto) => chiudi(true, scelto)}
+      onConferma={(testo) => chiudi(true, testo)}
+      onAnnulla={() => chiudi(false, bozza)}
+      onBlur={() => chiudi(true, bozza)}
     />
   )
 }

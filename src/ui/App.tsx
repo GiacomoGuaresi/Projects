@@ -1,11 +1,13 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { ListChecks, Menu, Plus } from 'lucide-react'
-import { progettiInUso } from '../dominio/progetto'
+import { cambioProgetto, progettiInUso } from '../dominio/progetto'
 import { titoloSenzaTag } from '../dominio/tag'
 import type { Attivita, Modifica } from '../dominio/tipi'
 import { Avviso } from './Avviso'
 import { Conferma } from './Conferma'
 import { Dashboard } from './Dashboard'
+import { DialogoProgetto } from './DialogoProgetto'
+import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
 import { ModaleNuova } from './ModaleNuova'
 import { useRotta } from './rotta'
@@ -16,25 +18,36 @@ import { useAttivita, type StatoElenco } from './useAttivita'
  * da bordo a bordo con ☰ a sinistra e + a destra, menu laterale, contenuto
  * largo al massimo 1200px. Da 1024px il menu è una colonna fissa e ☰ sparisce.
  *
- * Step 2.6 (doc/07-roadmap.md): dashboard con modifica inline e "Nuova
- * attività". La pagina Attività è ancora vuota.
+ * Step 2.7 (doc/07-roadmap.md): dashboard con modifica inline, cambio del
+ * progetto e "Nuova attività". La pagina Attività è ancora vuota.
  */
 export function App() {
   const rotta = useRotta()
   const [menuAperto, setMenuAperto] = useState(false)
   const [nuovaAperta, setNuovaAperta] = useState(false)
   const [daCompletare, setDaCompletare] = useState<{ attivita: Attivita; modifica: Modifica } | null>(null)
+  const [cambio, setCambio] = useState<{ attivita: Attivita; da: string; a: string | null; quante: number } | null>(
+    null,
+  )
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
-  const { stato, ricarica, crea, modifica, avviso, chiudiAvviso } = useAttivita()
+  const { stato, ricarica, crea, modifica, rinominaProgetto, avviso, chiudiAvviso } = useAttivita()
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
 
-  /** Passare a "Completo" chiede conferma; il resto si salva subito. */
-  const chiediModifica = (attivita: Attivita, cambi: Modifica) => {
-    if (cambi.stato === 'completo' && attivita.stato !== 'completo') {
-      setDaCompletare({ attivita, modifica: cambi })
-    } else {
-      void modifica(attivita.id, cambi)
-    }
+  const azioni: AzioniAttivita = {
+    /** Passare a "Completo" chiede conferma; il resto si salva subito. */
+    modifica: (attivita, cambi) => {
+      if (cambi.stato === 'completo' && attivita.stato !== 'completo') {
+        setDaCompletare({ attivita, modifica: cambi })
+      } else {
+        void modifica(attivita.id, cambi)
+      }
+    },
+    /** Salva subito, oppure chiede "solo questa / tutte" (doc/08, "Cambio del progetto"). */
+    cambiaProgetto: (attivita, testo) => {
+      const esito = cambioProgetto(attivita.progetto, testo, progetti)
+      if (esito.tipo === 'salva') void modifica(attivita.id, { progetto: esito.progetto })
+      if (esito.tipo === 'chiedi') setCambio({ attivita, da: esito.da, a: esito.a, quante: esito.quante })
+    },
   }
 
   return (
@@ -74,7 +87,7 @@ export function App() {
       <main className="mx-auto w-full max-w-[1200px] flex-1 p-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:col-start-2">
         {rotta === 'dashboard' && (
           <ConAttivita stato={stato} onRiprova={ricarica}>
-            {(attivita) => <Dashboard attivita={attivita} onModifica={chiediModifica} />}
+            {(attivita) => <Dashboard attivita={attivita} progetti={progetti} azioni={azioni} />}
           </ConAttivita>
         )}
         {rotta === 'attivita' && (
@@ -100,6 +113,22 @@ export function App() {
             come completa? L'avanzamento va al 100% e l'attività esce dalla dashboard.
           </p>
         </Conferma>
+      )}
+      {cambio && (
+        <DialogoProgetto
+          da={cambio.da}
+          a={cambio.a}
+          quante={cambio.quante}
+          onAnnulla={() => setCambio(null)}
+          onSoloQuesta={() => {
+            void modifica(cambio.attivita.id, { progetto: cambio.a })
+            setCambio(null)
+          }}
+          onTutte={() => {
+            void rinominaProgetto(cambio.da, cambio.a)
+            setCambio(null)
+          }}
+        />
       )}
       {avviso && <Avviso messaggio={avviso} onChiudi={chiudiAvviso} />}
     </div>

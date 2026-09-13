@@ -1,29 +1,31 @@
 import { useId, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { sezioniDashboard, type SezioneDashboard } from '../dominio/ordinamento'
-import type { Attivita, Modifica } from '../dominio/tipi'
-import { ElencoAttivita } from './ElencoAttivita'
+import type { ProgettoInUso } from '../dominio/progetto'
+import type { Attivita } from '../dominio/tipi'
+import { ElencoAttivita, type AzioniAttivita } from './ElencoAttivita'
 
 interface Props {
   attivita: readonly Attivita[]
-  onModifica: (attivita: Attivita, modifica: Modifica) => void
+  progetti: readonly ProgettoInUso[]
+  azioni: AzioniAttivita
 }
 
 /**
  * La dashboard (doc/08-interfaccia.md): le attività aperte in tre sezioni
  * collassabili, "In corso" aperta e le altre chiuse.
  */
-export function Dashboard({ attivita, onModifica }: Props) {
+export function Dashboard({ attivita, progetti, azioni }: Props) {
   return (
     <div className="flex flex-col gap-3">
       {sezioniDashboard(attivita).map((sezione) => (
-        <Sezione key={sezione.stato} sezione={sezione} onModifica={onModifica} />
+        <Sezione key={sezione.stato} sezione={sezione} progetti={progetti} azioni={azioni} />
       ))}
     </div>
   )
 }
 
-function Sezione({ sezione, onModifica }: { sezione: SezioneDashboard; onModifica: Props['onModifica'] }) {
+function Sezione({ sezione, progetti, azioni }: Omit<Props, 'attivita'> & { sezione: SezioneDashboard }) {
   const [aperta, setAperta] = useState(sezione.apertaDiDefault)
   const contenuto = useId()
 
@@ -48,7 +50,7 @@ function Sezione({ sezione, onModifica }: { sezione: SezioneDashboard; onModific
         {sezione.attivita.length === 0 ? (
           <p className="px-2 py-3 text-testo-tenue">Nessuna attività.</p>
         ) : (
-          <ElencoAttivita attivita={sezione.attivita} onModifica={onModifica} />
+          <ElencoAttivita attivita={sezione.attivita} progetti={progetti} azioni={azioni} />
         )}
       </div>
     </section>

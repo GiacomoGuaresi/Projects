@@ -2,6 +2,7 @@ import { useId, useRef, useState, type FormEvent } from 'react'
 import { normalizzaProgetto, type ProgettoInUso } from '../dominio/progetto'
 import { TAG, trovaTag, pezziTitolo } from '../dominio/tag'
 import type { Attivita, NuovaAttivita, Stato } from '../dominio/tipi'
+import { InputProgetto } from './InputProgetto'
 import { Modale } from './Modale'
 import { SceltaPriorita, SceltaStato } from './Scelte'
 import { TitoloConTag } from './TitoloConTag'
@@ -118,19 +119,13 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
           <label className="text-xs text-testo-tenue" htmlFor={`${id}-progetto`}>
             Progetto <span className="font-normal">(facoltativo)</span>
           </label>
-          <input
+          <InputProgetto
             id={`${id}-progetto`}
             className={campo}
-            list={`${id}-progetti`}
-            autoComplete="off"
-            value={progetto}
-            onChange={(e) => setProgetto(e.target.value)}
+            valore={progetto}
+            onCambia={setProgetto}
+            progetti={progetti}
           />
-          <datalist id={`${id}-progetti`}>
-            {progetti.map((p) => (
-              <option key={p.progetto} value={p.progetto} />
-            ))}
-          </datalist>
         </div>
 
         <div className="flex flex-col gap-1.5">

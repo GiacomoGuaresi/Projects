@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { attivita } from '../dati'
 import { applicaModifica } from '../dominio/attivita'
+import { chiaveProgetto } from '../dominio/progetto'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 
 export type StatoElenco =
@@ -59,7 +60,27 @@ export function useAttivita() {
     [ricarica],
   )
 
+  /**
+   * Cambia il progetto a tutte le sue attività, completate comprese (`null` lo
+   * toglie). Si vede subito; poi si rilegge tutto, date di modifica comprese.
+   */
+  const rinominaProgetto = useCallback(
+    async (vecchio: string, nuovo: string | null) => {
+      const chiave = chiaveProgetto(vecchio)
+      aggiorna((elenco) =>
+        elenco.map((a) => (a.progetto !== null && chiaveProgetto(a.progetto) === chiave ? { ...a, progetto: nuovo } : a)),
+      )
+      try {
+        await attivita().rinominaProgetto(vecchio, nuovo)
+      } catch (errore) {
+        setAvviso((errore as Error).message)
+      }
+      await ricarica()
+    },
+    [ricarica],
+  )
+
   const chiudiAvviso = useCallback(() => setAvviso(null), [])
 
-  return { stato, ricarica, crea, modifica, avviso, chiudiAvviso }
+  return { stato, ricarica, crea, modifica, rinominaProgetto, avviso, chiudiAvviso }
 }

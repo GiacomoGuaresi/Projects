@@ -29,7 +29,7 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 - [x] **2.4 · Dashboard in sola lettura**: tre sezioni collassabili con conteggio; riga (desktop) e card (mobile) con icona del progetto, titolo con badge dei tag, stato, stelle, barra
 - [x] **2.5 · Nuova attività**: modale con titolo, progetto, stato, priorità; dal + e dal menu
 - [x] **2.6 · Modifica inline**: titolo, stato (conferma per *Completo*), priorità, avanzamento
-- [ ] **2.7 · Cambio del progetto**: campo con suggerimenti e dialogo "solo questa / tutte"
+- [x] **2.7 · Cambio del progetto**: campo con suggerimenti e dialogo "solo questa / tutte"
 - [ ] **2.8 · Pagina Attività**: elenco completo, elimina con conferma
 - [ ] **2.9 · Filtri**: testo, stato, priorità, progetto, "Mostra completate", *Azzera*, paginazione 25/50/100 (e 50 per sezione in dashboard)
 - [ ] **2.10 · Descrizione**: modale Markdown con checklist, modifica; descrizione e aiuto sintassi nel modale "Nuova attività"
