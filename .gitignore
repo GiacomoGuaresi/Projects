@@ -1,0 +1,23 @@
+# Vecchio progetto: solo riferimento locale, non va pubblicato
+OLD/
+
+# Node
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/

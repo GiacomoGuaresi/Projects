@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+
+/* Palette salvia e verde pastello (doc/08-interfaccia.md). Solo tema chiaro.
+   Font e scala come Grocery, per coerenza tra le due app. */
+@theme {
+  --color-salvia: #587654;
+  --color-salvia-scura: #445d41;
+  --color-salvia-chiara: #7e9f7a;
+  --color-pastello: #d6e8cf;
+  --color-fondo: #f3f8f0;
+  --color-panna: #fffbf6;
+  --color-testo: #2e3a2d;
+  --color-testo-tenue: #6b7a69;
+  --color-bordo: #dde6d8;
+  --color-pericolo: #a8333a;
+
+  --font-sans: 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+  color: var(--color-testo);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+/* I campi di testo restano a 16px: sotto, iOS zooma da solo al tocco. */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
