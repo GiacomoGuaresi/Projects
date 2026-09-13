@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { BookOpen, CircleCheck, Play, Plus, type LucideIcon } from 'lucide-react'
-import { statoSuccessivo } from '../dominio/attivita'
 import { schedeProgetti } from '../dominio/ordinamento'
 import type { Attivita, Modifica, NuovaAttivita, Stato } from '../dominio/tipi'
 import { useInterruttore } from './preferenze'
+import { usePressioneLunga } from './pressioneLunga'
 import { ProgettoConIcona } from './ProgettoConIcona'
-import { infoStati } from './stati'
+import { PulsanteStato } from './PulsanteStato'
 import { TitoloConTag } from './TitoloConTag'
 
 interface Props {
@@ -88,58 +88,15 @@ export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }
               </h3>
               <ul className="divide-y divide-bordo">
                 {/* Il conto resta sul totale anche con gli interruttori che nascondono attività. */}
-                {scheda.visibili.map((a) => {
-                  const { etichetta, icona: Icona, colori } = infoStati[a.stato]
-                  return (
-                    // Un'attività che cambia stato si sposta nella card, con un'animazione breve.
-                    <li key={a.id} className="animate-entra relative flex items-center gap-1 pr-2 pl-1.5">
-                      {/* Il bordo sotto la riga è l'avanzamento: copre la linea divisoria, sparisce al 100%. */}
-                      {a.avanzamento < 100 && (
-                        <span
-                          className="pointer-events-none absolute -bottom-px left-0 z-1 h-0.5 bg-salvia transition-[width] duration-200 motion-reduce:transition-none"
-                          style={{ width: `${a.avanzamento}%` }}
-                          aria-hidden="true"
-                        />
-                      )}
-                      {/* L'icona dello stato lo porta al successivo; passare a Completo chiede conferma. */}
-                      <button
-                        type="button"
-                        aria-label={`${etichetta}: passa a ${infoStati[statoSuccessivo(a.stato)].etichetta}`}
-                        title={`${etichetta} → ${infoStati[statoSuccessivo(a.stato)].etichetta}`}
-                        className="grid size-8 shrink-0 place-items-center rounded-lg hover:bg-fondo active:bg-bordo"
-                        onClick={() => onModifica(a, { stato: statoSuccessivo(a.stato) })}
-                      >
-                        <span className={`grid size-6 place-items-center rounded-md ${colori}`}>
-                          <Icona className="size-3.5" aria-hidden="true" />
-                        </span>
-                      </button>
-                      {/* Il resto della riga apre i dettagli, tranne il pulsante del diario. */}
-                      <button
-                        type="button"
-                        title="Dettagli"
-                        className="flex min-w-0 flex-1 items-center self-stretch rounded-lg px-1 py-1.5 text-left hover:bg-fondo active:bg-bordo"
-                        onClick={() => onDettagli(a)}
-                      >
-                        {/* Completa: grigia e barrata. I pezzi del titolo sono flex item, quindi la riga va su ognuno. */}
-                        <span
-                          className={`min-w-0 flex-1 break-words ${a.stato === 'completo' ? 'text-testo-tenue [&_span]:line-through' : ''}`}
-                        >
-                          <TitoloConTag titolo={a.titolo} />
-                        </span>
-                      </button>
-                      {/* Evidenziato se il diario ha delle voci. */}
-                      <button
-                        type="button"
-                        aria-label="Diario"
-                        title="Diario"
-                        className={`grid size-8 shrink-0 place-items-center rounded-lg ${a.ha_diario ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
-                        onClick={() => onDiario(a)}
-                      >
-                        <BookOpen className="size-4" aria-hidden="true" />
-                      </button>
-                    </li>
-                  )
-                })}
+                {scheda.visibili.map((a) => (
+                  <RigaAttivita
+                    key={a.id}
+                    attivita={a}
+                    onDettagli={onDettagli}
+                    onDiario={onDiario}
+                    onModifica={onModifica}
+                  />
+                ))}
                 <li>
                   {/* Con "In corso" acceso la nuova attività nasce in corso, così resta visibile. */}
                   <AggiuntaRapida
@@ -154,6 +111,118 @@ export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }
         </div>
       )}
     </div>
+  )
+}
+
+/** Ogni tratto del trascinamento vale un multiplo di questo, come il cursore dell'avanzamento. */
+const PASSO_AVANZAMENTO = 5
+
+interface RigaAttivitaProps extends Pick<Props, 'onDettagli' | 'onDiario' | 'onModifica'> {
+  attivita: Attivita
+}
+
+/**
+ * Una riga della card. Tenendo premuto il titolo e trascinando in orizzontale
+ * si cambia l'avanzamento: tutta la larghezza della riga vale 100%, a passi
+ * del 5%, e si salva al rilascio. Non su un'attività completa, ferma al 100%.
+ */
+function RigaAttivita({ attivita: a, onDettagli, onDiario, onModifica }: RigaAttivitaProps) {
+  const [bozza, setBozza] = useState<number | null>(null)
+  const inizio = useRef<{ x: number; valore: number; larghezza: number } | null>(null)
+  const ultimaBozza = useRef<number | null>(null)
+
+  const aggiorna = (valore: number | null) => {
+    ultimaBozza.current = valore
+    setBozza(valore)
+  }
+
+  const { ref, gestori, clicDaIgnorare } = usePressioneLunga<HTMLButtonElement>({
+    disattiva: a.stato === 'completo',
+    onInizio: (x) => {
+      const larghezza = ref.current?.closest('li')?.getBoundingClientRect().width ?? 0
+      if (larghezza <= 0) return
+      inizio.current = { x, valore: a.avanzamento, larghezza }
+      aggiorna(a.avanzamento)
+    },
+    onMuovi: (e) => {
+      const i = inizio.current
+      if (!i) return
+      const grezzo = i.valore + ((e.clientX - i.x) / i.larghezza) * 100
+      const passo = Math.round(grezzo / PASSO_AVANZAMENTO) * PASSO_AVANZAMENTO
+      // Finché il dito non si sposta davvero resta il valore di partenza, anche se non è un multiplo di 5.
+      aggiorna(Math.abs(e.clientX - i.x) < 4 ? i.valore : Math.min(100, Math.max(0, passo)))
+    },
+    onRilascia: () => {
+      const valore = ultimaBozza.current
+      inizio.current = null
+      aggiorna(null)
+      if (valore !== null && valore !== a.avanzamento) onModifica(a, { avanzamento: valore })
+    },
+    onAnnulla: () => {
+      inizio.current = null
+      aggiorna(null)
+    },
+  })
+
+  const avanzamento = bozza ?? a.avanzamento
+
+  return (
+    // Un'attività che cambia stato si sposta nella card, con un'animazione breve.
+    <li className="animate-entra relative flex items-center gap-1 pr-2 pl-1.5">
+      {/* Il bordo sotto la riga è l'avanzamento: copre la linea divisoria, sparisce al 100% (non mentre si trascina). */}
+      {(avanzamento < 100 || bozza !== null) && (
+        <span
+          className={`pointer-events-none absolute -bottom-px left-0 z-1 bg-salvia ${
+            bozza === null ? 'h-0.5 transition-[width] duration-200 motion-reduce:transition-none' : 'h-1'
+          }`}
+          style={{ width: `${avanzamento}%` }}
+          aria-hidden="true"
+        />
+      )}
+      {bozza !== null && (
+        <span
+          className="pointer-events-none absolute -top-7 z-10 -translate-x-1/2 rounded-md bg-salvia-scura px-1.5 py-0.5 text-xs font-semibold text-panna shadow"
+          style={{ left: `clamp(1.5rem, ${bozza}%, 100% - 1.5rem)` }}
+          role="status"
+        >
+          {bozza}%
+        </span>
+      )}
+      {/* Tocco: stato successivo; pressione lunga: menu degli stati. Completo chiede conferma. */}
+      <PulsanteStato stato={a.stato} onScegli={(stato) => onModifica(a, { stato })} />
+      {/* Il resto della riga apre i dettagli, tranne il pulsante del diario. */}
+      <button
+        ref={ref}
+        type="button"
+        title={a.stato === 'completo' ? 'Dettagli' : "Dettagli (tieni premuto e trascina per l'avanzamento)"}
+        className="flex min-w-0 flex-1 touch-manipulation items-center self-stretch rounded-lg px-1 py-1.5 text-left select-none [-webkit-touch-callout:none] hover:bg-fondo active:bg-bordo"
+        {...gestori}
+        // Android apre il menu contestuale con la pressione lunga, interrompendo il trascinamento.
+        onContextMenu={(e) => {
+          if (a.stato !== 'completo') e.preventDefault()
+        }}
+        onClick={() => {
+          if (!clicDaIgnorare()) onDettagli(a)
+        }}
+      >
+        {/* Completa: grigia e barrata. I pezzi del titolo sono flex item, quindi la riga va su ognuno. */}
+        <span
+          className={`min-w-0 flex-1 break-words ${a.stato === 'completo' ? 'text-testo-tenue [&_span]:line-through' : ''}`}
+        >
+          <TitoloConTag titolo={a.titolo} />
+        </span>
+      </button>
+      {/* Evidenziato se il diario ha delle voci. */}
+      <button
+        type="button"
+        aria-label="Diario"
+        title="Diario"
+        className={`grid size-8 shrink-0 place-items-center rounded-lg ${a.ha_diario ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
+        onClick={() => onDiario(a)}
+      >
+        <BookOpen className="size-4" aria-hidden="true" />
+      </button>
+    </li>
   )
 }
 
