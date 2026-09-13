@@ -13,6 +13,31 @@
   --color-testo-tenue: #6b7a69;
   --color-bordo: #dde6d8;
   --color-pericolo: #a8333a;
+  --color-stella: #d9a23a;
+
+  /* Stati dell'attività: fondo e testo (doc/08, "Colori degli stati"). */
+  --color-dafare: #e4eaf0;
+  --color-dafare-testo: #4c5e6e;
+  --color-incorso: #dbe8d8;
+  --color-incorso-testo: #3f5a3c;
+  --color-bloccato: #f4ddd2;
+  --color-bloccato-testo: #93452d;
+  --color-completo: #3d8b4c;
+  --color-completo-testo: #ffffff;
+
+  /* Badge dei tag: fondo e testo (doc/08, "Tag"). */
+  --color-tag-rosso: #f6d9d7;
+  --color-tag-rosso-testo: #9b2f33;
+  --color-tag-sabbia: #efe3cc;
+  --color-tag-sabbia-testo: #7a5f2e;
+  --color-tag-terracotta: #f4ddd2;
+  --color-tag-terracotta-testo: #93452d;
+  --color-tag-giallo: #fbefb8;
+  --color-tag-giallo-testo: #7a6212;
+  --color-tag-viola: #e9def5;
+  --color-tag-viola-testo: #5e3f86;
+  --color-tag-neutro: #eceeea;
+  --color-tag-neutro-testo: #5f665d;
 
   --font-sans: 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
