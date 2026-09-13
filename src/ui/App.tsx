@@ -1,34 +1,33 @@
 import { useEffect, useState } from 'react'
 import { ListChecks } from 'lucide-react'
-import { db } from '../dati'
+import { attivita } from '../dati'
+import { progettiInUso } from '../dominio/progetto'
+import { ordinaAttivita } from '../dominio/ordinamento'
+import type { Attivita } from '../dominio/tipi'
 
 type Verifica =
   | { fase: 'in-corso' }
-  | { fase: 'ok'; attivita: number; progetti: number }
+  | { fase: 'ok'; attivita: Attivita[] }
   | { fase: 'errore'; messaggio: string }
 
 /**
- * Guscio provvisorio della Fase 1 (doc/07-roadmap.md): l'intestazione e una
- * verifica del collegamento allo schema `projects`. Dashboard, pagina Attività
- * e menu arrivano con la Fase 2.
+ * Guscio provvisorio (doc/07-roadmap.md, step 2.2): l'intestazione e l'elenco
+ * grezzo delle attività lette dallo schema `projects`. Menu e pagine arrivano
+ * con gli step successivi.
  */
 export function App() {
   const [verifica, setVerifica] = useState<Verifica>({ fase: 'in-corso' })
 
   useEffect(() => {
     let vivo = true
-    Promise.all([
-      db().from('attivita').select('id', { count: 'exact', head: true }),
-      db().from('progetti').select('progetto', { count: 'exact', head: true }),
-    ]).then(([attivita, progetti]) => {
-      if (!vivo) return
-      const errore = attivita.error ?? progetti.error
-      setVerifica(
-        errore
-          ? { fase: 'errore', messaggio: `${errore.code ?? ''} ${errore.message}`.trim() }
-          : { fase: 'ok', attivita: attivita.count ?? 0, progetti: progetti.count ?? 0 },
-      )
-    })
+    attivita()
+      .elenco()
+      .then((elenco) => {
+        if (vivo) setVerifica({ fase: 'ok', attivita: ordinaAttivita(elenco) })
+      })
+      .catch((errore: Error) => {
+        if (vivo) setVerifica({ fase: 'errore', messaggio: errore.message })
+      })
     return () => {
       vivo = false
     }
@@ -42,18 +41,26 @@ export function App() {
       </header>
       <main className="mx-auto w-full max-w-[1200px] flex-1 p-3">
         <section className="rounded-[11px] border border-bordo bg-white p-4">
-          <h2 className="mb-2 font-semibold">Verifica del collegamento</h2>
-          {verifica.fase === 'in-corso' && <p className="text-testo-tenue">Controllo…</p>}
-          {verifica.fase === 'ok' && (
-            <p>
-              Schema <code>projects</code> raggiungibile: {verifica.attivita} attività,{' '}
-              {verifica.progetti} progetti.
-            </p>
-          )}
+          <h2 className="mb-2 font-semibold">Verifica dei dati</h2>
+          {verifica.fase === 'in-corso' && <p className="text-testo-tenue">Carico…</p>}
           {verifica.fase === 'errore' && (
             <p className="text-pericolo" role="alert">
-              Schema <code>projects</code> non raggiungibile: {verifica.messaggio}
+              {verifica.messaggio}
             </p>
+          )}
+          {verifica.fase === 'ok' && (
+            <>
+              <p className="mb-2 text-testo-tenue">
+                {verifica.attivita.length} attività, {progettiInUso(verifica.attivita).length} progetti.
+              </p>
+              <ul className="list-disc pl-5">
+                {verifica.attivita.map((a) => (
+                  <li key={a.id}>
+                    {a.titolo} <span className="text-testo-tenue">· {a.progetto ?? '—'} · {a.stato}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </section>
       </main>

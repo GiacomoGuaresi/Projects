@@ -4,10 +4,12 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { AccessoSupabase, type Accesso } from './accesso'
+import { AttivitaSupabase } from './attivita'
 
 export type { Accesso, EsitoAccesso } from './accesso'
+export type { AttivitaSupabase, RigaAttivita } from './attivita'
 
-let connessione: { client: SupabaseClient; accesso: Accesso } | null = null
+let connessione: { accesso: Accesso; attivita: AttivitaSupabase } | null = null
 
 /**
  * Il client è uno solo: accesso e query condividono la sessione.
@@ -30,7 +32,7 @@ function connetti() {
     cookieOptions: { path: '/' },
     db: { schema: 'projects' },
   }) as unknown as SupabaseClient
-  connessione = { client, accesso: new AccessoSupabase(client, email) }
+  connessione = { accesso: new AccessoSupabase(client, email), attivita: new AttivitaSupabase(client) }
   return connessione
 }
 
@@ -39,7 +41,7 @@ export function accesso(): Accesso {
   return connetti().accesso
 }
 
-/** Il client per le query sullo schema `projects`. */
-export function db(): SupabaseClient {
-  return connetti().client
+/** Le query sulle attività. */
+export function attivita(): AttivitaSupabase {
+  return connetti().attivita
 }
