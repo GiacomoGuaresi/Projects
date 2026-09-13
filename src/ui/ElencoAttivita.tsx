@@ -109,7 +109,8 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
             {attivita.map((a) => {
               const c = campi(a)
               return (
-                <tr key={a.id}>
+                // Una riga nuova (o arrivata da un'altra sezione) entra con un'animazione breve.
+                <tr key={a.id} className="animate-entra">
                   <td className="max-w-52 px-3 py-1.5">{c.progetto}</td>
                   <td className="px-3 py-1.5">{c.titolo}</td>
                   <td className="px-3 py-1.5">{c.stato}</td>
@@ -127,7 +128,7 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
         {attivita.map((a) => {
           const c = campi(a)
           return (
-            <li key={a.id} className="flex flex-col gap-1.5 rounded-[11px] border border-bordo bg-white p-3">
+            <li key={a.id} className="animate-entra flex flex-col gap-1.5 rounded-[11px] border border-bordo bg-white p-3">
               <div className="flex items-center gap-2 text-xs text-testo-tenue">
                 <div className="min-w-0 flex-1">{c.progetto}</div>
                 {c.azioni}

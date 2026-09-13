@@ -163,7 +163,7 @@ Lista fissa nel codice (`src/dominio/tag.ts`).
 | Superficie (card, tabelle, menu) | `#FFFFFF` | |
 | Panna (testo su salvia, disegno dell'icona) | `#FFFBF6` | come Grocery |
 | Testo | `#2E3A2D` | |
-| Testo secondario | `#6B7A69` | |
+| Testo secondario | `#63725F` | contrasto ≥ 4.5:1 anche sul fondo |
 | Bordi | `#DDE6D8` | |
 | Pericolo (elimina) | `#A8333A` | lo stesso "pomodoro" di Grocery |
 

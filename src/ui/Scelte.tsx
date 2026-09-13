@@ -73,7 +73,7 @@ export function SceltaPriorita({ valore, onScegli, compatta = false }: SceltaPri
           className={`grid place-items-center rounded-lg hover:bg-fondo ${compatta ? 'size-7' : 'size-10'}`}
         >
           <Star
-            className={`${compatta ? 'size-4' : 'size-6'} ${n <= valore ? 'fill-stella text-stella' : 'text-bordo'}`}
+            className={`${compatta ? 'size-4' : 'size-6'} ${n <= valore ? 'fill-stella text-stella' : 'text-stella-vuota'}`}
             aria-hidden="true"
           />
         </button>

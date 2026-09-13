@@ -48,7 +48,7 @@ export function Modale({ titolo, onChiudi, children, piede, schermoInteroMobile 
       onClick={(evento) => {
         if (evento.target === dialogo.current) onChiudi()
       }}
-      className={`m-auto max-h-[min(90dvh,800px)] ${larga ? 'w-[min(100%-24px,860px)]' : 'w-[min(100%-24px,640px)]'} max-w-none overflow-hidden rounded-[14px] border border-bordo bg-white p-0 text-testo shadow-xl backdrop:bg-testo/40 ${
+      className={`open:animate-compari backdrop:animate-dissolvi m-auto max-h-[min(90dvh,800px)] ${larga ? 'w-[min(100%-24px,860px)]' : 'w-[min(100%-24px,640px)]'} max-w-none overflow-hidden rounded-[14px] border border-bordo bg-white p-0 text-testo shadow-xl backdrop:bg-testo/40 ${
         schermoInteroMobile ? 'max-sm:h-dvh max-sm:max-h-dvh max-sm:w-full max-sm:rounded-none max-sm:border-0' : ''
       }`}
     >

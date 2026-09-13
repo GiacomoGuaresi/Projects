@@ -10,10 +10,14 @@
   --color-fondo: #f3f8f0;
   --color-panna: #fffbf6;
   --color-testo: #2e3a2d;
-  --color-testo-tenue: #6b7a69;
+  /* Contrasto ≥ 4.5:1 sia sul bianco sia sul fondo verde. */
+  --color-testo-tenue: #63725f;
   --color-bordo: #dde6d8;
   --color-pericolo: #a8333a;
-  --color-stella: #d9a23a;
+  /* Stelle della priorità: le piene reggono il 3:1 della grafica, le vuote si
+     vedono senza competere con le piene. */
+  --color-stella: #b8801a;
+  --color-stella-vuota: #a9b5a4;
 
   /* Stati dell'attività: fondo e testo (doc/08, "Colori degli stati"). */
   --color-dafare: #e4eaf0;
@@ -22,7 +26,7 @@
   --color-incorso-testo: #3f5a3c;
   --color-bloccato: #f4ddd2;
   --color-bloccato-testo: #93452d;
-  --color-completo: #3d8b4c;
+  --color-completo: #367f45;
   --color-completo-testo: #ffffff;
 
   /* Badge dei tag: fondo e testo (doc/08, "Tag"). */
@@ -40,6 +44,43 @@
   --color-tag-neutro-testo: #5f665d;
 
   --font-sans: 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Animazioni brevi, come Grocery (doc/08, ~200ms): una riga che arriva in
+     una sezione, un modale che si apre, il suo velo. */
+  --animate-entra: entra 200ms ease-out;
+  --animate-compari: compari 180ms ease-out;
+  --animate-dissolvi: dissolvi 180ms ease-out;
+
+  @keyframes entra {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  @keyframes compari {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes dissolvi {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* Chi ha chiesto meno movimento vede tutto cambiare di colpo. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::backdrop {
+    animation-duration: 1ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+  }
 }
 
 :root {

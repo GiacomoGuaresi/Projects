@@ -19,7 +19,7 @@
 - [x] Sessione condivisa con Grocery verificata online (cookie di Grocery portato su `/`)
 - [x] **Nel repo Grocery**: cookie di sessione da `/Grocery/` a `/`, per condividere la sessione ([05](05-sicurezza.md))
 
-## Fase 2 · MVP ← *in corso*
+## Fase 2 · MVP ✅
 
 Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **prova in locale** e un commit. Si passa al successivo solo dopo la prova.
 
@@ -37,9 +37,9 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 - [x] **2.12 · Diario, modifica ed eliminazione** delle voci ("modificata")
 - [x] **2.13 · Sfondo doodle** a tema casa (`npm run sfondo`)
 - [x] **2.14 · "Installa l'app"** nel menu, come Grocery
-- [ ] **2.15 · Rifinitura**: colori di stati e tag, animazioni brevi, controllo responsive
+- [x] **2.15 · Rifinitura**: colori di stati e tag, animazioni brevi, controllo responsive
 
-## Fase 3 · Pubblicazione
+## Fase 3 · Pubblicazione ← *prossima*
 - [x] Workflow `pubblica.yml`
 - [ ] PWA: `public/icona.svg` e icone generate con `@vite-pwa/assets-generator`, come Grocery
 - [ ] Checklist di sicurezza ([05](05-sicurezza.md))

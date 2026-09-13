@@ -11,7 +11,7 @@ export function Avviso({ messaggio, onChiudi }: { messaggio: string; onChiudi: (
   return (
     <div
       role="alert"
-      className="fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-md items-center gap-2 rounded-[11px] bg-testo py-1 pr-1 pl-4 text-panna shadow-lg"
+      className="animate-entra fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-md items-center gap-2 rounded-[11px] bg-testo py-1 pr-1 pl-4 text-panna shadow-lg"
     >
       <p className="flex-1">{messaggio}</p>
       <button
