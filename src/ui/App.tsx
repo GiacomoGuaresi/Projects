@@ -156,7 +156,7 @@ export function App() {
         <ModaleDiario
           key={diarioAperto.id}
           attivita={diarioAperto}
-          onVoceAggiunta={() => segnaDiario(diarioAperto.id, true)}
+          onDiarioCambiato={(haVoci) => segnaDiario(diarioAperto.id, haVoci)}
           onChiudi={() => setDiarioDi(null)}
         />
       )}

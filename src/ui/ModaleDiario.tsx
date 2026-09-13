@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
-import { Send } from 'lucide-react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { Pencil, Send, Trash2 } from 'lucide-react'
 import { diario } from '../dati'
 import { titoloSenzaTag } from '../dominio/tag'
 import type { Attivita, VoceDiario } from '../dominio/tipi'
+import { Conferma } from './Conferma'
 import { Markdown } from './Markdown'
 import { Modale } from './Modale'
 
 interface Props {
   attivita: Attivita
-  /** Per evidenziare l'icona del diario nell'elenco. */
-  onVoceAggiunta: () => void
+  /** Il diario ha (o non ha più) voci: l'icona nell'elenco lo mostra. */
+  onDiarioCambiato: (haVoci: boolean) => void
   onChiudi: () => void
 }
 
@@ -29,18 +30,23 @@ export function dataOra(iso: string): string {
   })
 }
 
+const areaTesto =
+  'w-full resize-y rounded-[11px] border border-bordo bg-white px-3 py-2 focus:outline-2 focus:-outline-offset-1 focus:outline-salvia'
+
 /**
  * Il diario di un'attività (doc/08-interfaccia.md, "Modale diario"): le voci in
- * ordine, la più recente in basso ed evidenziata, le precedenti attenuate; in
- * fondo il testo per aggiungerne una, Cmd/Ctrl+Invio invia.
- *
- * Modifica ed eliminazione delle voci arrivano con lo step 2.12.
+ * ordine, la più recente in basso ed evidenziata, le precedenti attenuate. Ogni
+ * voce si modifica sul posto e si elimina con conferma; in fondo il testo per
+ * aggiungerne una, Cmd/Ctrl+Invio invia.
  */
-export function ModaleDiario({ attivita, onVoceAggiunta, onChiudi }: Props) {
+export function ModaleDiario({ attivita, onDiarioCambiato, onChiudi }: Props) {
   const [stato, setStato] = useState<StatoVoci>({ fase: 'caricamento' })
   const [testo, setTesto] = useState('')
   const [invio, setInvio] = useState(false)
-  const [erroreInvio, setErroreInvio] = useState<string | null>(null)
+  /** L'errore dell'ultima operazione (aggiunta, modifica, eliminazione). */
+  const [errore, setErrore] = useState<string | null>(null)
+  const [inModifica, setInModifica] = useState<{ id: number; testo: string } | null>(null)
+  const [daEliminare, setDaEliminare] = useState<VoceDiario | null>(null)
   const fondo = useRef<HTMLDivElement>(null)
   const campo = useRef<HTMLTextAreaElement>(null)
 
@@ -51,35 +57,82 @@ export function ModaleDiario({ attivita, onVoceAggiunta, onChiudi }: Props) {
       .then((voci) => {
         if (vivo) setStato({ fase: 'pronto', voci })
       })
-      .catch((errore: Error) => {
-        if (vivo) setStato({ fase: 'errore', messaggio: errore.message })
+      .catch((e: Error) => {
+        if (vivo) setStato({ fase: 'errore', messaggio: e.message })
       })
     return () => {
       vivo = false
     }
   }, [attivita.id])
 
-  // La voce più recente è in fondo: la si porta in vista.
-  const quante = stato.fase === 'pronto' ? stato.voci.length : 0
+  // Una voce nuova sta in fondo: la si porta in vista.
+  const ultimaId = stato.fase === 'pronto' ? stato.voci.at(-1)?.id : undefined
   useEffect(() => {
     fondo.current?.scrollIntoView({ block: 'end' })
-  }, [quante])
+  }, [ultimaId])
+
+  const voci = stato.fase === 'pronto' ? stato.voci : []
+  const cambiaVoci = (cambia: (voci: VoceDiario[]) => VoceDiario[]) =>
+    setStato((prima) => (prima.fase === 'pronto' ? { ...prima, voci: cambia(prima.voci) } : prima))
 
   const invia = async () => {
     const pulito = testo.trim() ? testo.trimEnd() : ''
     if (!pulito || invio || stato.fase !== 'pronto') return
     setInvio(true)
-    setErroreInvio(null)
+    setErrore(null)
     try {
       const voce = await diario().aggiungi(attivita.id, pulito)
-      setStato((prima) => (prima.fase === 'pronto' ? { ...prima, voci: [...prima.voci, voce] } : prima))
+      cambiaVoci((prima) => [...prima, voce])
       setTesto('')
-      onVoceAggiunta()
-    } catch (errore) {
-      setErroreInvio((errore as Error).message)
+      onDiarioCambiato(true)
+    } catch (e) {
+      setErrore((e as Error).message)
     } finally {
       setInvio(false)
       campo.current?.focus()
+    }
+  }
+
+  const salvaModifica = async () => {
+    if (!inModifica) return
+    const pulito = inModifica.testo.trim() ? inModifica.testo.trimEnd() : ''
+    const originale = voci.find((v) => v.id === inModifica.id)
+    // Vuota non si salva: per toglierla c'è "elimina".
+    if (!pulito) return
+    setInModifica(null)
+    if (!originale || pulito === originale.testo) return
+    setErrore(null)
+    try {
+      const salvata = await diario().modifica(inModifica.id, pulito)
+      cambiaVoci((prima) => prima.map((v) => (v.id === salvata.id ? salvata : v)))
+    } catch (e) {
+      setErrore((e as Error).message)
+    }
+  }
+
+  const elimina = async (voce: VoceDiario) => {
+    setDaEliminare(null)
+    setErrore(null)
+    try {
+      await diario().elimina(voce.id)
+      const rimaste = voci.filter((v) => v.id !== voce.id)
+      cambiaVoci((prima) => prima.filter((v) => v.id !== voce.id))
+      if (rimaste.length === 0) onDiarioCambiato(false)
+    } catch (e) {
+      setErrore((e as Error).message)
+    }
+  }
+
+  const tastiModifica = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      void salvaModifica()
+    }
+    if (e.key === 'Escape') {
+      // Esc annulla la modifica, e non chiude il diario.
+      e.preventDefault()
+      e.stopPropagation()
+      setInModifica(null)
     }
   }
 
@@ -105,7 +158,7 @@ export function ModaleDiario({ attivita, onVoceAggiunta, onChiudi }: Props) {
                   void invia()
                 }
               }}
-              className="min-w-0 flex-1 resize-y rounded-[11px] border border-bordo bg-white px-3 py-2 focus:outline-2 focus:-outline-offset-1 focus:outline-salvia"
+              className={`${areaTesto} min-w-0 flex-1`}
             />
             <button
               type="button"
@@ -118,9 +171,9 @@ export function ModaleDiario({ attivita, onVoceAggiunta, onChiudi }: Props) {
               <Send className="size-5" aria-hidden="true" />
             </button>
           </div>
-          {erroreInvio ? (
+          {errore ? (
             <p className="text-xs text-pericolo" role="alert">
-              {erroreInvio}
+              {errore}
             </p>
           ) : (
             <p className="text-xs text-testo-tenue">Markdown ammesso · Cmd/Ctrl+Invio per inviare</p>
@@ -135,29 +188,103 @@ export function ModaleDiario({ attivita, onVoceAggiunta, onChiudi }: Props) {
         </p>
       )}
       {stato.fase === 'pronto' &&
-        (stato.voci.length === 0 ? (
+        (voci.length === 0 ? (
           <p className="py-6 text-center text-testo-tenue">Ancora nessuna voce.</p>
         ) : (
           <ol className="flex flex-col gap-2">
-            {stato.voci.map((voce, i) => {
-              const ultima = i === stato.voci.length - 1
+            {voci.map((voce, i) => {
+              const ultima = i === voci.length - 1
+              const modifica = inModifica?.id === voce.id ? inModifica : null
+              const modificata = new Date(voce.modificata_il).getTime() !== new Date(voce.creata_il).getTime()
               return (
                 <li
                   key={voce.id}
                   className={`rounded-[11px] border px-3 py-2 transition-opacity ${
-                    ultima ? 'border-salvia-chiara bg-fondo shadow-sm' : 'border-bordo opacity-60 hover:opacity-100'
-                  }`}
+                    ultima ? 'border-salvia-chiara bg-fondo shadow-sm' : 'border-bordo'
+                  } ${ultima || modifica ? '' : 'opacity-60 focus-within:opacity-100 hover:opacity-100'}`}
                 >
-                  <time className="mb-1 block text-xs text-testo-tenue" dateTime={voce.creata_il}>
-                    {dataOra(voce.creata_il)}
-                  </time>
-                  <Markdown testo={voce.testo} />
+                  <div className="mb-1 flex items-center gap-2">
+                    <time className="flex-1 text-xs text-testo-tenue" dateTime={voce.creata_il}>
+                      {dataOra(voce.creata_il)}
+                      {modificata && (
+                        <span title={`Modificata il ${dataOra(voce.modificata_il)}`}> · modificata</span>
+                      )}
+                    </time>
+                    {!modifica && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Modifica la voce"
+                          title="Modifica"
+                          className="grid size-8 place-items-center rounded-lg text-testo-tenue hover:bg-white"
+                          onClick={() => setInModifica({ id: voce.id, testo: voce.testo })}
+                        >
+                          <Pencil className="size-4" aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Elimina la voce"
+                          title="Elimina"
+                          className="grid size-8 place-items-center rounded-lg text-testo-tenue hover:bg-white hover:text-pericolo"
+                          onClick={() => setDaEliminare(voce)}
+                        >
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {modifica ? (
+                    <div className="flex flex-col gap-2">
+                      <textarea
+                        aria-label="Testo della voce"
+                        autoFocus
+                        rows={4}
+                        value={modifica.testo}
+                        onChange={(e) => setInModifica({ id: voce.id, testo: e.target.value })}
+                        onKeyDown={tastiModifica}
+                        className={areaTesto}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          className="min-h-9 rounded-[11px] px-3 font-semibold text-testo-tenue hover:bg-white"
+                          onClick={() => setInModifica(null)}
+                        >
+                          Annulla
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!modifica.testo.trim()}
+                          className="min-h-9 rounded-[11px] bg-salvia px-3 font-semibold text-panna hover:bg-salvia-scura disabled:opacity-50"
+                          onClick={() => void salvaModifica()}
+                        >
+                          Salva
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Markdown testo={voce.testo} />
+                  )}
                 </li>
               )
             })}
           </ol>
         ))}
       <div ref={fondo} />
+      {daEliminare && (
+        <Conferma
+          titolo="Eliminare la voce?"
+          conferma="Elimina"
+          pericolo
+          onAnnulla={() => setDaEliminare(null)}
+          onConferma={() => void elimina(daEliminare)}
+        >
+          <p>
+            La voce del <strong>{dataOra(daEliminare.creata_il)}</strong> sparisce dal diario, e non si può tornare
+            indietro.
+          </p>
+        </Conferma>
+      )}
     </Modale>
   )
 }
