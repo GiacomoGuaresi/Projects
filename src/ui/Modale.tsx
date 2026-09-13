@@ -9,13 +9,15 @@ interface Props {
   piede?: ReactNode
   /** Su mobile occupa tutto lo schermo (es. "Nuova attività"). */
   schermoInteroMobile?: boolean
+  /** Più largo, per leggere testi lunghi (descrizione, diario). */
+  larga?: boolean
 }
 
 /**
  * Un modale su `<dialog>`: il browser pensa a fuoco, Esc e sfondo inerte.
  * È aperto finché è montato; Esc, la X e il tocco fuori chiamano `onChiudi`.
  */
-export function Modale({ titolo, onChiudi, children, piede, schermoInteroMobile = false }: Props) {
+export function Modale({ titolo, onChiudi, children, piede, schermoInteroMobile = false, larga = false }: Props) {
   const dialogo = useRef<HTMLDialogElement>(null)
   const chiudi = useRef(onChiudi)
 
@@ -46,7 +48,7 @@ export function Modale({ titolo, onChiudi, children, piede, schermoInteroMobile 
       onClick={(evento) => {
         if (evento.target === dialogo.current) onChiudi()
       }}
-      className={`m-auto max-h-[min(90dvh,800px)] w-[min(100%-24px,640px)] max-w-none overflow-hidden rounded-[14px] border border-bordo bg-white p-0 text-testo shadow-xl backdrop:bg-testo/40 ${
+      className={`m-auto max-h-[min(90dvh,800px)] ${larga ? 'w-[min(100%-24px,860px)]' : 'w-[min(100%-24px,640px)]'} max-w-none overflow-hidden rounded-[14px] border border-bordo bg-white p-0 text-testo shadow-xl backdrop:bg-testo/40 ${
         schermoInteroMobile ? 'max-sm:h-dvh max-sm:max-h-dvh max-sm:w-full max-sm:rounded-none max-sm:border-0' : ''
       }`}
     >

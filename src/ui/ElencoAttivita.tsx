@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { FileText, Trash2 } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import type { Attivita, Modifica } from '../dominio/tipi'
 import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
@@ -11,6 +11,7 @@ export interface AzioniAttivita {
   cambiaProgetto: (attivita: Attivita, testo: string) => void
   /** Chiede conferma prima di eliminare. */
   elimina: (attivita: Attivita) => void
+  apriDescrizione: (attivita: Attivita) => void
 }
 
 interface Props {
@@ -21,12 +22,14 @@ interface Props {
   conElimina?: boolean
 }
 
+const icona = 'grid size-8 shrink-0 place-items-center rounded-lg'
+
 /**
  * Le attività come tabella da desktop (da 1280px, dove le colonne ci stanno) e
  * come card sotto (doc/08-interfaccia.md, "Riga e card"), con la modifica
- * inline di tutti i campi.
+ * inline di tutti i campi e le azioni.
  *
- * Descrizione e diario arrivano con gli step successivi (doc/07-roadmap.md).
+ * Il diario arriva con lo step 2.11 (doc/07-roadmap.md).
  */
 export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false }: Props) {
   const campi = (a: Attivita) => ({
@@ -49,16 +52,30 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
         onSalva={(avanzamento) => azioni.modifica(a, { avanzamento })}
       />
     ),
-    elimina: conElimina && (
-      <button
-        type="button"
-        aria-label="Elimina"
-        title="Elimina"
-        className="grid size-8 shrink-0 place-items-center rounded-lg text-testo-tenue hover:bg-fondo hover:text-pericolo"
-        onClick={() => azioni.elimina(a)}
-      >
-        <Trash2 className="size-4" aria-hidden="true" />
-      </button>
+    azioni: (
+      <div className="flex items-center gap-0.5">
+        {/* Evidenziata se la descrizione non è vuota. */}
+        <button
+          type="button"
+          aria-label="Descrizione"
+          title="Descrizione"
+          className={`${icona} ${a.descrizione?.trim() ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
+          onClick={() => azioni.apriDescrizione(a)}
+        >
+          <FileText className="size-4" aria-hidden="true" />
+        </button>
+        {conElimina && (
+          <button
+            type="button"
+            aria-label="Elimina"
+            title="Elimina"
+            className={`${icona} text-testo-tenue hover:bg-fondo hover:text-pericolo`}
+            onClick={() => azioni.elimina(a)}
+          >
+            <Trash2 className="size-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
     ),
   })
 
@@ -74,11 +91,9 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
               <th className="w-40 px-3 py-2 font-medium">Stato</th>
               <th className="w-40 px-3 py-2 font-medium">Priorità</th>
               <th className="w-56 px-3 py-2 font-medium">Avanzamento</th>
-              {conElimina && (
-                <th className="w-12 px-3 py-2">
-                  <span className="sr-only">Azioni</span>
-                </th>
-              )}
+              <th className={`${conElimina ? 'w-24' : 'w-14'} px-3 py-2`}>
+                <span className="sr-only">Azioni</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-bordo">
@@ -91,7 +106,7 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
                   <td className="px-3 py-1.5">{c.stato}</td>
                   <td className="px-3 py-1.5">{c.priorita}</td>
                   <td className="px-3 py-1.5">{c.avanzamento}</td>
-                  {conElimina && <td className="px-2 py-1.5">{c.elimina}</td>}
+                  <td className="px-2 py-1.5">{c.azioni}</td>
                 </tr>
               )
             })}
@@ -106,7 +121,7 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
             <li key={a.id} className="flex flex-col gap-1.5 rounded-[11px] border border-bordo bg-white p-3">
               <div className="flex items-center gap-2 text-xs text-testo-tenue">
                 <div className="min-w-0 flex-1">{c.progetto}</div>
-                {c.elimina}
+                {c.azioni}
               </div>
               <div className="font-medium">{c.titolo}</div>
               <div className="flex flex-wrap items-center justify-between gap-2">

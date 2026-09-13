@@ -2,6 +2,7 @@ import { useId, useRef, useState, type FormEvent } from 'react'
 import { normalizzaProgetto, type ProgettoInUso } from '../dominio/progetto'
 import { TAG, trovaTag, pezziTitolo } from '../dominio/tag'
 import type { Attivita, NuovaAttivita, Stato } from '../dominio/tipi'
+import { EditorMarkdown } from './EditorMarkdown'
 import { InputProgetto } from './InputProgetto'
 import { Modale } from './Modale'
 import { SceltaPriorita, SceltaStato } from './Scelte'
@@ -18,16 +19,16 @@ const campo =
 
 /**
  * Il modale "Nuova attività" (doc/08-interfaccia.md): titolo obbligatorio con
- * i tag disponibili, progetto facoltativo con i progetti già usati, stato e
- * priorità. Invio crea. A schermo intero su mobile.
- *
- * La descrizione arriva con lo step 2.10 (doc/07-roadmap.md).
+ * i tag disponibili, progetto facoltativo con i progetti già usati, stato,
+ * priorità e descrizione in Markdown. Invio nel titolo crea. A schermo intero
+ * su mobile.
  */
 export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
   const [titolo, setTitolo] = useState('')
   const [progetto, setProgetto] = useState('')
   const [stato, setStato] = useState<Stato>('da_fare')
   const [priorita, setPriorita] = useState(3)
+  const [descrizione, setDescrizione] = useState('')
   const [inCorso, setInCorso] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
   const campoTitolo = useRef<HTMLInputElement>(null)
@@ -41,7 +42,7 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
     try {
       await onCrea({
         titolo: titolo.trim(),
-        descrizione: null,
+        descrizione: descrizione.trim() ? descrizione.trimEnd() : null,
         progetto: normalizzaProgetto(progetto, progetti),
         stato,
         priorita,
@@ -136,6 +137,13 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
         <div className="flex flex-col gap-1.5">
           <span className="text-xs text-testo-tenue">Priorità</span>
           <SceltaPriorita valore={priorita} onScegli={setPriorita} />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-testo-tenue">
+            Descrizione <span className="font-normal">(facoltativa)</span>
+          </span>
+          <EditorMarkdown etichetta="Descrizione" righe={5} valore={descrizione} onCambia={setDescrizione} />
         </div>
 
         {errore && (

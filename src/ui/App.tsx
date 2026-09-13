@@ -9,6 +9,7 @@ import { Dashboard } from './Dashboard'
 import { DialogoProgetto } from './DialogoProgetto'
 import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
+import { ModaleDescrizione } from './ModaleDescrizione'
 import { ModaleNuova } from './ModaleNuova'
 import { PaginaAttivita } from './PaginaAttivita'
 import { useRotta } from './rotta'
@@ -34,6 +35,10 @@ export function App() {
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
   const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, avviso, chiudiAvviso } = useAttivita()
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
+  // Il modale segue l'attività per id, così mostra sempre la versione aggiornata.
+  const [descrizioneDi, setDescrizioneDi] = useState<number | null>(null)
+  const descrizioneAperta =
+    stato.fase === 'pronto' && descrizioneDi !== null ? (stato.attivita.find((a) => a.id === descrizioneDi) ?? null) : null
 
   const azioni: AzioniAttivita = {
     /** Passare a "Completo" chiede conferma; il resto si salva subito. */
@@ -51,6 +56,7 @@ export function App() {
       if (esito.tipo === 'chiedi') setCambio({ attivita, da: esito.da, a: esito.a, quante: esito.quante })
     },
     elimina: setDaEliminare,
+    apriDescrizione: (attivita) => setDescrizioneDi(attivita.id),
   }
 
   return (
@@ -130,6 +136,14 @@ export function App() {
             void rinominaProgetto(cambio.da, cambio.a)
             setCambio(null)
           }}
+        />
+      )}
+      {descrizioneAperta && (
+        <ModaleDescrizione
+          key={descrizioneAperta.id}
+          attivita={descrizioneAperta}
+          onSalva={(descrizione) => void modifica(descrizioneAperta.id, { descrizione })}
+          onChiudi={() => setDescrizioneDi(null)}
         />
       )}
       {daEliminare && (
