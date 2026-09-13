@@ -6,6 +6,8 @@ import type { Attivita, Modifica } from '../dominio/tipi'
 import { Avviso } from './Avviso'
 import { Conferma } from './Conferma'
 import { Dashboard } from './Dashboard'
+import { Installa } from './Installa'
+import { installa, useInstallazione } from './installazione'
 import { DialogoProgetto } from './DialogoProgetto'
 import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
@@ -13,7 +15,7 @@ import { ModaleDescrizione } from './ModaleDescrizione'
 import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
 import { PaginaAttivita } from './PaginaAttivita'
-import { useRotta } from './rotta'
+import { indirizzi, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 
 /**
@@ -34,6 +36,7 @@ export function App() {
   )
   const [daEliminare, setDaEliminare] = useState<Attivita | null>(null)
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
+  const statoInstallazione = useInstallazione()
   const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, segnaDiario, avviso, chiudiAvviso } =
     useAttivita()
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
@@ -66,7 +69,7 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col lg:grid lg:grid-cols-[256px_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
+    <div className="sfondo-casa flex min-h-dvh flex-col lg:grid lg:grid-cols-[256px_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
       <header className="sticky top-0 z-1 flex items-center gap-1 border-b border-salvia-scura bg-salvia pt-[env(safe-area-inset-top)] pr-2 pl-1 text-white lg:col-span-full lg:min-h-11 lg:pl-3">
         <button
           className="grid size-11 place-items-center rounded-[11px] active:bg-salvia-scura lg:hidden"
@@ -98,6 +101,16 @@ export function App() {
           setMenuAperto(false)
           setNuovaAperta(true)
         }}
+        onInstalla={
+          statoInstallazione === 'installata'
+            ? undefined
+            : () => {
+                setMenuAperto(false)
+                // Con il prompt del browser basta un tocco; altrimenti le istruzioni.
+                if (statoInstallazione === 'pronta') void installa()
+                else window.location.hash = indirizzi.installa
+              }
+        }
       />
       <main className="mx-auto w-full max-w-[1200px] flex-1 p-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:col-start-2">
         {rotta === 'dashboard' && (
@@ -110,6 +123,7 @@ export function App() {
             {(attivita) => <PaginaAttivita attivita={attivita} progetti={progetti} azioni={azioni} />}
           </ConAttivita>
         )}
+        {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
       {daCompletare && (

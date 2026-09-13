@@ -54,6 +54,13 @@ body {
   font-size: 14px;
 }
 
+/* Poche icone grandi a tema casa, bianche sul verde pastello, ripetute senza
+   giunture: generate da scripts/genera-sfondo.ts (npm run sfondo). Tabelle,
+   card e modali restano su bianco pieno, quindi si vede solo ai margini. */
+.sfondo-casa {
+  background: var(--color-fondo) url('./ui/sfondo-casa.svg') 0 0 / 480px 480px repeat;
+}
+
 /* I campi di testo restano a 16px: sotto, iOS zooma da solo al tocco. */
 input,
 textarea,
