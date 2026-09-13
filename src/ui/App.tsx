@@ -1,68 +1,56 @@
-import { useEffect, useState } from 'react'
-import { ListChecks } from 'lucide-react'
-import { attivita } from '../dati'
-import { progettiInUso } from '../dominio/progetto'
-import { ordinaAttivita } from '../dominio/ordinamento'
-import type { Attivita } from '../dominio/tipi'
+import { useCallback, useState } from 'react'
+import { ListChecks, Menu, Plus } from 'lucide-react'
+import { MenuLaterale } from './MenuLaterale'
+import { useRotta, type Rotta } from './rotta'
 
-type Verifica =
-  | { fase: 'in-corso' }
-  | { fase: 'ok'; attivita: Attivita[] }
-  | { fase: 'errore'; messaggio: string }
+const titoli: Record<Rotta, string> = {
+  dashboard: 'Dashboard',
+  attivita: 'Attività',
+}
 
 /**
- * Guscio provvisorio (doc/07-roadmap.md, step 2.2): l'intestazione e l'elenco
- * grezzo delle attività lette dallo schema `projects`. Menu e pagine arrivano
- * con gli step successivi.
+ * Il guscio dell'app, come Grocery (doc/08-interfaccia.md): intestazione salvia
+ * da bordo a bordo con ☰ a sinistra e + a destra, menu laterale, contenuto
+ * largo al massimo 1200px. Da 1024px il menu è una colonna fissa e ☰ sparisce.
+ *
+ * Step 2.3 (doc/07-roadmap.md): le pagine sono ancora vuote e il + non apre
+ * nulla; il modale "Nuova attività" arriva con lo step 2.5.
  */
 export function App() {
-  const [verifica, setVerifica] = useState<Verifica>({ fase: 'in-corso' })
-
-  useEffect(() => {
-    let vivo = true
-    attivita()
-      .elenco()
-      .then((elenco) => {
-        if (vivo) setVerifica({ fase: 'ok', attivita: ordinaAttivita(elenco) })
-      })
-      .catch((errore: Error) => {
-        if (vivo) setVerifica({ fase: 'errore', messaggio: errore.message })
-      })
-    return () => {
-      vivo = false
-    }
-  }, [])
+  const rotta = useRotta()
+  const [menuAperto, setMenuAperto] = useState(false)
+  const chiudiMenu = useCallback(() => setMenuAperto(false), [])
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 flex items-center gap-2 border-b border-salvia-scura bg-salvia px-3 pt-[env(safe-area-inset-top)] text-white">
-        <ListChecks className="size-[22px]" aria-hidden="true" />
-        <h1 className="my-3 text-lg font-semibold tracking-[0.01em]">Projects</h1>
+    <div className="flex min-h-dvh flex-col lg:grid lg:grid-cols-[256px_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
+      <header className="sticky top-0 z-1 flex items-center gap-1 border-b border-salvia-scura bg-salvia pt-[env(safe-area-inset-top)] pr-2 pl-1 text-white lg:col-span-full lg:min-h-11 lg:pl-3">
+        <button
+          className="grid size-11 place-items-center rounded-[11px] active:bg-salvia-scura lg:hidden"
+          type="button"
+          aria-label="Apri il menu"
+          aria-expanded={menuAperto}
+          aria-controls="menu"
+          onClick={() => setMenuAperto(true)}
+        >
+          <Menu className="size-[22px]" aria-hidden="true" />
+        </button>
+        <ListChecks className="size-[22px] shrink-0" aria-hidden="true" />
+        <h1 className="ml-1 text-lg font-semibold tracking-[0.01em]">Projects</h1>
+        <button
+          className="ml-auto flex min-h-9 items-center gap-1.5 rounded-[11px] px-2.5 font-semibold hover:bg-salvia-scura active:bg-salvia-scura disabled:opacity-60 disabled:hover:bg-transparent"
+          type="button"
+          aria-label="Nuova attività"
+          title="Arriva con lo step 2.5"
+          disabled
+        >
+          <Plus className="size-[22px]" aria-hidden="true" />
+          <span className="hidden lg:inline">Nuova attività</span>
+        </button>
       </header>
-      <main className="mx-auto w-full max-w-[1200px] flex-1 p-3">
-        <section className="rounded-[11px] border border-bordo bg-white p-4">
-          <h2 className="mb-2 font-semibold">Verifica dei dati</h2>
-          {verifica.fase === 'in-corso' && <p className="text-testo-tenue">Carico…</p>}
-          {verifica.fase === 'errore' && (
-            <p className="text-pericolo" role="alert">
-              {verifica.messaggio}
-            </p>
-          )}
-          {verifica.fase === 'ok' && (
-            <>
-              <p className="mb-2 text-testo-tenue">
-                {verifica.attivita.length} attività, {progettiInUso(verifica.attivita).length} progetti.
-              </p>
-              <ul className="list-disc pl-5">
-                {verifica.attivita.map((a) => (
-                  <li key={a.id}>
-                    {a.titolo} <span className="text-testo-tenue">· {a.progetto ?? '—'} · {a.stato}</span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
+      <MenuLaterale aperto={menuAperto} corrente={rotta} onChiudi={chiudiMenu} />
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:col-start-2">
+        <h2 className="mb-3 text-lg font-semibold">{titoli[rotta]}</h2>
+        <p className="text-testo-tenue">Pagina vuota: il contenuto arriva con i prossimi step.</p>
       </main>
     </div>
   )
