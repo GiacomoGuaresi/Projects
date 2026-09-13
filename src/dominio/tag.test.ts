@@ -7,6 +7,12 @@ describe('trovaTag', () => {
     expect(trovaTag('  fai   Da te ')?.nome).toBe('fai da te')
   })
 
+  it('riconosce i tag di stagione, cucito, Natale e cucina', () => {
+    for (const nome of ['progetto', 'inverno', 'estate', 'cucito', 'natalizio', 'cucina']) {
+      expect(trovaTag(nome.toUpperCase())?.nome).toBe(nome)
+    }
+  })
+
   it('non trova i tag fuori elenco', () => {
     expect(trovaTag('bloccato')).toBeNull()
   })

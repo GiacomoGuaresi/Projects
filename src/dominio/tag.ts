@@ -2,7 +2,18 @@
 // `<urgente> Chiamare l'idraulico`, da una lista fissa. Qui c'è solo il
 // riconoscimento; icone e colori dei badge stanno nell'interfaccia.
 
-export type ColoreTag = 'rosso' | 'sabbia' | 'terracotta' | 'giallo' | 'viola'
+export type ColoreTag =
+  | 'rosso'
+  | 'sabbia'
+  | 'terracotta'
+  | 'giallo'
+  | 'viola'
+  | 'ardesia'
+  | 'blu'
+  | 'arancio'
+  | 'rosa'
+  | 'verde'
+  | 'pesca'
 
 export interface Tag {
   nome: string
@@ -17,6 +28,12 @@ export const TAG: readonly Tag[] = [
   { nome: 'fai da te', colore: 'sabbia', uso: 'lavoro manuale da fare in autonomia', riservato: false },
   { nome: 'guasto', colore: 'terracotta', uso: 'qualcosa da riparare o far riparare', riservato: false },
   { nome: 'idea', colore: 'giallo', uso: 'da valutare, nessun impegno', riservato: false },
+  { nome: 'progetto', colore: 'ardesia', uso: 'non ancora definito, da finire di pensare', riservato: false },
+  { nome: 'inverno', colore: 'blu', uso: "da fare d'inverno", riservato: false },
+  { nome: 'estate', colore: 'arancio', uso: "da fare d'estate", riservato: false },
+  { nome: 'cucito', colore: 'rosa', uso: 'lavoro di cucito', riservato: false },
+  { nome: 'natalizio', colore: 'verde', uso: 'per Natale', riservato: false },
+  { nome: 'cucina', colore: 'pesca', uso: 'ricette e cose da cucinare', riservato: false },
   { nome: 'ia', colore: 'viola', uso: "creata dall'assistente", riservato: true },
 ]
 

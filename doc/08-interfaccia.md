@@ -138,6 +138,7 @@ Stesso sistema di Grocery, colori diversi:
 Lista fissa nel codice (`src/dominio/tag.ts`).
 - Nel titolo si scrivono tra parentesi angolari (`<urgente> Chiamare l'idraulico`) e compaiono come badge con icona e colore.
 - Il riconoscimento ignora maiuscole e minuscole; più tag nello stesso titolo sono ammessi.
+- I badge si mostrano sempre in **maiuscolo**, e il modale "Nuova attività" inserisce il tag in maiuscolo (`<URGENTE>`).
 
 | Tag | Icona Lucide | Colore | Uso |
 |---|---|---|---|
@@ -145,6 +146,12 @@ Lista fissa nel codice (`src/dominio/tag.ts`).
 | `fai da te` | `hammer` | sabbia | lavoro manuale da fare in autonomia |
 | `guasto` | `wrench` | terracotta tenue | qualcosa da riparare o far riparare |
 | `idea` | `lightbulb` | giallo | da valutare, nessun impegno |
+| `progetto` | `drafting-compass` | ardesia | non ancora definito, da finire di pensare |
+| `inverno` | `snowflake` | blu | da fare d'inverno |
+| `estate` | `sun` | arancio | da fare d'estate |
+| `cucito` | `scissors` | rosa | lavoro di cucito |
+| `natalizio` | `gift` | verde | per Natale |
+| `cucina` | `chef-hat` | pesca | ricette e cose da cucinare |
 | `ia` | `sparkles` | viola | *riservato*: lo aggiungerà l'assistente IA (fase 4) |
 
 - Un tag non in elenco appare come badge neutro (`tag`, grigio).

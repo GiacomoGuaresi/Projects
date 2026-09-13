@@ -18,7 +18,7 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Funzione | Stato |
 |---|---|
 | Crea, modifica, elimina (con conferma) | ✅ |
-| Titolo, con tag `<tag>` da una lista fissa | ✅ urgente, fai da te, guasto, idea (+ `ia` riservato), vedi [08](08-interfaccia.md) |
+| Titolo, con tag `<tag>` da una lista fissa | ✅ urgente, fai da te, guasto, idea, progetto, inverno, estate, cucito, natalizio, cucina (+ `ia` riservato), vedi [08](08-interfaccia.md) |
 | Descrizione in Markdown con checklist | ✅ |
 | **Progetto**: campo di testo libero, facoltativo, con suggerimenti dai progetti già usati | ✅ |
 | Stato: **da fare · in corso · bloccato · completo** | ✅ |

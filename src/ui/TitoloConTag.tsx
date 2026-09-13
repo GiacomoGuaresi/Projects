@@ -1,4 +1,18 @@
-import { Flame, Hammer, Lightbulb, Sparkles, Tag, Wrench, type LucideIcon } from 'lucide-react'
+import {
+  ChefHat,
+  DraftingCompass,
+  Flame,
+  Gift,
+  Hammer,
+  Lightbulb,
+  Scissors,
+  Snowflake,
+  Sparkles,
+  Sun,
+  Tag,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react'
 import { pezziTitolo, type ColoreTag } from '../dominio/tag'
 
 /** Le icone dei tag in elenco (doc/08-interfaccia.md, "Tag"). */
@@ -7,6 +21,12 @@ const icone: Record<string, LucideIcon> = {
   'fai da te': Hammer,
   guasto: Wrench,
   idea: Lightbulb,
+  progetto: DraftingCompass,
+  inverno: Snowflake,
+  estate: Sun,
+  cucito: Scissors,
+  natalizio: Gift,
+  cucina: ChefHat,
   ia: Sparkles,
 }
 
@@ -16,6 +36,12 @@ const colori: Record<ColoreTag | 'neutro', string> = {
   terracotta: 'bg-tag-terracotta text-tag-terracotta-testo',
   giallo: 'bg-tag-giallo text-tag-giallo-testo',
   viola: 'bg-tag-viola text-tag-viola-testo',
+  ardesia: 'bg-tag-ardesia text-tag-ardesia-testo',
+  blu: 'bg-tag-blu text-tag-blu-testo',
+  arancio: 'bg-tag-arancio text-tag-arancio-testo',
+  rosa: 'bg-tag-rosa text-tag-rosa-testo',
+  verde: 'bg-tag-verde text-tag-verde-testo',
+  pesca: 'bg-tag-pesca text-tag-pesca-testo',
   neutro: 'bg-tag-neutro text-tag-neutro-testo',
 }
 
@@ -29,7 +55,7 @@ export function TitoloConTag({ titolo }: { titolo: string }) {
         return (
           <span
             key={i}
-            className={`inline-flex items-center gap-1 rounded-full px-1.5 py-px text-xs font-medium ${
+            className={`inline-flex items-center gap-1 rounded-full px-1.5 py-px text-xs font-medium uppercase ${
               colori[pezzo.tag?.colore ?? 'neutro']
             }`}
           >

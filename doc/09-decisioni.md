@@ -44,3 +44,4 @@
 | 2026-09-13 | **Sfondo doodle a tema casa**, come Grocery, generato da script con seed fisso | deciso |
 | 2026-09-13 | Pulsante **+ Nuova attività** a destra nell'intestazione, oltre alla voce nel menu | deciso |
 | 2026-09-13 | Documentazione completa: si passa all'implementazione | deciso |
+| 2026-09-13 | Nuovi tag: **progetto** (da finire di pensare), **inverno** ed **estate** (stagionali), **cucito**, **natalizio**, **cucina** | deciso |

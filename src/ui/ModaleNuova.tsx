@@ -57,7 +57,7 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
   /** Un tocco sul tag lo mette in testa al titolo, se non c'è già. */
   const aggiungiTag = (nome: string) => {
     const presente = pezziTitolo(titolo).some((p) => p.tipo === 'tag' && trovaTag(p.nome)?.nome === nome)
-    if (!presente) setTitolo(`<${nome}> ${titolo.trimStart()}`)
+    if (!presente) setTitolo(`<${nome.toUpperCase()}> ${titolo.trimStart()}`)
     campoTitolo.current?.focus()
   }
 
