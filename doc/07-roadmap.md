@@ -41,8 +41,8 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 
 ## Fase 3 · Pubblicazione ← *prossima*
 - [x] Workflow `pubblica.yml`
-- [ ] PWA: `public/icona.svg` e icone generate con `@vite-pwa/assets-generator`, come Grocery
-- [ ] Checklist di sicurezza ([05](05-sicurezza.md))
+- [x] PWA: `public/icona.svg` e icone generate con `@vite-pwa/assets-generator`, come Grocery
+- [ ] Checklist di sicurezza ([05](05-sicurezza.md)): tutto verificato tranne gli URL di redirect di Auth, da controllare sulla dashboard
 - [ ] README con screenshot
 
 ## Fase 4 · Assistente IA

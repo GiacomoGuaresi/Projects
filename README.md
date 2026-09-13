@@ -2,7 +2,29 @@
 
 Lista delle attività di casa, raggruppate per progetto, con un diario per ogni attività. Si usa da smartphone e da PC.
 
-> **Stato: documentazione completa, implementazione in partenza** (vedi [roadmap](doc/07-roadmap.md)).
+> **Stato: MVP completo, online su [giacomoguaresi.github.io/Projects](https://giacomoguaresi.github.io/Projects/)** (vedi [roadmap](doc/07-roadmap.md)).
+
+## Cosa fa
+
+- **Dashboard** con le attività divise in sezioni collassabili, **pagina Attività** con l'elenco completo
+- Titolo con **tag** (`<urgente>`, `<fai da te>`, `<guasto>`, `<idea>`), progetto, stato, priorità a stelle, avanzamento: tutto modificabile al volo
+- **Descrizione** in Markdown con checklist e **diario** con le voci datate per ogni attività
+- Filtri per testo, stato, priorità e progetto; rinomina di un progetto su tutte le sue attività
+- Accesso con la sola **passphrase**, sessione condivisa con Grocery; installabile sulla schermata Home
+
+## Per iniziare
+
+```sh
+cp .env.example .env.local   # e riempi le tre variabili (doc/06)
+npm install
+npm run dev                  # http://localhost:5173/Projects/
+npm test
+npm run build
+```
+
+Script di supporto: `npm run icone` rigenera le icone della PWA da `public/icona.svg`, `npm run sfondo` rigenera lo sfondo doodle. Il risultato di entrambi è versionato.
+
+A ogni push su `main` il workflow [`pubblica.yml`](.github/workflows/pubblica.yml) esegue i test e pubblica su GitHub Pages.
 
 ## In breve
 

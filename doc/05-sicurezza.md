@@ -47,10 +47,12 @@ Grocery e Projects hanno la stessa origine (`giacomoguaresi.github.io`), lo stes
 
 ## Checklist prima di pubblicare
 
-- [ ] Registrazioni pubbliche **spente** sul progetto (già così per Grocery: da verificare)
-- [ ] RLS attiva su ogni tabella dello schema `projects`
-- [ ] Una query con la sola publishable key e senza sessione restituisce zero righe e non esegue funzioni
-- [ ] Nessun file `.env*` committato; `OLD/` escluso da git
-- [ ] Secret key e password del DB assenti dal repo
-- [ ] URL di redirect di Auth: aggiunti `https://giacomoguaresi.github.io/Projects/` e `http://localhost:5173`
-- [ ] Sessione condivisa verificata: accesso a Grocery → Projects aperto senza passphrase
+Verificata il 2026-09-13.
+
+- [x] Registrazioni pubbliche **spente** sul progetto (`/auth/v1/settings`: `disable_signup: true`, solo provider email)
+- [x] RLS attiva su ogni tabella dello schema `projects` (`attivita`, `voci_diario`: le uniche dello schema, verificato in Fase 1)
+- [x] Una query con la sola publishable key e senza sessione non restituisce righe e non esegue funzioni: `attivita`, `voci_diario`, `attivita_elenco`, `progetti` e `rpc/rinomina_progetto` rispondono tutte `401 permission denied for schema projects`
+- [x] Nessun file `.env*` committato (solo `.env.example`); `OLD/` escluso da git
+- [x] Secret key e password del DB assenti dal repo e dalla storia git
+- [ ] URL di redirect di Auth: aggiunti `https://giacomoguaresi.github.io/Projects/` e `http://localhost:5173` (dashboard Supabase, da controllare a mano)
+- [x] Sessione condivisa verificata: accesso a Grocery → Projects aperto senza passphrase (Fase 1)
