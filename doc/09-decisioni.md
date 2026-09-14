@@ -46,3 +46,4 @@
 | 2026-09-13 | Pulsante **+ Nuova attività** a destra nell'intestazione, oltre alla voce nel menu | deciso |
 | 2026-09-13 | Documentazione completa: si passa all'implementazione | deciso |
 | 2026-09-13 | Nuovi tag: **progetto** (da finire di pensare), **inverno** ed **estate** (stagionali), **cucito**, **natalizio**, **cucina** | deciso |
+| 2026-09-14 | **Faccende**: attività veloci con solo titolo e da fare / fatta, in una **tabella separata** `faccende`; card in cima alla Dashboard e pagina nel menu; le fatte si eliminano **a fine giornata** | deciso |

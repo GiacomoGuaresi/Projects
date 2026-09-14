@@ -6,12 +6,19 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { AccessoSupabase, type Accesso } from './accesso'
 import { AttivitaSupabase } from './attivita'
 import { DiarioSupabase } from './diario'
+import { FaccendeSupabase } from './faccende'
 
 export type { Accesso, EsitoAccesso } from './accesso'
 export type { AttivitaSupabase, RigaAttivita } from './attivita'
 export type { DiarioSupabase } from './diario'
+export type { FaccendeSupabase } from './faccende'
 
-let connessione: { accesso: Accesso; attivita: AttivitaSupabase; diario: DiarioSupabase } | null = null
+let connessione: {
+  accesso: Accesso
+  attivita: AttivitaSupabase
+  diario: DiarioSupabase
+  faccende: FaccendeSupabase
+} | null = null
 
 /**
  * Il client è uno solo: accesso e query condividono la sessione.
@@ -38,6 +45,7 @@ function connetti() {
     accesso: new AccessoSupabase(client, email),
     attivita: new AttivitaSupabase(client),
     diario: new DiarioSupabase(client),
+    faccende: new FaccendeSupabase(client),
   }
   return connessione
 }
@@ -55,4 +63,9 @@ export function attivita(): AttivitaSupabase {
 /** Le query sul diario. */
 export function diario(): DiarioSupabase {
   return connetti().diario
+}
+
+/** Le query sulle faccende. */
+export function faccende(): FaccendeSupabase {
+  return connetti().faccende
 }

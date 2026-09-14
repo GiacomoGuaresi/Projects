@@ -16,9 +16,11 @@ import { ModaleDettagli } from './ModaleDettagli'
 import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
 import { PaginaAttivita } from './PaginaAttivita'
+import { PaginaFaccende } from './PaginaFaccende'
 import { PaginaPerStato } from './PaginaPerStato'
 import { indirizzi, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
+import { useFaccende } from './useFaccende'
 
 /**
  * Il guscio dell'app, come Grocery (doc/08-interfaccia.md): intestazione salvia
@@ -39,8 +41,9 @@ export function App() {
   const [daEliminare, setDaEliminare] = useState<Attivita | null>(null)
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
   const statoInstallazione = useInstallazione()
-  const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, segnaDiario, avviso, chiudiAvviso } =
+  const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, segnaDiario, avviso, mostraAvviso, chiudiAvviso } =
     useAttivita()
+  const faccende = useFaccende(mostraAvviso)
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
   // I modali seguono l'attività per id, così mostrano sempre la versione aggiornata.
   const [descrizioneDi, setDescrizioneDi] = useState<number | null>(null)
@@ -122,6 +125,7 @@ export function App() {
             {(attivita) => (
               <Dashboard
                 attivita={attivita}
+                faccende={faccende}
                 onDettagli={(a) => setDettagliDi(a.id)}
                 onDiario={azioni.apriDiario}
                 onModifica={azioni.modifica}
@@ -140,6 +144,7 @@ export function App() {
             {(attivita) => <PaginaAttivita attivita={attivita} progetti={progetti} azioni={azioni} />}
           </ConAttivita>
         )}
+        {rotta === 'faccende' && <PaginaFaccende faccende={faccende} />}
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}

@@ -30,6 +30,7 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Sezioni | **Dashboard** | `layout-dashboard` |
 | Sezioni | **Per stato** | `layout-list` |
 | Sezioni | **Attività** | `list-checks` |
+| Sezioni | **Faccende** | `broom` |
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
 
@@ -86,6 +87,19 @@ La pagina iniziale (`#/`).
 - **Tenere premuto il titolo** (~400ms) e poi **trascinare in orizzontale** cambia l'avanzamento: si parte dal valore attuale, tutta la larghezza della riga vale 100%, a passi del 5%. Mentre si trascina la linea si ingrossa e sopra la riga compare la percentuale; al rilascio si salva, e non si aprono i dettagli. Non vale per le attività completate, ferme al 100%.
 - Le **completate** stanno in fondo alla card, dalla più recente, con il titolo **grigio e barrato**.
 - **Aggiunta rapida** come ultima riga di ogni card: campo "Aggiungi attività" (`plus`); Invio (o il pulsante + che compare scrivendo) crea un'attività *Da fare*, 3 stelle, nel **progetto della card** (nessun progetto nella card "Senza progetto"). Il campo si svuota e resta pronto per la successiva; Esc lo svuota. Un errore di salvataggio compare sotto il campo, con il testo conservato.
+
+## Faccende
+
+Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"): **solo il titolo** e **da fare / fatta**. Niente progetto, priorità, avanzamento, descrizione, diario o tag.
+
+- Una **card "Faccende"** (`broom`) in cima alla **Dashboard**, sotto gli interruttori e sopra le card dei progetti, e la stessa card da sola nella pagina **Faccende** (`#/faccende`).
+- Intestazione con le faccende **fatte oggi sul totale** (es. `2/5`).
+- Prima le **da fare**, dalla più vecchia; poi le **fatte**, dalla più recente, **grigie e barrate**.
+- **Toccare la riga** la segna fatta, senza conferma; toccarla di nuovo la riporta da fare.
+- Le fatte restano visibili **fino a mezzanotte**, poi si **eliminano da sole** (all'apertura dell'app o al ritorno in primo piano).
+- Gli interruttori della Dashboard valgono anche qui: con **In corso** acceso o **Completi** spento le fatte si nascondono. Nella pagina Faccende si vedono sempre.
+- **Aggiunta rapida** come ultima riga, uguale a quella delle card dei progetti: "Aggiungi faccenda".
+- Le faccende non compaiono nelle pagine Per stato e Attività, né nel modale "Nuova attività".
 
 ## Modale dettagli
 

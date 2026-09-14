@@ -7,6 +7,13 @@ Tutte le tabelle stanno nello schema Postgres **`projects`**. Come in Grocery, i
 ```mermaid
 erDiagram
   attivita ||--o{ voci_diario : "diario"
+  faccende {
+    bigint id PK
+    text titolo
+    boolean completa
+    timestamptz creata_il
+    timestamptz completata_il
+  }
   attivita {
     bigint id PK
     text titolo
@@ -56,6 +63,20 @@ Indici su `stato` e su `lower(progetto)`.
 | modificata_il | timestamptz | default `now()`, trigger | "modificata" se diversa da `creata_il` |
 
 Nessun autore: l'account è condiviso.
+
+## `projects.faccende`
+
+Attività veloci e ripetitive, senza attributi ([08](08-interfaccia.md), "Faccende"). Script `supabase/sql/002_faccende.sql`.
+
+| Campo | Tipo | Vincoli / default | Note |
+|---|---|---|---|
+| id | bigint | PK, identity | |
+| titolo | text | NOT NULL, non vuoto | testo semplice, niente tag |
+| completa | boolean | NOT NULL, default `false` | |
+| creata_il | timestamptz | default `now()` | ordina le da fare |
+| completata_il | timestamptz | trigger | `now()` quando diventa completa, `NULL` se riaperta |
+
+**Pulizia**: a ogni lettura (apertura dell'app e ritorno in primo piano) l'app elimina le faccende completate prima della mezzanotte locale del dispositivo. Nessun job nel database.
 
 ## Viste
 

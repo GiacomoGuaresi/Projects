@@ -1,16 +1,21 @@
 import { useRef, useState } from 'react'
-import { BookOpen, CircleCheck, Play, Plus, type LucideIcon } from 'lucide-react'
+import { BookOpen, CircleCheck, Play, type LucideIcon } from 'lucide-react'
 import { schedeProgetti } from '../dominio/ordinamento'
-import type { Attivita, Modifica, NuovaAttivita, Stato } from '../dominio/tipi'
+import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
+import { AggiuntaRapida } from './AggiuntaRapida'
+import { CardFaccende } from './CardFaccende'
 import { useInterruttore, useRilievi } from './preferenze'
 import { usePressioneLunga } from './pressioneLunga'
 import { ProgettoConIcona } from './ProgettoConIcona'
 import { PulsanteStato } from './PulsanteStato'
 import { PulsanteStella } from './PulsanteStella'
 import { TitoloConTag } from './TitoloConTag'
+import type { useFaccende } from './useFaccende'
 
 interface Props {
   attivita: readonly Attivita[]
+  /** La card delle faccende, in cima. */
+  faccende: ReturnType<typeof useFaccende>
   /** Apre il modale con tutti i campi dell'attività. */
   onDettagli: (attivita: Attivita) => void
   onDiario: (attivita: Attivita) => void
@@ -25,8 +30,9 @@ interface Props {
  * attività, le completate in fondo grigie e barrate. Ogni attività mostra solo
  * stato, titolo e il pulsante del diario; toccando la riga si aprono i
  * dettagli, dove si modifica tutto. In fondo alla card l'aggiunta rapida.
+ * Sopra i progetti, la card delle faccende.
  */
-export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }: Props) {
+export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica, onCrea }: Props) {
   const [soloInCorso, setSoloInCorso] = useInterruttore('projects_in_corso', false)
   const [mostraCompleti, setMostraCompleti] = useInterruttore('projects_completi', true)
   const [rilievi, cambiaRilievo] = useRilievi()
@@ -60,6 +66,9 @@ export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }
           />
         </div>
       </div>
+
+      {/* Gli interruttori valgono anche qui: "In corso" o "Completi" spento nascondono le fatte. */}
+      <CardFaccende faccende={faccende} soloDaFare={soloInCorso || !mostraCompleti} />
 
       {mostrate.length === 0 ? (
         <p className="px-2 py-3 text-testo-tenue">
@@ -108,9 +117,19 @@ export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }
                 <li>
                   {/* Con "In corso" acceso la nuova attività nasce in corso, così resta visibile. */}
                   <AggiuntaRapida
-                    progetto={scheda.progetto}
-                    stato={soloInCorso ? 'in_corso' : 'da_fare'}
-                    onCrea={onCrea}
+                    placeholder={soloInCorso ? 'Aggiungi attività in corso' : 'Aggiungi attività'}
+                    etichetta={
+                      scheda.progetto === null ? 'Nuova attività senza progetto' : `Nuova attività in ${scheda.progetto}`
+                    }
+                    onCrea={(titolo) =>
+                      onCrea({
+                        titolo,
+                        descrizione: null,
+                        progetto: scheda.progetto,
+                        stato: soloInCorso ? 'in_corso' : 'da_fare',
+                        priorita: 3,
+                      })
+                    }
                   />
                 </li>
               </ul>
@@ -261,86 +280,5 @@ function Interruttore({ etichetta, icona: Icona, acceso, onCambia, ignorato = fa
       <Icona className="size-4" aria-hidden="true" />
       {etichetta}
     </button>
-  )
-}
-
-interface AggiuntaRapidaProps {
-  progetto: string | null
-  stato: Extract<Stato, 'da_fare' | 'in_corso'>
-  onCrea: Props['onCrea']
-}
-
-/**
- * L'ultima riga della card: un titolo e Invio creano un'attività *Da fare* con
- * 3 stelle nel progetto della card. Il campo resta aperto per aggiungerne
- * un'altra; Esc lo svuota.
- */
-function AggiuntaRapida({ progetto, stato, onCrea }: AggiuntaRapidaProps) {
-  const [titolo, setTitolo] = useState('')
-  const [invio, setInvio] = useState(false)
-  const [errore, setErrore] = useState<string | null>(null)
-
-  const crea = async () => {
-    const pulito = titolo.trim()
-    if (!pulito || invio) return
-    setInvio(true)
-    setErrore(null)
-    try {
-      await onCrea({ titolo: pulito, descrizione: null, progetto, stato, priorita: 3 })
-      setTitolo('')
-    } catch (e) {
-      setErrore((e as Error).message)
-    } finally {
-      setInvio(false)
-    }
-  }
-
-  return (
-    <form
-      className="flex flex-col"
-      onSubmit={(e) => {
-        e.preventDefault()
-        void crea()
-      }}
-    >
-      {/* Allineata alle righe: il + sta sotto le icone dello stato. */}
-      <label className="flex items-center gap-1 py-1 pr-2 pl-1.5 text-testo-tenue focus-within:text-testo">
-        <span className="grid size-8 shrink-0 place-items-center" aria-hidden="true">
-          <Plus className="size-4" />
-        </span>
-        <input
-          aria-label={progetto === null ? 'Nuova attività senza progetto' : `Nuova attività in ${progetto}`}
-          placeholder={stato === 'in_corso' ? 'Aggiungi attività in corso' : 'Aggiungi attività'}
-          enterKeyHint="done"
-          className="min-h-9 min-w-0 flex-1 bg-transparent text-base text-testo outline-none placeholder:text-testo-tenue"
-          value={titolo}
-          // readOnly e non disabled: il fuoco resta nel campo, pronto per la prossima.
-          readOnly={invio}
-          onChange={(e) => setTitolo(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault()
-              setTitolo('')
-              setErrore(null)
-            }
-          }}
-        />
-        {titolo.trim() && (
-          <button
-            type="submit"
-            disabled={invio}
-            className="grid size-8 shrink-0 place-items-center rounded-lg bg-salvia text-panna hover:bg-salvia-scura"
-            aria-label="Aggiungi"
-          >
-            <Plus className="size-4" aria-hidden="true" />
-          </button>
-        )}
-      </label>
-      {errore && (
-        <p className="px-3 pb-2 text-sm text-pericolo" role="alert">
-          {errore}
-        </p>
-      )}
-    </form>
   )
 }

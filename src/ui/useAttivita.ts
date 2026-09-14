@@ -101,5 +101,17 @@ export function useAttivita() {
 
   const chiudiAvviso = useCallback(() => setAvviso(null), [])
 
-  return { stato, ricarica, crea, modifica, rinominaProgetto, elimina, segnaDiario, avviso, chiudiAvviso }
+  return {
+    stato,
+    ricarica,
+    crea,
+    modifica,
+    rinominaProgetto,
+    elimina,
+    segnaDiario,
+    avviso,
+    /** Lo stesso avviso, per salvataggi non riusciti fuori dalle attività (faccende). */
+    mostraAvviso: setAvviso,
+    chiudiAvviso,
+  }
 }

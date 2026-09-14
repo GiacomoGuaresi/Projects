@@ -30,6 +30,18 @@ export type Modifica = Partial<
 
 export type NuovaAttivita = Pick<Attivita, 'titolo' | 'descrizione' | 'progetto' | 'stato' | 'priorita'>
 
+/**
+ * Un'attività veloce e ripetitiva (tabella `faccende`): solo il titolo e se è
+ * fatta. Le completate spariscono a fine giornata.
+ */
+export interface Faccenda {
+  id: number
+  titolo: string
+  completa: boolean
+  creata_il: string
+  completata_il: string | null
+}
+
 export interface VoceDiario {
   id: number
   attivita_id: number
