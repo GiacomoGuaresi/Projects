@@ -73,7 +73,7 @@ La pagina iniziale (`#/`).
 
 - In alto il titolo **"Progetti"** con il numero di card e, accanto, una fila di **interruttori on/off** a pillola (acceso: salvia chiaro; spento: bianco con bordo). Ognuno è ricordato in un **cookie** (percorso `/Projects/`, durata un anno).
   - **In corso** (`play`, cookie `projects_in_corso`, spento di default): acceso mostra **solo** le attività in corso e **ha la precedenza** sugli altri interruttori, che restano com'erano ma attenuati e non toccabili. Le card senza attività in corso spariscono; l'aggiunta rapida crea l'attività già *In corso* ("Aggiungi attività in corso"). Spento, la vista torna normale.
-  - **Completi** (`circle-check`, cookie `projects_completi`, acceso di default): spento nasconde le attività completate dalle card; il conto `completate/totale` non cambia e le card restano, con l'aggiunta rapida.
+  - **Completi** (`circle-check`, cookie `projects_completi`, acceso di default): spento nasconde le attività completate dalle card; il conto `completate/totale` non cambia e le card restano, con l'aggiunta rapida. Fanno eccezione i progetti con **tutte** le attività completate: la loro card compare solo con *Completi* acceso.
 
 - Una **card per progetto** con **tutte** le sue attività, completate comprese.
 - Card in tre gruppi: prima i **preferiti**, poi gli altri, poi gli **accantonati**; in ogni gruppo ordine di progetto (A→Z, senza distinguere maiuscole e minuscole), la card **"Senza progetto"** in fondo al suo gruppo.

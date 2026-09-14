@@ -37,7 +37,9 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
   const [mostraCompleti, setMostraCompleti] = useInterruttore('projects_completi', true)
   const [rilievi, cambiaRilievo] = useRilievi()
   // "In corso" vince sugli altri interruttori; e mostra solo le card che ne hanno.
+  // I progetti con tutte le attività completate compaiono solo con "Completi" acceso.
   const mostrate = schedeProgetti(attivita, rilievi)
+    .filter((scheda) => mostraCompleti || scheda.completate < scheda.attivita.length)
     .map((scheda) => ({
       ...scheda,
       visibili: soloInCorso
