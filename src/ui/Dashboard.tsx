@@ -2,10 +2,11 @@ import { useRef, useState } from 'react'
 import { BookOpen, CircleCheck, Play, Plus, type LucideIcon } from 'lucide-react'
 import { schedeProgetti } from '../dominio/ordinamento'
 import type { Attivita, Modifica, NuovaAttivita, Stato } from '../dominio/tipi'
-import { useInterruttore } from './preferenze'
+import { useInterruttore, useRilievi } from './preferenze'
 import { usePressioneLunga } from './pressioneLunga'
 import { ProgettoConIcona } from './ProgettoConIcona'
 import { PulsanteStato } from './PulsanteStato'
+import { PulsanteStella } from './PulsanteStella'
 import { TitoloConTag } from './TitoloConTag'
 
 interface Props {
@@ -28,8 +29,9 @@ interface Props {
 export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }: Props) {
   const [soloInCorso, setSoloInCorso] = useInterruttore('projects_in_corso', false)
   const [mostraCompleti, setMostraCompleti] = useInterruttore('projects_completi', true)
+  const [rilievi, cambiaRilievo] = useRilievi()
   // "In corso" vince sugli altri interruttori; e mostra solo le card che ne hanno.
-  const mostrate = schedeProgetti(attivita)
+  const mostrate = schedeProgetti(attivita, rilievi)
     .map((scheda) => ({
       ...scheda,
       visibili: soloInCorso
@@ -71,7 +73,7 @@ export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }
               key={scheda.chiave}
               className="animate-entra mb-3 break-inside-avoid rounded-[11px] border border-bordo bg-white"
             >
-              <h3 className="flex items-center gap-2 border-b border-bordo px-3 py-2 font-semibold">
+              <h3 className="flex items-center gap-2 border-b border-bordo py-1 pr-1.5 pl-3 font-semibold">
                 <span className="min-w-0 flex-1">
                   {scheda.progetto === null ? (
                     <span className="text-testo-tenue">Senza progetto</span>
@@ -85,6 +87,12 @@ export function Dashboard({ attivita, onDettagli, onDiario, onModifica, onCrea }
                 >
                   {scheda.completate}/{scheda.attivita.length}
                 </span>
+                {/* Tocco: preferito sì/no; pressione lunga: anche "Accantonato", in fondo alla pagina. */}
+                <PulsanteStella
+                  rilievo={scheda.rilievo}
+                  nome={scheda.progetto ?? 'Senza progetto'}
+                  onScegli={(rilievo) => cambiaRilievo(scheda.chiave, rilievo)}
+                />
               </h3>
               <ul className="divide-y divide-bordo">
                 {/* Il conto resta sul totale anche con gli interruttori che nascondono attività. */}

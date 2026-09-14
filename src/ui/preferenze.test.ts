@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { leggiCookie } from './preferenze'
+import { leggiCookie, leggiRilievi } from './preferenze'
+
+describe('leggiRilievi', () => {
+  it('legge preferiti e accantonati, scarta il resto', () => {
+    const valore = encodeURIComponent(JSON.stringify({ casa: 'preferito', auto: 'accantonato', orto: 'boh' }))
+    expect(leggiRilievi(`projects_rilievi=${valore}`)).toEqual({ casa: 'preferito', auto: 'accantonato' })
+  })
+
+  it('senza cookie o con un valore rovinato dà vuoto', () => {
+    expect(leggiRilievi('')).toEqual({})
+    expect(leggiRilievi('projects_rilievi=%7Bnon-json')).toEqual({})
+    expect(leggiRilievi('projects_rilievi=%5B1%5D')).toEqual({})
+  })
+})
 
 describe('leggiCookie', () => {
   it('trova il cookie per nome, tra gli altri', () => {

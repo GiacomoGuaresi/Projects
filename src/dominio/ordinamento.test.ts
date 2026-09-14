@@ -58,6 +58,28 @@ describe('sezioniPerStato', () => {
 })
 
 describe('schedeProgetti', () => {
+  it('preferiti in cima e accantonati in fondo, ogni gruppo A→Z', () => {
+    const elenco = [
+      attivita({ progetto: null }),
+      attivita({ progetto: 'Zeta' }),
+      attivita({ progetto: 'Casa' }),
+      attivita({ progetto: 'Auto' }),
+      attivita({ progetto: 'Bici' }),
+      attivita({ progetto: 'Orto' }),
+      attivita({ progetto: 'Barca' }),
+    ]
+    const rilievi = { zeta: 'preferito', casa: 'preferito', auto: 'accantonato', barca: 'accantonato' } as const
+    expect(schedeProgetti(elenco, rilievi).map((s) => [s.progetto, s.rilievo])).toEqual([
+      ['Casa', 'preferito'],
+      ['Zeta', 'preferito'],
+      ['Bici', 'normale'],
+      ['Orto', 'normale'],
+      [null, 'normale'],
+      ['Auto', 'accantonato'],
+      ['Barca', 'accantonato'],
+    ])
+  })
+
   it('una card per progetto A→Z, senza distinguere maiuscole, "senza progetto" in fondo, completate comprese', () => {
     const elenco = [
       attivita({ titolo: 'senza', progetto: null }),

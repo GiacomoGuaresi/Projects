@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { Rilievo } from '../dominio/ordinamento'
 
 // Le preferenze dell'interfaccia (doc/08-interfaccia.md, "Dashboard"), salvate in
 // un cookie per ciascuna: restano tra una visita e l'altra sullo stesso dispositivo.
@@ -32,4 +33,35 @@ export function useInterruttore(nome: string, predefinito: boolean): [boolean, (
   }
 
   return [acceso, cambia]
+}
+
+const COOKIE_RILIEVI = 'projects_rilievi'
+
+/** I rilievi salvati nel cookie (JSON `{chiave: rilievo}`, senza i normali); un valore rovinato vale vuoto. */
+export function leggiRilievi(testo: string): Record<string, Rilievo> {
+  const salvato = leggiCookie(testo, COOKIE_RILIEVI)
+  if (salvato === null) return {}
+  try {
+    const dati: unknown = JSON.parse(salvato)
+    if (typeof dati !== 'object' || dati === null || Array.isArray(dati)) return {}
+    return Object.fromEntries(
+      Object.entries(dati).filter(([, r]) => r === 'preferito' || r === 'accantonato'),
+    ) as Record<string, Rilievo>
+  } catch {
+    return {}
+  }
+}
+
+/** Preferiti e accantonati della Dashboard, per chiave del progetto, salvati nel cookie `projects_rilievi`. */
+export function useRilievi(): [Record<string, Rilievo>, (chiave: string, rilievo: Rilievo) => void] {
+  const [rilievi, setRilievi] = useState(() => leggiRilievi(document.cookie))
+
+  const cambia = (chiave: string, rilievo: Rilievo) => {
+    const { [chiave]: _, ...altri } = leggiRilievi(document.cookie)
+    const nuovi = rilievo === 'normale' ? altri : { ...altri, [chiave]: rilievo }
+    setRilievi(nuovi)
+    document.cookie = `${COOKIE_RILIEVI}=${encodeURIComponent(JSON.stringify(nuovi))}; path=${import.meta.env.BASE_URL}; max-age=${DURATA}; SameSite=Lax`
+  }
+
+  return [rilievi, cambia]
 }

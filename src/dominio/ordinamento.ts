@@ -58,10 +58,16 @@ export function sezioniPerStato(attivita: readonly Attivita[]): SezionePerStato[
   }))
 }
 
+/** Dove sta la card di un progetto nella Dashboard: in cima, in mezzo o in fondo. */
+export type Rilievo = 'preferito' | 'normale' | 'accantonato'
+
+const ORDINE_RILIEVI: Record<Rilievo, number> = { preferito: 0, normale: 1, accantonato: 2 }
+
 export interface SchedaProgetto {
   /** Il progetto senza distinzione di maiuscole e minuscole; '' per "senza progetto". */
   chiave: string
   progetto: string | null
+  rilievo: Rilievo
   /** Tutte le attività del progetto, completate comprese. */
   attivita: Attivita[]
   /** Quante sono completate: la card mostra "completate/totali". */
@@ -85,14 +91,24 @@ function confrontaInScheda(a: Attivita, b: Attivita): number {
 
 /**
  * Le card della Dashboard (doc/08-interfaccia.md): una per progetto con
- * tutte le sue attività, completate in fondo, e il loro conto; progetti A→Z e
- * "senza progetto" in fondo.
+ * tutte le sue attività, completate in fondo, e il loro conto. Prima i
+ * preferiti, poi gli altri, poi gli accantonati; in ogni gruppo progetti A→Z e
+ * "senza progetto" in fondo. `rilievi` ha per chiave quella della card.
  */
-export function schedeProgetti(attivita: readonly Attivita[]): SchedaProgetto[] {
+export function schedeProgetti(
+  attivita: readonly Attivita[],
+  rilievi: Readonly<Record<string, Rilievo>> = {},
+): SchedaProgetto[] {
   const schede = new Map<string, SchedaProgetto>()
   for (const a of attivita) {
     const chiave = a.progetto === null ? '' : chiaveProgetto(a.progetto)
-    const scheda = schede.get(chiave) ?? { chiave, progetto: a.progetto, attivita: [], completate: 0 }
+    const scheda = schede.get(chiave) ?? {
+      chiave,
+      progetto: a.progetto,
+      rilievo: rilievi[chiave] ?? 'normale',
+      attivita: [],
+      completate: 0,
+    }
     if (a.stato === 'completo') scheda.completate++
     scheda.attivita.push(a)
     schede.set(chiave, scheda)
@@ -100,6 +116,8 @@ export function schedeProgetti(attivita: readonly Attivita[]): SchedaProgetto[] 
   return [...schede.values()]
     .map((scheda) => ({ ...scheda, attivita: scheda.attivita.sort(confrontaInScheda) }))
     .sort((a, b) => {
+      const rilievo = ORDINE_RILIEVI[a.rilievo] - ORDINE_RILIEVI[b.rilievo]
+      if (rilievo !== 0) return rilievo
       if (a.progetto === null) return 1
       if (b.progetto === null) return -1
       return confrontaTesto(a.progetto, b.progetto)
