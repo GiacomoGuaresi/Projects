@@ -32,6 +32,7 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Funzione | Stato |
 |---|---|
 | Attività veloci con **solo titolo** e **da fare / fatta** | ✅ |
+| Modifica del titolo ed eliminazione (senza conferma) | ✅ |
 | Card in cima alla Dashboard e pagina **Faccende** nel menu | ✅ |
 | Le fatte restano barrate **fino a mezzanotte**, poi si eliminano da sole | ✅ |
 | Progetto, priorità, descrizione, diario, tag | ❌ |

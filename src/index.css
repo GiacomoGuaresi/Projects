@@ -29,6 +29,12 @@
   --color-completo: #367f45;
   --color-completo-testo: #ffffff;
 
+  /* Card delle faccende, come un post-it giallo (doc/08, "Faccende"). Il testo
+     tenue regge il 4.5:1 anche su questo fondo. */
+  --color-postit: #fffbe3;
+  --color-postit-bordo: #efe4b0;
+  --color-postit-scuro: #fcf2c6;
+
   /* Badge dei tag: fondo e testo (doc/08, "Tag"). */
   --color-tag-rosso: #f6d9d7;
   --color-tag-rosso-testo: #9b2f33;

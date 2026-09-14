@@ -57,5 +57,34 @@ export function useFaccende(onAvviso: (messaggio: string) => void) {
     [onAvviso, ricarica],
   )
 
-  return { stato, ricarica, crea, segna }
+  /** Cambia il titolo: si vede subito; se non riesce avvisa e rilegge. */
+  const rinomina = useCallback(
+    async (id: number, titolo: string) => {
+      aggiorna((elenco) => elenco.map((f) => (f.id === id ? { ...f, titolo } : f)))
+      try {
+        const riga = await faccende().rinomina(id, titolo)
+        aggiorna((elenco) => elenco.map((f) => (f.id === id ? riga : f)))
+      } catch (errore) {
+        onAvviso((errore as Error).message)
+        void ricarica()
+      }
+    },
+    [onAvviso, ricarica],
+  )
+
+  /** Toglie subito la faccenda; se non riesce avvisa e rilegge. */
+  const elimina = useCallback(
+    async (id: number) => {
+      aggiorna((elenco) => elenco.filter((f) => f.id !== id))
+      try {
+        await faccende().elimina(id)
+      } catch (errore) {
+        onAvviso((errore as Error).message)
+        void ricarica()
+      }
+    },
+    [onAvviso, ricarica],
+  )
+
+  return { stato, ricarica, crea, segna, rinomina, elimina }
 }

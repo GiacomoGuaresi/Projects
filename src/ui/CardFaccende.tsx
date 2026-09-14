@@ -1,5 +1,7 @@
-import { Broom, Circle, CircleCheck } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Broom, Circle, CircleCheck, Trash2 } from 'lucide-react'
 import { faccendeDiOggi } from '../dominio/faccende'
+import type { Faccenda } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
 import type { useFaccende } from './useFaccende'
 
@@ -9,22 +11,29 @@ interface Props {
   faccende: Faccende
   /** Nasconde le faccende già fatte oggi (interruttori della Dashboard). */
   soloDaFare?: boolean
+  /** Classi in più, per stare nelle colonne della Dashboard. */
+  className?: string
 }
 
 /**
  * La card delle faccende (doc/08-interfaccia.md, "Faccende"): attività veloci
- * con solo il titolo. Toccare una riga la segna fatta (o di nuovo da fare): le
- * fatte restano barrate in fondo fino a mezzanotte, poi spariscono. In fondo
- * l'aggiunta rapida.
+ * con solo il titolo. L'icona segna fatta (o di nuovo da fare): le fatte restano
+ * barrate in fondo fino a mezzanotte, poi spariscono. Il titolo si modifica
+ * toccandolo, e lì compare anche il cestino. In fondo l'aggiunta rapida.
  */
-export function CardFaccende({ faccende: { stato, ricarica, crea, segna }, soloDaFare = false }: Props) {
+export function CardFaccende({
+  faccende: { stato, ricarica, crea, segna, rinomina, elimina },
+  soloDaFare = false,
+  className = '',
+}: Props) {
   const tutte = stato.fase === 'pronto' ? faccendeDiOggi(stato.faccende) : []
   const fatte = tutte.filter((f) => f.completa).length
   const visibili = soloDaFare ? tutte.filter((f) => !f.completa) : tutte
 
   return (
-    <section className="animate-entra rounded-[11px] border border-bordo bg-white">
-      <h3 className="flex min-h-10 items-center gap-2 border-b border-bordo py-1 pr-3 pl-3 font-semibold">
+    // Un post-it giallo: si distingue subito dalle card bianche dei progetti.
+    <section className={`animate-entra rounded-[11px] border border-postit-bordo bg-postit ${className}`}>
+      <h3 className="flex min-h-10 items-center gap-2 border-b border-postit-bordo py-1 pr-3 pl-3 font-semibold">
         <Broom className="size-4.5 shrink-0 text-salvia-scura" aria-hidden="true" />
         <span className="min-w-0 flex-1">Faccende</span>
         {tutte.length > 0 && (
@@ -49,41 +58,124 @@ export function CardFaccende({ faccende: { stato, ricarica, crea, segna }, soloD
       )}
 
       {stato.fase === 'pronto' && (
-        <ul className="divide-y divide-bordo">
-          {visibili.map((f) => {
-            const Icona = f.completa ? CircleCheck : Circle
-            return (
-              <li key={f.id} className="animate-entra">
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={f.completa}
-                  title={f.completa ? 'Segna da fare' : 'Segna fatta'}
-                  className="flex min-h-11 w-full touch-manipulation items-center gap-1 py-1 pr-2 pl-1.5 text-left hover:bg-fondo active:bg-bordo"
-                  onClick={() => void segna(f.id, !f.completa)}
-                >
-                  <span
-                    className={`grid size-8 shrink-0 place-items-center rounded-lg ${
-                      f.completa ? 'bg-completo text-completo-testo' : 'bg-dafare text-dafare-testo'
-                    }`}
-                    aria-hidden="true"
-                  >
-                    <Icona className="size-4" />
-                  </span>
-                  <span
-                    className={`min-w-0 flex-1 px-1 break-words ${f.completa ? 'text-testo-tenue line-through' : ''}`}
-                  >
-                    {f.titolo}
-                  </span>
-                </button>
-              </li>
-            )
-          })}
+        <ul className="divide-y divide-postit-bordo">
+          {visibili.map((f) => (
+            <RigaFaccenda
+              key={f.id}
+              faccenda={f}
+              onSegna={(completa) => void segna(f.id, completa)}
+              onRinomina={(titolo) => void rinomina(f.id, titolo)}
+              onElimina={() => void elimina(f.id)}
+            />
+          ))}
           <li>
             <AggiuntaRapida placeholder="Aggiungi faccenda" etichetta="Nuova faccenda" onCrea={crea} />
           </li>
         </ul>
       )}
     </section>
+  )
+}
+
+interface RigaFaccendaProps {
+  faccenda: Faccenda
+  onSegna: (completa: boolean) => void
+  onRinomina: (titolo: string) => void
+  onElimina: () => void
+}
+
+/**
+ * Una faccenda: l'icona la segna fatta o da fare; il titolo, toccato, diventa un
+ * campo (Invio o clic fuori salvano, Esc annulla) con accanto il cestino, che
+ * elimina subito.
+ */
+function RigaFaccenda({ faccenda: f, onSegna, onRinomina, onElimina }: RigaFaccendaProps) {
+  const [bozza, setBozza] = useState<string | null>(null)
+  // Invio chiude il campo, e il campo che sparisce può perdere il fuoco:
+  // senza questo il titolo si salverebbe due volte (come CampoTitolo).
+  const aperto = useRef(false)
+  const Icona = f.completa ? CircleCheck : Circle
+
+  const apri = () => {
+    aperto.current = true
+    setBozza(f.titolo)
+  }
+
+  const chiudi = (salva: boolean) => {
+    if (!aperto.current || bozza === null) return
+    aperto.current = false
+    const nuovo = bozza.trim()
+    setBozza(null)
+    // Un titolo svuotato non si salva: per togliere la faccenda c'è il cestino.
+    if (salva && nuovo && nuovo !== f.titolo) onRinomina(nuovo)
+  }
+
+  return (
+    <li className="animate-entra flex min-h-11 items-center gap-1 py-1 pr-2 pl-1.5">
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={f.completa}
+        aria-label={f.titolo}
+        title={f.completa ? 'Segna da fare' : 'Segna fatta'}
+        className={`grid size-8 shrink-0 touch-manipulation place-items-center rounded-lg ${
+          f.completa ? 'bg-completo text-completo-testo' : 'bg-dafare text-dafare-testo'
+        }`}
+        onClick={() => onSegna(!f.completa)}
+      >
+        <Icona className="size-4" aria-hidden="true" />
+      </button>
+
+      {bozza === null ? (
+        <button
+          type="button"
+          title="Modifica"
+          className={`min-w-0 flex-1 self-stretch rounded-lg px-1 text-left break-words hover:bg-postit-scuro active:bg-postit-bordo ${
+            f.completa ? 'text-testo-tenue line-through' : ''
+          }`}
+          onClick={apri}
+        >
+          {f.titolo}
+        </button>
+      ) : (
+        <input
+          aria-label="Titolo della faccenda"
+          autoFocus
+          enterKeyHint="done"
+          className="min-h-9 min-w-0 flex-1 rounded-lg border border-bordo bg-white px-2 text-base focus:outline-2 focus:-outline-offset-1 focus:outline-salvia"
+          value={bozza}
+          onChange={(e) => setBozza(e.target.value)}
+          onBlur={() => chiudi(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              chiudi(true)
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              chiudi(false)
+            }
+          }}
+        />
+      )}
+      {/* Sempre visibile, come il diario nelle righe delle attività. */}
+      <button
+        type="button"
+        aria-label={`Elimina ${f.titolo}`}
+        title="Elimina"
+        className="grid size-8 shrink-0 place-items-center rounded-lg text-testo-tenue hover:bg-postit-scuro hover:text-pericolo"
+        // Se il titolo è in modifica, il campo non deve perdere il fuoco (e salvare) prima dell'eliminazione.
+        onPointerDown={(e) => {
+          if (bozza !== null) e.preventDefault()
+        }}
+        onClick={() => {
+          aperto.current = false
+          setBozza(null)
+          onElimina()
+        }}
+      >
+        <Trash2 className="size-4" aria-hidden="true" />
+      </button>
+    </li>
   )
 }

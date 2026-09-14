@@ -33,4 +33,15 @@ export class FaccendeSupabase {
     if (error) throw fallita('Faccenda non salvata', error)
     return data as Faccenda
   }
+
+  async rinomina(id: number, titolo: string): Promise<Faccenda> {
+    const { data, error } = await this.client.from('faccende').update({ titolo }).eq('id', id).select().single()
+    if (error) throw fallita('Faccenda non modificata', error)
+    return data as Faccenda
+  }
+
+  async elimina(id: number): Promise<void> {
+    const { error } = await this.client.from('faccende').delete().eq('id', id)
+    if (error) throw fallita('Faccenda non eliminata', error)
+  }
 }

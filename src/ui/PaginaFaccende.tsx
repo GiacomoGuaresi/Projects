@@ -12,7 +12,8 @@ export function PaginaFaccende({ faccende }: Props) {
       <h2 className="px-1 text-lg font-semibold">Faccende</h2>
       <CardFaccende faccende={faccende} />
       <p className="px-2 text-sm text-testo-tenue">
-        Tocca una faccenda per segnarla fatta. Le fatte restano barrate fino a mezzanotte, poi spariscono.
+        Tocca l'icona per segnarla fatta, il titolo per modificarla, il cestino per eliminarla. Le fatte restano barrate fino a
+        mezzanotte, poi spariscono.
       </p>
     </div>
   )

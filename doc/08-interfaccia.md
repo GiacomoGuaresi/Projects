@@ -92,10 +92,13 @@ La pagina iniziale (`#/`).
 
 Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"): **solo il titolo** e **da fare / fatta**. Niente progetto, priorità, avanzamento, descrizione, diario o tag.
 
-- Una **card "Faccende"** (`broom`) in cima alla **Dashboard**, sotto gli interruttori e sopra le card dei progetti, e la stessa card da sola nella pagina **Faccende** (`#/faccende`).
+- Una **card "Faccende"** (`broom`) nella **Dashboard**: è la **prima card delle colonne**, larga come quelle dei progetti (mezza pagina da PC). La stessa card, da sola, nella pagina **Faccende** (`#/faccende`).
+- Colore **post-it giallo**: fondo `#FFFBE3` (molto chiaro), bordi e divisori `#EFE4B0`, così si distingue dalle card bianche dei progetti.
 - Intestazione con le faccende **fatte oggi sul totale** (es. `2/5`).
 - Prima le **da fare**, dalla più vecchia; poi le **fatte**, dalla più recente, **grigie e barrate**.
-- **Toccare la riga** la segna fatta, senza conferma; toccarla di nuovo la riporta da fare.
+- **Toccare l'icona** a inizio riga (`circle` / `circle-check`) la segna fatta, senza conferma; toccarla di nuovo la riporta da fare.
+- **Toccare il titolo** lo rende modificabile: Invio o clic fuori salvano, Esc annulla; un titolo svuotato non si salva.
+- A fine riga il **cestino** (`trash-2`), **sempre visibile** come il pulsante Diario delle attività: elimina subito la faccenda, **senza conferma** (è un'attività usa e getta).
 - Le fatte restano visibili **fino a mezzanotte**, poi si **eliminano da sole** (all'apertura dell'app o al ritorno in primo piano).
 - Gli interruttori della Dashboard valgono anche qui: con **In corso** acceso o **Completi** spento le fatte si nascondono. Nella pagina Faccende si vedono sempre.
 - **Aggiunta rapida** come ultima riga, uguale a quella delle card dei progetti: "Aggiungi faccenda".

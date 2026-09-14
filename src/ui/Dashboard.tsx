@@ -47,6 +47,15 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
           : scheda.attivita.filter((a) => a.stato !== 'completo'),
     }))
     .filter((scheda) => !soloInCorso || scheda.visibili.length > 0)
+  // La prima card delle colonne, larga come le altre. Gli interruttori valgono
+  // anche qui: "In corso" acceso o "Completi" spento nascondono le fatte.
+  const cardFaccende = (
+    <CardFaccende
+      className="mb-3 break-inside-avoid"
+      faccende={faccende}
+      soloDaFare={soloInCorso || !mostraCompleti}
+    />
+  )
 
   return (
     <div className="flex flex-col gap-3">
@@ -67,16 +76,17 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
         </div>
       </div>
 
-      {/* Gli interruttori valgono anche qui: "In corso" o "Completi" spento nascondono le fatte. */}
-      <CardFaccende faccende={faccende} soloDaFare={soloInCorso || !mostraCompleti} />
-
       {mostrate.length === 0 ? (
-        <p className="px-2 py-3 text-testo-tenue">
-          {soloInCorso ? 'Nessuna attività in corso.' : 'Nessuna attività: aggiungine una con il +.'}
-        </p>
+        <>
+          <div className="gap-3 lg:columns-2">{cardFaccende}</div>
+          <p className="px-2 py-3 text-testo-tenue">
+            {soloInCorso ? 'Nessuna attività in corso.' : 'Nessuna attività: aggiungine una con il +.'}
+          </p>
+        </>
       ) : (
         // Da PC due colonne sfalsate (come l'icona `layout-dashboard`): ogni card è alta quanto il suo contenuto.
         <div className="gap-3 lg:columns-2">
+          {cardFaccende}
           {mostrate.map((scheda) => (
             <section
               key={scheda.chiave}
