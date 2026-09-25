@@ -1,7 +1,7 @@
 # 08 · Interfaccia
 
 Due riferimenti:
-- **Contenuti** simili al vecchio progetto: tabelle con modifica inline su desktop, card su mobile, modali per descrizione e diario.
+- **Contenuti** simili al vecchio progetto: tabelle con modifica inline su desktop, card su mobile, modale per il diario.
 - **Stile e navigazione** coerenti con **Grocery**: stessa struttura, stesse icone, stesso font, colori diversi.
 
 Interfaccia solo in italiano, solo tema chiaro, stile con **Tailwind CSS**. Le voci si chiamano **Attività**.
@@ -90,7 +90,7 @@ La pagina iniziale (`#/`).
 
 ## Faccende
 
-Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"): **solo il titolo** e **da fare / fatta**. Niente progetto, priorità, avanzamento, descrizione, diario o tag.
+Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"): **solo il titolo** e **da fare / fatta**. Niente progetto, priorità, avanzamento, diario o tag.
 
 - Una **card "Faccende"** (`broom`) nella **Dashboard**: è la **prima card delle colonne**, larga come quelle dei progetti (mezza pagina da PC). La stessa card, da sola, nella pagina **Faccende** (`#/faccende`).
 - Colore **post-it giallo**: fondo `#FFFBE3` (molto chiaro), bordi e divisori `#EFE4B0`, così si distingue dalle card bianche dei progetti.
@@ -124,7 +124,6 @@ Pulizie e attività periodiche che si aggiungono da sole alle faccende ([04](04-
 
 Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
 - Campi modificabili con le stesse regole delle righe: **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Priorità**, **Stato** (conferma per *Completo*), **Avanzamento**.
-- **Descrizione** resa in Markdown, con *Modifica* / *Aggiungi* che apre il modale descrizione sopra.
 - Date di creazione, modifica e completamento; pulsante **Diario** (evidenziato se ha voci) che apre il modale diario sopra.
 - In fondo, pulsante **Elimina** (`trash-2`, rosso) con la stessa conferma della pagina Attività; eliminata l'attività, il modale si chiude.
 
@@ -145,7 +144,7 @@ Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
 | Stato | gruppo di pulsanti con icona e colore | clic sul pulsante; passare a *Completo* chiede conferma |
 | Priorità | 5 stelle (`star`) | clic sulla stella |
 | Avanzamento | barra + % | clic → slider / numero |
-| Azioni | `file-text` descrizione · `book-open` diario · `trash-2` elimina (solo nella pagina Attività) | icone evidenziate se descrizione o diario non sono vuoti |
+| Azioni | `book-open` diario · `trash-2` elimina (solo nella pagina Attività) | icona del diario evidenziata se ha voci |
 
 Icone degli stati: *Da fare* `circle` · *In corso* `play` · *Bloccato* `ban` · *Completo* `circle-check`.
 
@@ -167,11 +166,7 @@ Nel modale "Nuova attività" non c'è nessun dialogo.
 
 ## Modale "Nuova attività"
 
-Campi: **Titolo** (obbligatorio, con i suggerimenti dei tag e sotto la sola scritta "Scrivi < per aggiungere un tag"), **Progetto** (facoltativo, con suggerimenti), **Stato** (default *Da fare*), **Priorità** (default 3 stelle), **Descrizione** (Markdown, con anteprima e aiuto sulla sintassi). Invio nel titolo crea l'attività. A schermo intero su mobile.
-
-## Modale descrizione
-
-Titolo dell'attività; vista Markdown resa, con checklist; pulsante *Modifica* → textarea con *Salva*. Se la descrizione è vuota si apre direttamente in modifica.
+Campi: **Titolo** (obbligatorio, con i suggerimenti dei tag e sotto la sola scritta "Scrivi < per aggiungere un tag"), **Progetto** (facoltativo, con suggerimenti), **Stato** (default *Da fare*), **Priorità** (default 3 stelle). Invio nel titolo crea l'attività. A schermo intero su mobile.
 
 ## Modale diario
 

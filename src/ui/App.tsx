@@ -11,7 +11,6 @@ import { installa, useInstallazione } from './installazione'
 import { DialogoProgetto } from './DialogoProgetto'
 import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
-import { ModaleDescrizione } from './ModaleDescrizione'
 import { ModaleDettagli } from './ModaleDettagli'
 import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
@@ -46,12 +45,10 @@ export function App() {
   const faccende = useFaccende(mostraAvviso)
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
   // I modali seguono l'attività per id, così mostrano sempre la versione aggiornata.
-  const [descrizioneDi, setDescrizioneDi] = useState<number | null>(null)
   const [diarioDi, setDiarioDi] = useState<number | null>(null)
   const [dettagliDi, setDettagliDi] = useState<number | null>(null)
   const trova = (id: number | null) =>
     stato.fase === 'pronto' && id !== null ? (stato.attivita.find((a) => a.id === id) ?? null) : null
-  const descrizioneAperta = trova(descrizioneDi)
   const diarioAperto = trova(diarioDi)
   const dettagliAperti = trova(dettagliDi)
 
@@ -71,7 +68,6 @@ export function App() {
       if (esito.tipo === 'chiedi') setCambio({ attivita, da: esito.da, a: esito.a, quante: esito.quante })
     },
     elimina: setDaEliminare,
-    apriDescrizione: (attivita) => setDescrizioneDi(attivita.id),
     apriDiario: (attivita) => setDiarioDi(attivita.id),
   }
 
@@ -148,7 +144,7 @@ export function App() {
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
-      {/* Descrizione, diario e conferme si aprono dopo, quindi sopra i dettagli. */}
+      {/* Diario e conferme si aprono dopo, quindi sopra i dettagli. */}
       {dettagliAperti && (
         <ModaleDettagli
           key={dettagliAperti.id}
@@ -190,14 +186,6 @@ export function App() {
           }}
         />
       )}
-      {descrizioneAperta && (
-        <ModaleDescrizione
-          key={descrizioneAperta.id}
-          attivita={descrizioneAperta}
-          onSalva={(descrizione) => void modifica(descrizioneAperta.id, { descrizione })}
-          onChiudi={() => setDescrizioneDi(null)}
-        />
-      )}
       {diarioAperto && (
         <ModaleDiario
           key={diarioAperto.id}
@@ -220,8 +208,8 @@ export function App() {
           }}
         >
           <p>
-            Eliminare <strong>{titoloSenzaTag(daEliminare.titolo) || daEliminare.titolo}</strong>? Si perdono anche
-            descrizione e diario, e non si può tornare indietro.
+            Eliminare <strong>{titoloSenzaTag(daEliminare.titolo) || daEliminare.titolo}</strong>? Si perde anche il
+            diario, e non si può tornare indietro.
           </p>
         </Conferma>
       )}

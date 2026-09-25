@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react'
-import { BookOpen, Pencil, Trash2 } from 'lucide-react'
+import { BookOpen, Trash2 } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import { titoloSenzaTag } from '../dominio/tag'
 import type { Attivita } from '../dominio/tipi'
 import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
 import type { AzioniAttivita } from './ElencoAttivita'
 import { AiutoTag } from './InputTitolo'
-import { Markdown } from './Markdown'
 import { Modale } from './Modale'
 import { dataOra } from './ModaleDiario'
 import { SceltaPriorita, SceltaStato } from './Scelte'
@@ -25,11 +24,9 @@ const pulsante =
  * I dettagli di un'attività, aperti dalla Dashboard (doc/08-interfaccia.md,
  * "Modale dettagli"): tutti i campi modificabili come nelle righe, con le stesse
  * regole (conferma di *Completo*, "solo questa / tutte" sul progetto).
- * Descrizione e diario si modificano nei loro modali, che si aprono sopra.
+ * Il diario si modifica nel suo modale, che si apre sopra.
  */
 export function ModaleDettagli({ attivita: a, progetti, azioni, onChiudi }: Props) {
-  const descrizione = a.descrizione?.trim() ? a.descrizione : null
-
   return (
     <Modale
       titolo={titoloSenzaTag(a.titolo) || a.titolo}
@@ -79,21 +76,6 @@ export function ModaleDettagli({ attivita: a, progetti, azioni, onChiudi }: Prop
             onSalva={(avanzamento) => azioni.modifica(a, { avanzamento })}
           />
         </Campo>
-
-        <section className="flex flex-col gap-1 border-t border-bordo pt-3">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xs font-medium text-testo-tenue">Descrizione</h3>
-            <button type="button" className={pulsante} onClick={() => azioni.apriDescrizione(a)}>
-              <Pencil className="size-4" aria-hidden="true" />
-              {descrizione === null ? 'Aggiungi' : 'Modifica'}
-            </button>
-          </div>
-          {descrizione === null ? (
-            <p className="text-testo-tenue">Nessuna descrizione.</p>
-          ) : (
-            <Markdown testo={descrizione} />
-          )}
-        </section>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-bordo pt-3">
           <p className="text-xs text-testo-tenue">

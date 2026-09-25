@@ -48,3 +48,4 @@
 | 2026-09-13 | Nuovi tag: **progetto** (da finire di pensare), **inverno** ed **estate** (stagionali), **cucito**, **natalizio**, **cucina** | deciso |
 | 2026-09-14 | **Faccende**: attività veloci con solo titolo e da fare / fatta, in una **tabella separata** `faccende`; card in cima alla Dashboard e pagina nel menu; le fatte si eliminano **a fine giornata** | deciso |
 | 2026-09-25 | **Faccende ricorrenti**: tabella `ricorrenze` con regola "ogni N giorni / settimane (giorni scelti) / mesi / anni"; le faccende si creano **dall'app alla lettura**, niente job nel database; **una sola aperta per ricorrenza** (indice univoco), le occorrenze saltate non si recuperano | deciso |
+| 2026-09-25 | **Via la descrizione** delle attività: non si usava, bastano titolo e diario. Colonna tolta con `004_senza_descrizione.sql` | deciso |

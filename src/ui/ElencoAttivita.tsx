@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Trash2 } from 'lucide-react'
+import { BookOpen, Trash2 } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import type { Attivita, Modifica } from '../dominio/tipi'
 import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
@@ -11,7 +11,6 @@ export interface AzioniAttivita {
   cambiaProgetto: (attivita: Attivita, testo: string) => void
   /** Chiede conferma prima di eliminare. */
   elimina: (attivita: Attivita) => void
-  apriDescrizione: (attivita: Attivita) => void
   apriDiario: (attivita: Attivita) => void
 }
 
@@ -53,16 +52,6 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
     ),
     azioni: (
       <div className="flex items-center gap-0.5">
-        {/* Evidenziata se la descrizione non è vuota. */}
-        <button
-          type="button"
-          aria-label="Descrizione"
-          title="Descrizione"
-          className={`${icona} ${a.descrizione?.trim() ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
-          onClick={() => azioni.apriDescrizione(a)}
-        >
-          <FileText className="size-4" aria-hidden="true" />
-        </button>
         {/* Evidenziata se il diario ha delle voci. */}
         <button
           type="button"

@@ -9,7 +9,7 @@ interface Props {
   piede?: ReactNode
   /** Su mobile occupa tutto lo schermo (es. "Nuova attività"). */
   schermoInteroMobile?: boolean
-  /** Più largo, per leggere testi lunghi (descrizione, diario). */
+  /** Più largo, per leggere testi lunghi (il diario). */
   larga?: boolean
 }
 

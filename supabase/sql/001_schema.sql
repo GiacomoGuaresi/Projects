@@ -14,7 +14,6 @@ create schema if not exists projects;
 create table if not exists projects.attivita (
   id             bigint generated always as identity primary key,
   titolo         text not null check (btrim(titolo) <> ''),
-  descrizione    text,
   progetto       text,
   stato          text not null default 'da_fare'
                  check (stato in ('da_fare', 'in_corso', 'bloccato', 'completo')),

@@ -6,7 +6,6 @@
 - uno stato;
 - una priorità;
 - una percentuale di avanzamento;
-- una descrizione con checklist;
 - un diario che ricorda cosa è stato fatto e quando.
 
 Le attività si raggruppano per **progetto**: un'etichetta libera (es. "Casa", "Bagno", "Auto"), non un'entità da creare e gestire a parte.
@@ -43,6 +42,6 @@ Il vecchio codice è in `OLD/`, solo come riferimento locale.
 - Dashboard con una card per progetto, pagina Per stato a sezioni collassabili
 - Tabella su desktop e card su mobile, con modifica inline dei campi
 - Stelle di priorità e barra di avanzamento
-- Modali per descrizione (Markdown) e diario
+- Modale per il diario
 - Tag nel titolo (`<urgente>`) mostrati come badge
 - Icona del progetto con iniziali e colore ricavato dal nome

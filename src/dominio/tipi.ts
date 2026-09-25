@@ -8,8 +8,6 @@ export type Stato = (typeof STATI)[number]
 export interface Attivita {
   id: number
   titolo: string
-  /** Markdown. */
-  descrizione: string | null
   /** Etichetta libera; mai stringa vuota (il trigger la porta a NULL). */
   progetto: string | null
   stato: Stato
@@ -25,10 +23,10 @@ export interface Attivita {
 
 /** I campi che l'interfaccia cambia; il resto lo gestisce il database. */
 export type Modifica = Partial<
-  Pick<Attivita, 'titolo' | 'descrizione' | 'progetto' | 'stato' | 'priorita' | 'avanzamento'>
+  Pick<Attivita, 'titolo' | 'progetto' | 'stato' | 'priorita' | 'avanzamento'>
 >
 
-export type NuovaAttivita = Pick<Attivita, 'titolo' | 'descrizione' | 'progetto' | 'stato' | 'priorita'>
+export type NuovaAttivita = Pick<Attivita, 'titolo' | 'progetto' | 'stato' | 'priorita'>
 
 /**
  * Un'attività veloce e ripetitiva (tabella `faccende`): solo il titolo e se è

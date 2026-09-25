@@ -136,7 +136,6 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
                     onCrea={(titolo) =>
                       onCrea({
                         titolo,
-                        descrizione: null,
                         progetto: scheda.progetto,
                         stato: soloInCorso ? 'in_corso' : 'da_fare',
                         priorita: 3,

@@ -19,7 +19,6 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 |---|---|
 | Crea, modifica, elimina (con conferma) | ✅ |
 | Titolo, con tag `<tag>` da una lista fissa | ✅ urgente, fai da te, guasto, idea, progetto, inverno, estate, cucito, natalizio, cucina (+ `ia` riservato), vedi [08](08-interfaccia.md) |
-| Descrizione in Markdown con checklist | ✅ |
 | **Progetto**: campo di testo libero, facoltativo, con suggerimenti dai progetti già usati | ✅ |
 | Stato: **da fare · in corso · bloccato · completo** | ✅ |
 | Priorità da 1 a 5 stelle | ✅ |
@@ -37,7 +36,7 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Le fatte restano barrate **fino a mezzanotte**, poi si eliminano da sole | ✅ |
 | **Ricorrenti**: ogni N giorni, settimane (con i giorni scelti), mesi o anni; si aggiungono da sole, senza accumularsi; pausa | ✅ |
 | Notifiche o promemoria a un orario | ❌ |
-| Progetto, priorità, descrizione, diario, tag | ❌ |
+| Progetto, priorità, diario, tag | ❌ |
 
 ## Diario
 

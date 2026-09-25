@@ -8,7 +8,6 @@ export function attivita(campi: Partial<Attivita> = {}): Attivita {
   return {
     id: prossimoId++,
     titolo: 'Attività',
-    descrizione: null,
     progetto: null,
     stato: 'da_fare',
     priorita: 3,

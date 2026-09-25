@@ -31,7 +31,6 @@ erDiagram
   attivita {
     bigint id PK
     text titolo
-    text descrizione
     text progetto
     text stato
     smallint priorita
@@ -55,7 +54,6 @@ erDiagram
 |---|---|---|---|
 | id | bigint | PK, identity | |
 | titolo | text | NOT NULL, non vuoto | può contenere tag `<tag>` |
-| descrizione | text | | Markdown |
 | progetto | text | NULL ammesso | etichetta libera; `trim`, stringa vuota → NULL (trigger) |
 | stato | text | NOT NULL, default `'da_fare'`, check in (`da_fare`, `in_corso`, `bloccato`, `completo`) | |
 | priorita | smallint | NOT NULL, default `3`, check 1–5 | stelle |
