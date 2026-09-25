@@ -35,6 +35,8 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Modifica del titolo ed eliminazione (senza conferma) | ✅ |
 | Card in cima alla Dashboard e pagina **Faccende** nel menu | ✅ |
 | Le fatte restano barrate **fino a mezzanotte**, poi si eliminano da sole | ✅ |
+| **Ricorrenti**: ogni N giorni, settimane (con i giorni scelti), mesi o anni; si aggiungono da sole, senza accumularsi; pausa | ✅ |
+| Notifiche o promemoria a un orario | ❌ |
 | Progetto, priorità, descrizione, diario, tag | ❌ |
 
 ## Diario

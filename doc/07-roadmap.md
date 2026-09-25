@@ -48,6 +48,7 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 ## Dopo l'MVP
 - [ ] **Dashboard per progetto**: una card per progetto con tutte le attività (completate grigie e barrate) e aggiunta rapida nel progetto, modale dettagli con tutti i campi modificabili; la vecchia dashboard diventa la pagina **Per stato**
 - [ ] **Faccende**: tabella `faccende` (`supabase/sql/002_faccende.sql`, da applicare a mano), card in cima alla Dashboard, pagina nel menu, eliminazione delle fatte a fine giornata
+- [ ] **Faccende ricorrenti**: tabella `ricorrenze` (`supabase/sql/003_ricorrenze.sql`, da applicare a mano), card "Ricorrenti" nella pagina Faccende, creazione automatica alla lettura
 
 ## Fase 4 · Assistente IA
 - [ ] Scelta del provider con tier gratuito

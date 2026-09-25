@@ -144,7 +144,7 @@ export function App() {
             {(attivita) => <PaginaAttivita attivita={attivita} progetti={progetti} azioni={azioni} />}
           </ConAttivita>
         )}
-        {rotta === 'faccende' && <PaginaFaccende faccende={faccende} />}
+        {rotta === 'faccende' && <PaginaFaccende faccende={faccende} onAvviso={mostraAvviso} />}
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}

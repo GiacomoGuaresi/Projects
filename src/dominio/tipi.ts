@@ -40,7 +40,44 @@ export interface Faccenda {
   completa: boolean
   creata_il: string
   completata_il: string | null
+  /** La ricorrenza che l'ha creata, se c'è. */
+  ricorrenza_id: number | null
 }
+
+export const UNITA = ['giorno', 'settimana', 'mese', 'anno'] as const
+
+export type Unita = (typeof UNITA)[number]
+
+/** Le date di calendario, senza ora: `YYYY-MM-DD`. */
+export type Giorno = string
+
+/**
+ * Una regola che crea da sola una faccenda (tabella `ricorrenze`): ogni `ogni`
+ * giorni, settimane, mesi o anni a partire da `inizio`.
+ */
+export interface Ricorrenza {
+  id: number
+  titolo: string
+  unita: Unita
+  /** Ogni quante unità: 1 = ogni settimana, 2 = ogni due settimane… */
+  ogni: number
+  /** 1 = lunedì … 7 = domenica. Solo per le settimanali, e lì mai vuoto. */
+  giorni: number[] | null
+  inizio: Giorno
+  /** Il giorno in cui creerà la prossima faccenda. */
+  prossima: Giorno
+  /** L'ultimo giorno in cui ha creato una faccenda. */
+  ultima: Giorno | null
+  /** In pausa non crea niente. */
+  attiva: boolean
+  creata_il: string
+}
+
+/** Quello che decide le date. */
+export type Regola = Pick<Ricorrenza, 'unita' | 'ogni' | 'giorni' | 'inizio'>
+
+/** Quello che si sceglie nel modale; `prossima` e `ultima` le calcola l'app. */
+export type DatiRicorrenza = Pick<Ricorrenza, 'titolo' | 'unita' | 'ogni' | 'giorni' | 'inizio' | 'attiva'>
 
 export interface VoceDiario {
   id: number

@@ -13,6 +13,7 @@ const faccenda = (campi: Partial<Faccenda> = {}): Faccenda => ({
   completa: false,
   creata_il: ieri(9),
   completata_il: null,
+  ricorrenza_id: null,
   ...campi,
 })
 

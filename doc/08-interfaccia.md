@@ -103,6 +103,22 @@ Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"
 - Gli interruttori della Dashboard valgono anche qui: con **In corso** acceso o **Completi** spento le fatte si nascondono. Nella pagina Faccende si vedono sempre.
 - **Aggiunta rapida** come ultima riga, uguale a quella delle card dei progetti: "Aggiungi faccenda".
 - Le faccende non compaiono nelle pagine Per stato e Attività, né nel modale "Nuova attività".
+- Una faccenda creata da una ricorrenza ha accanto al titolo una piccola icona `repeat`.
+
+## Faccende ricorrenti
+
+Pulizie e attività periodiche che si aggiungono da sole alle faccende ([04](04-modello-dati.md), `ricorrenze`).
+
+- Nella pagina **Faccende**, sotto la card, una card bianca **"Ricorrenti"** (`repeat`): una riga per regola con titolo, frequenza a parole ("Ogni 2 settimane, lunedì e giovedì", "Ogni mese il 15", "Ogni anno l'8 dicembre") e **prossima** data ("oggi", "domani", "ven 3 ott"); quelle in pausa grigie con `pause`. Ultima riga **"Nuova ricorrente"**.
+- Toccare una riga apre il **modale** della ricorrenza (a schermo intero su mobile):
+  - **Titolo**;
+  - **Ripeti**: scelte rapide *Ogni giorno · Ogni settimana · Ogni 2 settimane · Ogni mese · Ogni anno*, e sotto "Ogni [N] [giorni / settimane / mesi / anni]" per tutto il resto;
+  - per le settimanali, **i giorni** L M M G V S D (almeno uno; di default quello dell'inizio);
+  - **A partire dal** (data, default oggi); per mese e anno giorno e mese vengono da qui;
+  - in modifica, **In pausa**;
+  - un riquadro con la regola a parole e le **prossime tre date**;
+  - **Elimina** (rosso, con conferma): la faccenda già in elenco resta.
+- Arrivato il giorno, la faccenda compare nella card (all'apertura dell'app o al ritorno in primo piano). Se quella precedente è ancora da fare **non se ne aggiunge un'altra**.
 
 ## Modale dettagli
 

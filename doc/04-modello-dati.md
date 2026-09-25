@@ -7,12 +7,26 @@ Tutte le tabelle stanno nello schema Postgres **`projects`**. Come in Grocery, i
 ```mermaid
 erDiagram
   attivita ||--o{ voci_diario : "diario"
+  ricorrenze |o--o{ faccende : "crea"
+  ricorrenze {
+    bigint id PK
+    text titolo
+    text unita
+    smallint ogni
+    smallint_array giorni
+    date inizio
+    date prossima
+    date ultima
+    boolean attiva
+    timestamptz creata_il
+  }
   faccende {
     bigint id PK
     text titolo
     boolean completa
     timestamptz creata_il
     timestamptz completata_il
+    bigint ricorrenza_id FK
   }
   attivita {
     bigint id PK
@@ -75,8 +89,36 @@ Attività veloci e ripetitive, senza attributi ([08](08-interfaccia.md), "Faccen
 | completa | boolean | NOT NULL, default `false` | |
 | creata_il | timestamptz | default `now()` | ordina le da fare |
 | completata_il | timestamptz | trigger | `now()` quando diventa completa, `NULL` se riaperta |
+| ricorrenza_id | bigint | FK → `ricorrenze`, `on delete set null` | la ricorrenza che l'ha creata; eliminata la ricorrenza, la faccenda resta |
+
+Indice univoco parziale **`faccende_una_aperta_per_ricorrenza`** su `ricorrenza_id` `where not completa`: al massimo una faccenda da fare per ricorrenza.
 
 **Pulizia**: a ogni lettura (apertura dell'app e ritorno in primo piano) l'app elimina le faccende completate prima della mezzanotte locale del dispositivo. Nessun job nel database.
+
+## `projects.ricorrenze`
+
+Le regole delle faccende ricorrenti ([08](08-interfaccia.md), "Faccende ricorrenti"). Script `supabase/sql/003_ricorrenze.sql`.
+
+| Campo | Tipo | Vincoli / default | Note |
+|---|---|---|---|
+| id | bigint | PK, identity | |
+| titolo | text | NOT NULL, non vuoto | il titolo delle faccende create |
+| unita | text | `giorno` · `settimana` · `mese` · `anno` | |
+| ogni | smallint | 1–365, default 1 | ogni quante unità |
+| giorni | smallint[] | solo per `settimana`, lì non vuoto, valori 1–7 | 1 = lunedì … 7 = domenica; `NULL` per le altre unità |
+| inizio | date | NOT NULL | prima occorrenza possibile; per mese e anno dà anche il giorno (e il mese) |
+| prossima | date | NOT NULL | il giorno in cui creerà la prossima faccenda; la calcola l'app |
+| ultima | date | | l'ultimo giorno in cui ha creato una faccenda |
+| attiva | boolean | NOT NULL, default `true` | `false` = in pausa |
+| creata_il | timestamptz | default `now()` | |
+
+**Occorrenze** (`src/dominio/ricorrenze.ts`): *giorno* ogni N giorni dall'inizio; *settimana* nei giorni scelti, una settimana (da lunedì) ogni N a partire da quella dell'inizio; *mese* e *anno* lo stesso giorno dell'inizio ogni N mesi o anni, o l'ultimo del mese se è più corto (31 → 30 aprile, 29 febbraio → 28).
+
+**Creazione delle faccende**: a ogni lettura delle faccende, dopo la pulizia, per ogni ricorrenza attiva con `prossima` ≤ oggi (data locale del dispositivo) l'app
+1. sposta `prossima` alla prima occorrenza dopo oggi e segna `ultima = oggi`, **solo se `prossima` è ancora quella letta** (due dispositivi aperti insieme: vince uno solo);
+2. inserisce la faccenda con `ricorrenza_id`; se ce n'è già una da fare l'indice univoco la rifiuta, e va bene così.
+
+Le occorrenze saltate (app non aperta per giorni) non si recuperano: si crea una sola faccenda. Salvare una regola ricalcola `prossima` da oggi, senza ripetere il giorno di `ultima`.
 
 ## Viste
 
@@ -100,7 +142,7 @@ Attività veloci e ripetitive, senza attributi ([08](08-interfaccia.md), "Faccen
 
 ## Permessi
 
-RLS attiva su entrambe le tabelle. Policy "solo la sessione autenticata" (`to authenticated using (true) with check (true)`), come in Grocery. Accesso revocato a `anon`, funzioni comprese. Dettagli in [05](05-sicurezza.md).
+RLS attiva su tutte le tabelle. Policy "solo la sessione autenticata" (`to authenticated using (true) with check (true)`), come in Grocery. Accesso revocato a `anon`, funzioni comprese. Dettagli in [05](05-sicurezza.md).
 
 ## Suggerimenti del progetto
 

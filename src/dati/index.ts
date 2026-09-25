@@ -7,17 +7,20 @@ import { AccessoSupabase, type Accesso } from './accesso'
 import { AttivitaSupabase } from './attivita'
 import { DiarioSupabase } from './diario'
 import { FaccendeSupabase } from './faccende'
+import { RicorrenzeSupabase } from './ricorrenze'
 
 export type { Accesso, EsitoAccesso } from './accesso'
 export type { AttivitaSupabase, RigaAttivita } from './attivita'
 export type { DiarioSupabase } from './diario'
 export type { FaccendeSupabase } from './faccende'
+export type { RicorrenzeSupabase } from './ricorrenze'
 
 let connessione: {
   accesso: Accesso
   attivita: AttivitaSupabase
   diario: DiarioSupabase
   faccende: FaccendeSupabase
+  ricorrenze: RicorrenzeSupabase
 } | null = null
 
 /**
@@ -46,6 +49,7 @@ function connetti() {
     attivita: new AttivitaSupabase(client),
     diario: new DiarioSupabase(client),
     faccende: new FaccendeSupabase(client),
+    ricorrenze: new RicorrenzeSupabase(client),
   }
   return connessione
 }
@@ -68,4 +72,9 @@ export function diario(): DiarioSupabase {
 /** Le query sulle faccende. */
 export function faccende(): FaccendeSupabase {
   return connetti().faccende
+}
+
+/** Le query sulle ricorrenze. */
+export function ricorrenze(): RicorrenzeSupabase {
+  return connetti().ricorrenze
 }

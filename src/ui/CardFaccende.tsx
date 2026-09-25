@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Broom, Circle, CircleCheck, Trash2 } from 'lucide-react'
+import { Broom, Circle, CircleCheck, Repeat, Trash2 } from 'lucide-react'
 import { faccendeDiOggi } from '../dominio/faccende'
 import type { Faccenda } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
@@ -136,6 +136,9 @@ function RigaFaccenda({ faccenda: f, onSegna, onRinomina, onElimina }: RigaFacce
           onClick={apri}
         >
           {f.titolo}
+          {f.ricorrenza_id !== null && (
+            <Repeat className="ml-1.5 inline size-3.5 align-[-2px] text-testo-tenue" aria-label="ricorrente" />
+          )}
         </button>
       ) : (
         <input

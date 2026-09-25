@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { faccende } from '../dati'
 import { inizioGiornata, segnaCompleta } from '../dominio/faccende'
+import { oggi } from '../dominio/ricorrenze'
 import type { Faccenda } from '../dominio/tipi'
 
 export type StatoFaccende =
@@ -10,7 +11,8 @@ export type StatoFaccende =
 
 /**
  * Le faccende, lette all'apertura e ogni volta che l'app torna in primo piano:
- * ogni lettura elimina prima quelle completate prima di oggi.
+ * ogni lettura elimina prima quelle completate prima di oggi e crea quelle
+ * delle ricorrenze arrivate.
  */
 export function useFaccende(onAvviso: (messaggio: string) => void) {
   const [stato, setStato] = useState<StatoFaccende>({ fase: 'caricamento' })
@@ -18,7 +20,7 @@ export function useFaccende(onAvviso: (messaggio: string) => void) {
   const ricarica = useCallback(async () => {
     setStato((prima) => (prima.fase === 'pronto' ? prima : { fase: 'caricamento' }))
     try {
-      setStato({ fase: 'pronto', faccende: await faccende().elenco(inizioGiornata()) })
+      setStato({ fase: 'pronto', faccende: await faccende().elenco(inizioGiornata(), oggi()) })
     } catch (errore) {
       setStato({ fase: 'errore', messaggio: (errore as Error).message })
     }
