@@ -1,7 +1,8 @@
-import { BookOpen, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import type { Attivita, Modifica } from '../dominio/tipi'
 import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
+import { PulsanteDiario } from './PulsanteDiario'
 import { SceltaPriorita, SceltaStato } from './Scelte'
 
 /** Cosa si può fare su un'attività dalle righe e dalle card. */
@@ -52,16 +53,7 @@ export function ElencoAttivita({ attivita, progetti, azioni, conElimina = false 
     ),
     azioni: (
       <div className="flex items-center gap-0.5">
-        {/* Evidenziata se il diario ha delle voci. */}
-        <button
-          type="button"
-          aria-label="Diario"
-          title="Diario"
-          className={`${icona} ${a.ha_diario ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
-          onClick={() => azioni.apriDiario(a)}
-        >
-          <BookOpen className="size-4" aria-hidden="true" />
-        </button>
+        <PulsanteDiario pieno={a.ha_diario} onApri={() => azioni.apriDiario(a)} />
         {conElimina && (
           <button
             type="button"

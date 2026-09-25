@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { BookOpen, CircleCheck, Play, type LucideIcon } from 'lucide-react'
+import { CircleCheck, Play, type LucideIcon } from 'lucide-react'
 import { schedeProgetti } from '../dominio/ordinamento'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
@@ -7,6 +7,7 @@ import { CardFaccende } from './CardFaccende'
 import { useInterruttore, useRilievi } from './preferenze'
 import { usePressioneLunga } from './pressioneLunga'
 import { ProgettoConIcona } from './ProgettoConIcona'
+import { PulsanteDiario } from './PulsanteDiario'
 import { PulsanteStato } from './PulsanteStato'
 import { PulsanteStella } from './PulsanteStella'
 import { TitoloConTag } from './TitoloConTag'
@@ -250,16 +251,7 @@ function RigaAttivita({ attivita: a, onDettagli, onDiario, onModifica }: RigaAtt
           <TitoloConTag titolo={a.titolo} />
         </span>
       </button>
-      {/* Evidenziato se il diario ha delle voci. */}
-      <button
-        type="button"
-        aria-label="Diario"
-        title="Diario"
-        className={`grid size-8 shrink-0 place-items-center rounded-lg ${a.ha_diario ? 'bg-pastello text-salvia-scura' : 'text-testo-tenue hover:bg-fondo'}`}
-        onClick={() => onDiario(a)}
-      >
-        <BookOpen className="size-4" aria-hidden="true" />
-      </button>
+      <PulsanteDiario pieno={a.ha_diario} onApri={() => onDiario(a)} />
     </li>
   )
 }

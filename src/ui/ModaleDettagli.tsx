@@ -85,11 +85,18 @@ export function ModaleDettagli({ attivita: a, progetti, azioni, onChiudi }: Prop
           </p>
           <button
             type="button"
-            className={`${pulsante} ${a.ha_diario ? 'bg-pastello' : ''}`}
+            className={`${pulsante} relative`}
             onClick={() => azioni.apriDiario(a)}
           >
+            {/* Come PulsanteDiario: un pallino se ha voci. */}
             <BookOpen className="size-4" aria-hidden="true" />
             Diario
+            {a.ha_diario && (
+              <span
+                className="absolute -top-1 -right-1 size-2.5 rounded-full bg-salvia ring-2 ring-white"
+                aria-hidden="true"
+              />
+            )}
           </button>
         </div>
       </div>

@@ -82,7 +82,7 @@ La pagina iniziale (`#/`).
 - Dentro la card: prima *In corso*, poi *Da fare*, poi *Bloccate*; a parità di stato priorità decrescente, poi titolo.
 - **Toccare l'icona dello stato** a inizio riga lo fa avanzare: *Da fare* → *In corso* → *Completo* (con la solita conferma); *Completo* e *Bloccato* → *In corso*.
 - **Tenere premuta l'icona dello stato** (~400ms, con una breve vibrazione dove supportata) apre un **menu con tutti gli stati** sopra l'icona (sotto, se in alto non c'è spazio): facendo scorrere il dito sullo stato voluto questo si evidenzia, e **rilasciando lo si imposta** (*Completo* con la solita conferma). Rilasciato fuori dal menu o sullo stato attuale non cambia nulla; rilasciato senza muovere il dito il menu resta aperto e si sceglie con un tocco. Si chiude toccando fuori, con Esc o scorrendo la pagina. Da desktop si apre anche con il tasto destro.
-- Ogni attività mostra **solo** l'icona dello stato (con i colori dello stato), il titolo con i badge e il pulsante **Diario** (`book-open`, evidenziato se ha voci, apre il modale diario); **toccare un punto qualsiasi della riga** fuori dal pulsante apre il modale dettagli; ogni modifica, stato compreso, si fa nel modale dettagli.
+- Ogni attività mostra **solo** l'icona dello stato (con i colori dello stato), il titolo con i badge e il pulsante **Diario** (`book-open`, con un pallino di notifica se ha voci; apre il modale diario); **toccare un punto qualsiasi della riga** fuori dal pulsante apre il modale dettagli; ogni modifica, stato compreso, si fa nel modale dettagli.
 - Il **bordo inferiore** di ogni riga è l'**avanzamento**: una linea salvia larga quanto la percentuale, sopra la linea divisoria; al 100% non si mostra.
 - **Tenere premuto il titolo** (~400ms) e poi **trascinare in orizzontale** cambia l'avanzamento: si parte dal valore attuale, tutta la larghezza della riga vale 100%, a passi del 5%. Mentre si trascina la linea si ingrossa e sopra la riga compare la percentuale; al rilascio si salva, e non si aprono i dettagli. Non vale per le attività completate, ferme al 100%.
 - Le **completate** stanno in fondo alla card, dalla più recente, con il titolo **grigio e barrato**.
@@ -124,7 +124,7 @@ Pulizie e attività periodiche che si aggiungono da sole alle faccende ([04](04-
 
 Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
 - Campi modificabili con le stesse regole delle righe: **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Priorità**, **Stato** (conferma per *Completo*), **Avanzamento**.
-- Date di creazione, modifica e completamento; pulsante **Diario** (evidenziato se ha voci) che apre il modale diario sopra.
+- Date di creazione, modifica e completamento; pulsante **Diario** (con un pallino di notifica se ha voci) che apre il modale diario sopra.
 - In fondo, pulsante **Elimina** (`trash-2`, rosso) con la stessa conferma della pagina Attività; eliminata l'attività, il modale si chiude.
 
 ## Pagina Attività
@@ -144,7 +144,7 @@ Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
 | Stato | gruppo di pulsanti con icona e colore | clic sul pulsante; passare a *Completo* chiede conferma |
 | Priorità | 5 stelle (`star`) | clic sulla stella |
 | Avanzamento | barra + % | clic → slider / numero |
-| Azioni | `book-open` diario · `trash-2` elimina (solo nella pagina Attività) | icona del diario evidenziata se ha voci |
+| Azioni | `book-open` diario · `trash-2` elimina (solo nella pagina Attività) | pallino di notifica sul diario se ha voci |
 
 Icone degli stati: *Da fare* `circle` · *In corso* `play` · *Bloccato* `ban` · *Completo* `circle-check`.
 
