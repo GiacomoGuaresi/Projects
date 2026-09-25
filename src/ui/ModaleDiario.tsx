@@ -47,6 +47,7 @@ export function ModaleDiario({ attivita, onDiarioCambiato, onChiudi }: Props) {
   const [errore, setErrore] = useState<string | null>(null)
   const [inModifica, setInModifica] = useState<{ id: number; testo: string } | null>(null)
   const [daEliminare, setDaEliminare] = useState<VoceDiario | null>(null)
+  const [chiusuraDaConfermare, setChiusuraDaConfermare] = useState(false)
   const fondo = useRef<HTMLDivElement>(null)
   const campo = useRef<HTMLTextAreaElement>(null)
 
@@ -123,6 +124,15 @@ export function ModaleDiario({ attivita, onDiarioCambiato, onChiudi }: Props) {
     }
   }
 
+  // Testo scritto e non inviato, o una voce cambiata e non salvata: chiudere lo perde.
+  const voceCambiata =
+    inModifica !== null && inModifica.testo.trimEnd() !== voci.find((v) => v.id === inModifica.id)?.testo
+  const nonSalvato = testo.trim() !== '' || voceCambiata
+  const richiediChiusura = () => {
+    if (nonSalvato) setChiusuraDaConfermare(true)
+    else onChiudi()
+  }
+
   const tastiModifica = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault()
@@ -139,7 +149,7 @@ export function ModaleDiario({ attivita, onDiarioCambiato, onChiudi }: Props) {
   return (
     <Modale
       titolo={`Diario · ${titoloSenzaTag(attivita.titolo) || attivita.titolo}`}
-      onChiudi={onChiudi}
+      onChiudi={richiediChiusura}
       larga
       piede={
         <div className="flex w-full flex-col gap-1">
@@ -282,6 +292,23 @@ export function ModaleDiario({ attivita, onDiarioCambiato, onChiudi }: Props) {
           <p>
             La voce del <strong>{dataOra(daEliminare.creata_il)}</strong> sparisce dal diario, e non si può tornare
             indietro.
+          </p>
+        </Conferma>
+      )}
+      {chiusuraDaConfermare && (
+        <Conferma
+          titolo="Chiudere senza salvare?"
+          conferma="Chiudi senza salvare"
+          pericolo
+          onAnnulla={() => setChiusuraDaConfermare(false)}
+          onConferma={onChiudi}
+        >
+          <p>
+            {testo.trim() && voceCambiata
+              ? 'La nuova voce non è stata inviata e la modifica non è stata salvata: chiudendo si perdono.'
+              : testo.trim()
+                ? 'La nuova voce non è stata inviata: chiudendo si perde.'
+                : 'La modifica alla voce non è stata salvata: chiudendo si perde.'}
           </p>
         </Conferma>
       )}

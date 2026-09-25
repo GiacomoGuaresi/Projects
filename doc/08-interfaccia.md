@@ -179,6 +179,7 @@ Titolo dell'attività; vista Markdown resa, con checklist; pulsante *Modifica* �
 - Ogni voce mostra data e ora (formato italiano), più "modificata" se è stata cambiata. Nessun autore.
 - Azioni sulla voce: **modifica** (inline, Salva/Annulla) ed **elimina** (con conferma).
 - In basso: textarea e pulsante *Invia*; Cmd/Ctrl+Invio invia.
+- Chiudere (X, Esc, tocco fuori) con una voce scritta e non inviata, o una modifica non salvata, chiede conferma (*Chiudi senza salvare*).
 
 ## Icona del progetto
 
