@@ -5,11 +5,17 @@ import {
   descrivi,
   formattaGiorno,
   giornoSettimanaDi,
+  inizioDa,
   occorrenzaDa,
   occorrenzaDopo,
   oggi,
   prossimaDopoModifica,
+  primeVolte,
   prossimeOccorrenze,
+  regolaDa,
+  scelteDa,
+  ULTIMO,
+  type Scelte,
 } from './ricorrenze'
 import type { Regola, Ricorrenza } from './tipi'
 
@@ -156,8 +162,8 @@ describe('descrivi', () => {
       'Ogni settimana, tutti i giorni',
     )
     expect(descrivi(regola({ unita: 'mese' }))).toBe('Ogni mese il 25')
-    expect(descrivi(regola({ unita: 'mese', ogni: 2, inizio: '2026-01-31' }))).toBe(
-      'Ogni 2 mesi il 31 (o l’ultimo del mese)',
+    expect(descrivi(regola({ unita: 'mese', ogni: 2, inizio: '2026-01-30' }))).toBe(
+      'Ogni 2 mesi il 30 (o l’ultimo del mese)',
     )
     expect(descrivi(regola({ unita: 'anno', inizio: '2026-12-08' }))).toBe('Ogni anno l’8 dicembre')
     expect(descrivi(regola({ unita: 'mese', inizio: '2026-10-01' }))).toBe('Ogni mese il 1°')
@@ -171,5 +177,80 @@ describe('formattaGiorno', () => {
     expect(formattaGiorno('2026-09-24', '2026-09-25')).toBe('ieri')
     expect(formattaGiorno('2026-10-02', '2026-09-25')).toMatch(/2 ott/)
     expect(formattaGiorno('2027-01-02', '2026-09-25')).toMatch(/2027/)
+  })
+})
+
+describe('scelte del modale', () => {
+  // Venerdì 25 settembre 2026.
+  const oggi = '2026-09-25'
+  const scelte = (campi: Partial<Scelte>): Scelte => ({
+    unita: 'settimana',
+    ogni: 1,
+    giorni: [5],
+    giornoMese: 25,
+    mese: 9,
+    sfasamento: 0,
+    ...campi,
+  })
+
+  it('ogni giorno parte oggi; ogni 3 giorni si sceglie tra oggi, domani e dopodomani', () => {
+    expect(primeVolte(scelte({ unita: 'giorno' }), oggi)).toEqual(['2026-09-25'])
+    expect(primeVolte(scelte({ unita: 'giorno', ogni: 3 }), oggi)).toEqual(['2026-09-25', '2026-09-26', '2026-09-27'])
+  })
+
+  it('ogni 2 settimane: questa settimana o la prossima, senza i giorni già passati', () => {
+    const s = scelte({ ogni: 2, giorni: [1, 6] })
+    expect(primeVolte(s, oggi)).toEqual(['2026-09-26', '2026-09-28'])
+    expect(prossimeOccorrenze(regolaDa({ ...s, sfasamento: 1 }, oggi), oggi, 3)).toEqual([
+      '2026-09-28',
+      '2026-10-03',
+      '2026-10-12',
+    ])
+  })
+
+  it('ogni mese: il giorno scelto, da questo mese se non è passato', () => {
+    expect(inizioDa(scelte({ unita: 'mese', giornoMese: 25 }), oggi)).toBe('2026-09-25')
+    expect(inizioDa(scelte({ unita: 'mese', giornoMese: 10 }), oggi)).toBe('2026-10-10')
+    expect(primeVolte(scelte({ unita: 'mese', ogni: 3, giornoMese: 1 }), oggi)).toEqual([
+      '2026-10-01',
+      '2026-11-01',
+      '2026-12-01',
+    ])
+  })
+
+  it('l’ultimo del mese resta l’ultimo anche nei mesi corti', () => {
+    const r = regolaDa(scelte({ unita: 'mese', giornoMese: ULTIMO }), oggi)
+    expect(r.inizio).toBe('2026-10-31')
+    expect(prossimeOccorrenze(r, oggi, 3)).toEqual(['2026-10-31', '2026-11-30', '2026-12-31'])
+  })
+
+  it('ogni anno: giorno e mese scelti, quest’anno se non sono passati', () => {
+    expect(inizioDa(scelte({ unita: 'anno', giornoMese: 8, mese: 12 }), oggi)).toBe('2026-12-08')
+    expect(inizioDa(scelte({ unita: 'anno', giornoMese: 1, mese: 3 }), oggi)).toBe('2027-03-01')
+    expect(inizioDa(scelte({ unita: 'anno', giornoMese: 29, mese: 2 }), oggi)).toBe('2028-02-29')
+  })
+
+  it('una ricorrenza da modificare ritrova le sue scelte e la sua prima volta', () => {
+    const ricorrenza: Ricorrenza = {
+      id: 1,
+      titolo: 'Vetri',
+      unita: 'settimana',
+      ogni: 2,
+      giorni: [1],
+      inizio: '2026-09-07', // lunedì: poi 21/9, 5/10…
+      prossima: '2026-10-05',
+      ultima: '2026-09-21',
+      attiva: true,
+      creata_il: '2026-09-01T10:00:00Z',
+    }
+    const s = scelteDa(ricorrenza, oggi)
+    // Questa settimana è quella giusta, ma il suo lunedì è passato: la prima volta resta il 5/10.
+    expect(primeVolte(s, oggi)).toEqual(['2026-10-05', '2026-09-28'])
+    expect(s).toMatchObject({ unita: 'settimana', ogni: 2, giorni: [1], sfasamento: 0 })
+    expect(occorrenzaDa(regolaDa(s, oggi), oggi)).toBe('2026-10-05')
+  })
+
+  it('descrive l’ultimo giorno del mese', () => {
+    expect(descrivi(regolaDa(scelte({ unita: 'mese', giornoMese: ULTIMO }), oggi))).toBe('Ogni mese l’ultimo giorno')
   })
 })
