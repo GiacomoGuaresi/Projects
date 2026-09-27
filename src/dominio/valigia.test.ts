@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CATALOGO,
+  caselle,
   giorniValidi,
   leggiSpunte,
   leggiViaggio,
@@ -44,6 +45,16 @@ describe('listaPerViaggio', () => {
     expect(categorie({ giorni: 3, tipi: ['montagna'] })).not.toContain('rifugio')
   })
 
+  it('dice quali tipi scelti hanno fatto comparire voci e categorie', () => {
+    const lista = listaPerViaggio({ giorni: 3, tipi: ['mare', 'rifugio'] })
+    const voci = lista.flatMap((c) => c.voci)
+    expect(voci.find((v) => v.id === 'solare')?.tipi).toEqual(['mare', 'rifugio'])
+    expect(voci.find((v) => v.id === 'scarponi')?.tipi).toEqual(['rifugio'])
+    expect(voci.find((v) => v.id === 'spazzolino')?.tipi).toEqual([])
+    expect(lista.find((c) => c.id === 'spiaggia')?.tipi).toEqual(['mare'])
+    expect(lista.find((c) => c.id === 'beauty')?.tipi).toEqual([])
+  })
+
   it('porta il dettaglio delle voci raggruppate', () => {
     const portafogli = listaPerViaggio({ giorni: 3, tipi: [] })
       .flatMap((c) => c.voci)
@@ -61,6 +72,24 @@ describe('listaPerViaggio', () => {
     expect(quantita(3, 'pigiama')).toBe(1)
     expect(quantita(5, 'pigiama')).toBe(2)
     expect(quantita(3, 'spazzolino')).toBeUndefined()
+  })
+})
+
+describe('caselle', () => {
+  it('una a testa, una sola per chi ce l\'ha, una comune', () => {
+    expect(caselle({ id: 'calzini', di: 'entrambi' })).toEqual([
+      { persona: 'jack', chiave: 'calzini_j' },
+      { persona: 'ale', chiave: 'calzini_a' },
+    ])
+    expect(caselle({ id: 'anello', di: 'ale' })).toEqual([{ persona: 'ale', chiave: 'anello_a' }])
+    expect(caselle({ id: 'chiavi', di: 'comune' })).toEqual([{ persona: 'comune', chiave: 'chiavi' }])
+  })
+
+  it('la lista porta di chi è ogni voce', () => {
+    const voci = listaPerViaggio({ giorni: 3, tipi: [] }).flatMap((c) => c.voci)
+    expect(voci.find((v) => v.id === 'calzini')?.di).toBe('entrambi')
+    expect(voci.find((v) => v.id === 'rasoio')?.di).toBe('jack')
+    expect(voci.find((v) => v.id === 'chiavi')?.di).toBe('comune')
   })
 })
 
@@ -90,10 +119,15 @@ describe('cookie del viaggio', () => {
 })
 
 describe('cookie delle spunte', () => {
-  it('va e torna, scartando gli id non più nel catalogo', () => {
-    const spunte = new Set(['calzini', 'tenda'])
+  it('va e torna, scartando le chiavi non più nel catalogo', () => {
+    const spunte = new Set(['calzini_j', 'calzini_a', 'tenda'])
     expect(leggiSpunte(scriviSpunte(spunte))).toEqual(spunte)
-    expect(leggiSpunte('calzini.tolta.')).toEqual(new Set(['calzini']))
+    expect(leggiSpunte('calzini_j.tolta_j.')).toEqual(new Set(['calzini_j']))
     expect(leggiSpunte(null)).toEqual(new Set())
+  })
+
+  it('scarta le chiavi di chi non ha la voce, e quelle senza persona', () => {
+    // Il rasoio è solo di Jack, le chiavi di casa sono comuni, i calzini di tutti e due.
+    expect(leggiSpunte('rasoio_j.rasoio_a.chiavi_j.calzini')).toEqual(new Set(['rasoio_j']))
   })
 })

@@ -63,6 +63,7 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Lista per fare la valigia, nata dalla lista di controllo di Action e ritagliata su di noi, divisa in categorie | ✅ |
 | Voci che raggruppano più cose, elencate sotto l'etichetta (portafogli, farmaci, trucchi…) | ✅ |
 | Giorni del viaggio (quantità dei vestiti) e tipi combinabili: mare, montagna, rifugio, città, campeggio | ✅ |
+| Caselle per **Jack** e **Ale**: voci di tutti e due, di uno solo o **comuni** (una casella sola) | ✅ |
 | Spunte, viaggio e "Nascondi prese" nei **cookie**; **Reset** delle spunte | ✅ |
 | Voci personalizzate o liste salvate nel database | ❌ |
 

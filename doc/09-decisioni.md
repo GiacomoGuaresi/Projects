@@ -52,3 +52,4 @@
 | 2026-09-27 | **Valigia**: lista di Action nel codice, filtrata per **tipi di viaggio combinabili** e con quantità per **giorni**; spunte nei **cookie**, niente database; **Reset** toglie le spunte e lascia il viaggio | deciso |
 | 2026-09-27 | Valigia: via la sezione **bambini** e il tipo di viaggio *Bambini* (lista solo per noi) | deciso |
 | 2026-09-27 | Valigia ritagliata su di noi: tipi **mare, montagna, rifugio, città, campeggio** (via lavoro, aereo, auto, estero); voci **raggruppate con un sottotitolo** (portafogli, farmaci, trucchi, letture, giochi, tenda, cucina); categoria **Beauty** al posto di farmaci e cura personale; via snack, "prima di partire" e parte di spiaggia e campeggio | deciso |
+| 2026-09-27 | Valigia a due: ogni voce è **di tutti e due** (una casella a testa, Jack blu e Ale rossa), **di uno solo** o **comune** (una casella larga, gialla/arancione); categorie al massimo su **2 colonne** | deciso |

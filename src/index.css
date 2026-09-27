@@ -35,6 +35,16 @@
   --color-postit-bordo: #efe4b0;
   --color-postit-scuro: #fcf2c6;
 
+  /* Caselle della Valigia (doc/08, "Valigia"): Jack blu, Ale rossa, le voci
+     comuni gialle e arancioni quando sono prese. Fondo chiaro da vuote, pieno da
+     prese; i fondi pieni reggono il 4.5:1 con la sigla bianca. */
+  --color-jack: #2f5a8a;
+  --color-jack-chiaro: #e3edf8;
+  --color-ale: #a8333a;
+  --color-ale-chiaro: #f8e3e1;
+  --color-comune-chiaro: #fbefb8;
+  --color-comune: #b45309;
+
   /* Badge dei tag: fondo e testo (doc/08, "Tag"). */
   --color-tag-rosso: #f6d9d7;
   --color-tag-rosso-testo: #9b2f33;

@@ -12,6 +12,16 @@ export const TIPI_VIAGGIO = [
 ] as const
 export type TipoViaggio = (typeof TIPI_VIAGGIO)[number]
 
+export const PERSONE = ['jack', 'ale'] as const
+export type Persona = (typeof PERSONE)[number]
+
+/**
+ * Di chi è una voce: di tutti e due, una casella a testa (il predefinito, es.
+ * le mutande); di uno solo; o comune, una casella sola per la coppia (es. le
+ * chiavi di casa, i giochi).
+ */
+export type Di = 'entrambi' | Persona | 'comune'
+
 export const GIORNI_MIN = 1
 export const GIORNI_MAX = 30
 
@@ -21,6 +31,8 @@ export interface Voce {
   etichetta: string
   /** Le cose raggruppate nella voce, sotto l'etichetta (es. cosa c'è nel portafogli). */
   dettaglio?: string
+  /** Senza: di tutti e due, una casella a testa. */
+  di?: Di
   /** Serve se il viaggio ha almeno uno di questi tipi. Senza: serve sempre (se la categoria serve). */
   per?: readonly TipoViaggio[]
   /** Quanti ne servono per la durata del viaggio. */
@@ -53,7 +65,7 @@ export const CATALOGO: readonly Categoria[] = [
         etichetta: 'Portafogli',
         dettaglio: "Carta d'identità, patente, tessera sanitaria, bancomat / carta di credito, contanti",
       },
-      { id: 'chiavi', etichetta: 'Chiavi di casa' },
+      { id: 'chiavi', di: 'comune', etichetta: 'Chiavi di casa' },
     ],
   },
   {
@@ -81,14 +93,14 @@ export const CATALOGO: readonly Categoria[] = [
       { id: 'cappello', etichetta: 'Cappello di paglia', per: ['mare'] },
       { id: 'ciabatte', etichetta: 'Ciabatte' },
       { id: 'impermeabile', etichetta: 'Impermeabile' },
-      { id: 'ombrello', etichetta: 'Ombrello', per: ['citta'] },
-      { id: 'occhiali-vista', etichetta: 'Occhiali da vista', dettaglio: 'Custodia e panno' },
+      { id: 'ombrello', di: 'comune', etichetta: 'Ombrello', per: ['citta'] },
+      { id: 'occhiali-vista', di: 'ale', etichetta: 'Occhiali da vista', dettaglio: 'Custodia e panno' },
       { id: 'occhiali-sole', etichetta: 'Occhiali da sole' },
       { id: 'scarpe-comode', etichetta: 'Scarpe comode o sportive' },
       { id: 'scarpe-eleganti', etichetta: 'Scarpe eleganti' },
       { id: 'sandali', etichetta: 'Sandali', per: ['mare'] },
       { id: 'scarponi', etichetta: 'Scarponi da trekking', per: quota },
-      { id: 'sacco-sporchi', etichetta: 'Sacchetto per i panni sporchi' },
+      { id: 'sacco-sporchi', di: 'comune', etichetta: 'Sacchetto per i panni sporchi' },
     ],
   },
   {
@@ -96,30 +108,31 @@ export const CATALOGO: readonly Categoria[] = [
     titolo: 'Beauty',
     voci: [
       { id: 'spazzolino', etichetta: 'Spazzolino da denti' },
-      { id: 'dentifricio', etichetta: 'Dentifricio' },
+      { id: 'dentifricio', di: 'comune', etichetta: 'Dentifricio' },
       { id: 'deodorante', etichetta: 'Deodorante' },
-      { id: 'shampoo', etichetta: 'Shampoo e balsamo' },
-      { id: 'bagnoschiuma', etichetta: 'Bagnoschiuma' },
-      { id: 'lozione', etichetta: 'Lozione per il corpo' },
+      { id: 'shampoo', di: 'comune', etichetta: 'Shampoo e balsamo' },
+      { id: 'bagnoschiuma', di: 'comune', etichetta: 'Bagnoschiuma' },
+      { id: 'lozione', di: 'comune', etichetta: 'Lozione per il corpo' },
       { id: 'spazzola', etichetta: 'Spazzola / pettine' },
-      { id: 'rasoio', etichetta: 'Rasoio' },
-      { id: 'tagliaunghie', etichetta: 'Tagliaunghie' },
+      { id: 'rasoio', di: 'jack', etichetta: 'Rasoio' },
+      { id: 'tagliaunghie', di: 'comune', etichetta: 'Tagliaunghie' },
       { id: 'profumo', etichetta: 'Profumo' },
-      { id: 'trucchi', etichetta: 'Trucchi', dettaglio: 'Fondotinta, mascara, struccante' },
-      { id: 'lenti', etichetta: 'Lenti a contatto', dettaglio: 'Liquido e custodia' },
-      { id: 'assorbenti', etichetta: 'Assorbenti' },
-      { id: 'anello', etichetta: 'Anello anticoncezionale' },
+      { id: 'trucchi', di: 'ale', etichetta: 'Trucchi', dettaglio: 'Fondotinta, mascara, struccante' },
+      { id: 'lenti', di: 'ale', etichetta: 'Lenti a contatto', dettaglio: 'Liquido e custodia' },
+      { id: 'assorbenti', di: 'ale', etichetta: 'Assorbenti' },
+      { id: 'anello', di: 'ale', etichetta: 'Anello anticoncezionale' },
       {
         id: 'farmaci',
+        di: 'comune',
         etichetta: 'Farmaci',
         dettaglio:
           "Medicinali abituali, antidolorifici, crema per le punture d'insetto, cerotti, pinzette, kit di primo soccorso",
       },
-      { id: 'antistaminico', etichetta: 'Antistaminico' },
+      { id: 'antistaminico', di: 'comune', etichetta: 'Antistaminico' },
       { id: 'tappi', etichetta: 'Tappi per le orecchie' },
-      { id: 'fazzoletti', etichetta: 'Fazzoletti' },
-      { id: 'solare', etichetta: 'Protezione solare', per: ['mare', ...quota] },
-      { id: 'doposole', etichetta: 'Doposole', per: ['mare'] },
+      { id: 'fazzoletti', di: 'comune', etichetta: 'Fazzoletti' },
+      { id: 'solare', di: 'comune', etichetta: 'Protezione solare', per: ['mare', ...quota] },
+      { id: 'doposole', di: 'comune', etichetta: 'Doposole', per: ['mare'] },
     ],
   },
   {
@@ -127,17 +140,17 @@ export const CATALOGO: readonly Categoria[] = [
     titolo: 'Tecnologia',
     voci: [
       { id: 'caricatori', etichetta: 'Caricatori' },
-      { id: 'power-bank', etichetta: 'Power bank' },
+      { id: 'power-bank', di: 'comune', etichetta: 'Power bank' },
       { id: 'cuffie', etichetta: 'Cuffie o auricolari' },
-      { id: 'portatile', etichetta: 'Computer portatile' },
+      { id: 'portatile', di: 'jack', etichetta: 'Computer portatile' },
     ],
   },
   {
     id: 'relax',
     titolo: 'Giochi e letture',
     voci: [
-      { id: 'letture', etichetta: 'Letture', dettaglio: 'Guida di viaggio, libri, riviste, cruciverba' },
-      { id: 'giochi', etichetta: 'Giochi', dettaglio: 'Carte, palla, palline da ping pong, set da badminton' },
+      { id: 'letture', di: 'comune', etichetta: 'Letture', dettaglio: 'Guida di viaggio, libri, riviste, cruciverba' },
+      { id: 'giochi', di: 'comune', etichetta: 'Giochi', dettaglio: 'Carte, palla, palline da ping pong, set da badminton' },
     ],
   },
   {
@@ -145,12 +158,12 @@ export const CATALOGO: readonly Categoria[] = [
     titolo: 'Spiaggia o piscina',
     per: ['mare'],
     voci: [
-      { id: 'borsa-spiaggia', etichetta: 'Borsa da spiaggia' },
+      { id: 'borsa-spiaggia', di: 'comune', etichetta: 'Borsa da spiaggia' },
       { id: 'telo', etichetta: 'Telo mare' },
       { id: 'infradito', etichetta: 'Infradito' },
       { id: 'occhialini', etichetta: 'Occhialini e pinne' },
-      { id: 'borsa-frigo', etichetta: 'Borsa frigo', dettaglio: 'Elementi di raffreddamento' },
-      { id: 'thermos', etichetta: 'Thermos' },
+      { id: 'borsa-frigo', di: 'comune', etichetta: 'Borsa frigo', dettaglio: 'Elementi di raffreddamento' },
+      { id: 'thermos', di: 'comune', etichetta: 'Thermos' },
     ],
   },
   {
@@ -161,7 +174,7 @@ export const CATALOGO: readonly Categoria[] = [
       { id: 'zaino', etichetta: 'Zaino da escursione' },
       { id: 'borraccia', etichetta: 'Borraccia' },
       { id: 'bastoncini', etichetta: 'Bastoncini da trekking' },
-      { id: 'cartina', etichetta: 'Cartina dei sentieri' },
+      { id: 'cartina', di: 'comune', etichetta: 'Cartina dei sentieri' },
     ],
   },
   {
@@ -178,15 +191,15 @@ export const CATALOGO: readonly Categoria[] = [
     titolo: 'Speciale per i campeggiatori',
     per: ['campeggio'],
     voci: [
-      { id: 'tenda', etichetta: 'Tenda' },
-      { id: 'montaggio', etichetta: 'Montaggio tenda', dettaglio: 'Picchetti, martello di gomma, corde, telo per terreno' },
+      { id: 'tenda', di: 'comune', etichetta: 'Tenda' },
+      { id: 'montaggio', di: 'comune', etichetta: 'Montaggio tenda', dettaglio: 'Picchetti, martello di gomma, corde, telo per terreno' },
       { id: 'materassino', etichetta: 'Stuoia o materasso ad aria', dettaglio: 'Pompa di gonfiaggio' },
       { id: 'sacco-pelo', etichetta: 'Sacco a pelo' },
       { id: 'cuscini', etichetta: 'Cuscini' },
-      { id: 'pentole', etichetta: 'Pentole e padelle' },
-      { id: 'piatti', etichetta: 'Piatti, posate e vassoi' },
-      { id: 'apriscatole', etichetta: 'Apriscatole' },
-      { id: 'fornello', etichetta: 'Fornello a gas', dettaglio: 'Ricariche per gas, accendino' },
+      { id: 'pentole', di: 'comune', etichetta: 'Pentole e padelle' },
+      { id: 'piatti', di: 'comune', etichetta: 'Piatti, posate e vassoi' },
+      { id: 'apriscatole', di: 'comune', etichetta: 'Apriscatole' },
+      { id: 'fornello', di: 'comune', etichetta: 'Fornello a gas', dettaglio: 'Ricariche per gas, accendino' },
     ],
   },
 ]
@@ -202,6 +215,9 @@ export interface VoceDaPrendere {
   id: string
   etichetta: string
   dettaglio?: string
+  di: Di
+  /** I tipi scelti che l'hanno fatta comparire; vuoto se serve sempre. */
+  tipi: TipoViaggio[]
   /** Solo per le voci che dipendono dai giorni. */
   quantita?: number
 }
@@ -209,11 +225,18 @@ export interface VoceDaPrendere {
 export interface CategoriaDaPrendere {
   id: string
   titolo: string
+  /** Come `VoceDaPrendere.tipi`, per tutta la categoria. */
+  tipi: TipoViaggio[]
   voci: VoceDaPrendere[]
 }
 
 function serve(regola: { per?: readonly TipoViaggio[] }, tipi: readonly TipoViaggio[]) {
   return !regola.per || regola.per.some((t) => tipi.includes(t))
+}
+
+/** I tipi del viaggio che fanno comparire la voce (o la categoria), nell'ordine dei tipi. */
+function perche(regola: { per?: readonly TipoViaggio[] }, tipi: readonly TipoViaggio[]): TipoViaggio[] {
+  return regola.per ? TIPI_VIAGGIO.filter((t) => tipi.includes(t) && regola.per?.includes(t)) : []
 }
 
 /** Le categorie e le voci che servono per il viaggio, con le quantità; le categorie vuote spariscono. */
@@ -223,11 +246,14 @@ export function listaPerViaggio(viaggio: Viaggio, catalogo: readonly Categoria[]
     .map((c) => ({
       id: c.id,
       titolo: c.titolo,
+      tipi: perche(c, viaggio.tipi),
       voci: c.voci
         .filter((v) => serve(v, viaggio.tipi))
         .map((v) => ({
           id: v.id,
           etichetta: v.etichetta,
+          di: v.di ?? 'entrambi',
+          tipi: perche(v, viaggio.tipi),
           ...(v.dettaglio && { dettaglio: v.dettaglio }),
           ...(v.quantita && { quantita: v.quantita(viaggio.giorni) }),
         })),
@@ -241,8 +267,29 @@ export function giorniValidi(giorni: number): number {
   return Math.min(GIORNI_MAX, Math.max(GIORNI_MIN, Math.round(giorni)))
 }
 
-// Nei cookie: il viaggio come `7.mare.rifugio`, le spunte come `calzini.intimo`.
-// Il punto è ammesso in un cookie senza codifica, e gli id non ne contengono.
+export interface Casella {
+  persona: Persona | 'comune'
+  /** La chiave nel cookie delle spunte: l'id per le voci comuni, `id_j` / `id_a` per quelle personali. */
+  chiave: string
+}
+
+const SUFFISSI: Record<Persona, string> = { jack: 'j', ale: 'a' }
+
+/**
+ * Le caselle di una voce, nell'ordine delle colonne: una per persona, o una
+ * sola se è comune. La chiave dipende solo da voce e persona, così passare una
+ * voce da "entrambi" a una persona sola non perde la spunta.
+ */
+export function caselle(voce: { id: string; di: Di }): Casella[] {
+  if (voce.di === 'comune') return [{ persona: 'comune', chiave: voce.id }]
+  return PERSONE.filter((p) => voce.di === 'entrambi' || voce.di === p).map((persona) => ({
+    persona,
+    chiave: `${voce.id}_${SUFFISSI[persona]}`,
+  }))
+}
+
+// Nei cookie: il viaggio come `7.mare.rifugio`, le spunte come `calzini_j.chiavi`.
+// Punto e trattino basso restano uguali anche codificati, e gli id non ne contengono.
 
 export function scriviViaggio(viaggio: Viaggio): string {
   return [viaggio.giorni, ...viaggio.tipi].join('.')
@@ -264,9 +311,11 @@ export function scriviSpunte(spunte: ReadonlySet<string>): string {
   return [...spunte].join('.')
 }
 
-/** Le spunte dal cookie; gli id che non sono più nel catalogo si scartano. */
+/** Le spunte dal cookie; le chiavi che non sono più nel catalogo si scartano. */
 export function leggiSpunte(testo: string | null, catalogo: readonly Categoria[] = CATALOGO): Set<string> {
   if (!testo) return new Set()
-  const noti = new Set(catalogo.flatMap((c) => c.voci.map((v) => v.id)))
+  const noti = new Set(
+    catalogo.flatMap((c) => c.voci.flatMap((v) => caselle({ id: v.id, di: v.di ?? 'entrambi' }).map((k) => k.chiave))),
+  )
   return new Set(testo.split('.').filter((id) => noti.has(id)))
 }

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
-  Circle,
-  CircleCheck,
+  Check,
   EyeOff,
   Landmark,
   House,
@@ -14,11 +13,13 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import {
+  caselle,
   giorniValidi,
   GIORNI_MAX,
   GIORNI_MIN,
   listaPerViaggio,
   TIPI_VIAGGIO,
+  type Casella,
   type CategoriaDaPrendere,
   type TipoViaggio,
 } from '../dominio/valigia'
@@ -32,6 +33,34 @@ const infoTipi: Record<TipoViaggio, { etichetta: string; icona: LucideIcon }> = 
   rifugio: { etichetta: 'Rifugio', icona: House },
   citta: { etichetta: 'Città', icona: Landmark },
   campeggio: { etichetta: 'Campeggio', icona: Tent },
+}
+
+/** Nome, sigla e colori delle caselle, come il pulsante dello stato: solo il fondo, chiaro da vuota e pieno da presa. */
+const infoCaselle: Record<
+  Casella['persona'],
+  { nome: string; sigla: string; vuota: string; presa: string; pallino: string }
+> = {
+  jack: {
+    nome: 'Jack',
+    sigla: 'J',
+    vuota: 'bg-jack-chiaro text-jack',
+    presa: 'bg-jack text-white',
+    pallino: 'bg-jack',
+  },
+  ale: {
+    nome: 'Ale',
+    sigla: 'A',
+    vuota: 'bg-ale-chiaro text-ale',
+    presa: 'bg-ale text-white',
+    pallino: 'bg-ale',
+  },
+  comune: {
+    nome: 'Comuni',
+    sigla: 'Com',
+    vuota: 'bg-comune-chiaro text-tag-giallo-testo',
+    presa: 'bg-comune text-white',
+    pallino: 'bg-comune',
+  },
 }
 
 const pulsanteGiorni =
@@ -49,8 +78,18 @@ export function PaginaValigia() {
   const [conferma, setConferma] = useState(false)
 
   const lista = listaPerViaggio(viaggio)
-  const totale = lista.reduce((n, c) => n + c.voci.length, 0)
-  const prese = lista.reduce((n, c) => n + c.voci.filter((v) => spunte.has(v.id)).length, 0)
+  // Si conta per casella: una voce di tutti e due vale due spunte.
+  const tutte = lista.flatMap((c) => c.voci.flatMap(caselle))
+  const totale = tutte.length
+  const prese = tutte.filter((k) => spunte.has(k.chiave)).length
+  const conteggi = (['jack', 'ale', 'comune'] as const).map((persona) => {
+    const sue = tutte.filter((k) => k.persona === persona)
+    return {
+      persona,
+      prese: sue.filter((k) => spunte.has(k.chiave)).length,
+      totale: sue.length,
+    }
+  })
 
   const cambiaGiorni = (giorni: number) => cambiaViaggio({ ...viaggio, giorni: giorniValidi(giorni) })
   const cambiaTipo = (tipo: TipoViaggio, acceso: boolean) =>
@@ -65,7 +104,7 @@ export function PaginaValigia() {
       <div className="flex items-center gap-2 px-1">
         <h2 className="flex items-baseline gap-2 text-lg font-semibold">
           Valigia{' '}
-          <span className="text-sm font-normal text-testo-tenue" title="Voci prese sul totale">
+          <span className="text-sm font-normal text-testo-tenue" title="Caselle spuntate sul totale">
             {prese}/{totale}
           </span>
         </h2>
@@ -141,16 +180,21 @@ export function PaginaValigia() {
               style={{ width: `${totale ? (prese / totale) * 100 : 0}%` }}
             />
           </div>
-          <Interruttore
-            etichetta="Nascondi prese"
-            icona={EyeOff}
-            acceso={nascondiPrese}
-            onCambia={setNascondiPrese}
-          />
+          <Interruttore etichetta="Nascondi prese" icona={EyeOff} acceso={nascondiPrese} onCambia={setNascondiPrese} />
         </div>
+        {/* La legenda dei colori, con quante caselle ha preso ciascuno. */}
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-testo-tenue">
+          {conteggi.map(({ persona, prese, totale }) => (
+            <li key={persona} className="flex items-center gap-1.5">
+              <span className={`size-3 rounded-full ${infoCaselle[persona].pallino}`} aria-hidden="true" />
+              <span className="font-semibold text-testo">{infoCaselle[persona].nome}</span>
+              {prese}/{totale}
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <div className="columns-1 gap-3 md:columns-2 xl:columns-3">
+      <div className="columns-1 gap-3 md:columns-2">
         {lista.map((categoria) => (
           <CardCategoria
             key={categoria.id}
@@ -184,59 +228,124 @@ interface CardCategoriaProps {
   categoria: CategoriaDaPrendere
   spunte: ReadonlySet<string>
   nascondiPrese: boolean
-  onSegna: (id: string, presa: boolean) => void
+  onSegna: (chiave: string, presa: boolean) => void
 }
 
-/** Una categoria: titolo con le prese sul totale e una riga per voce, tutta da toccare. */
+/**
+ * Una categoria: titolo con le caselle spuntate sul totale e una riga per voce.
+ * A sinistra due colonne di caselle, Jack e Ale, allineate tra le righe: una
+ * voce di uno solo lascia vuoto il posto dell'altro, una voce comune ha una
+ * casella sola, larga quanto le due. Una voce è presa quando lo sono tutte le
+ * sue caselle.
+ */
 function CardCategoria({ categoria, spunte, nascondiPrese, onSegna }: CardCategoriaProps) {
-  const prese = categoria.voci.filter((v) => spunte.has(v.id)).length
-  const visibili = nascondiPrese ? categoria.voci.filter((v) => !spunte.has(v.id)) : categoria.voci
-  const completa = prese === categoria.voci.length
+  const righe = categoria.voci.map((voce) => {
+    const sue = caselle(voce)
+    return {
+      voce,
+      caselle: sue,
+      presa: sue.every((k) => spunte.has(k.chiave)),
+    }
+  })
+  const tutte = righe.flatMap((r) => r.caselle)
+  const prese = tutte.filter((k) => spunte.has(k.chiave)).length
+  const visibili = nascondiPrese ? righe.filter((r) => !r.presa) : righe
+  const completa = prese === tutte.length
 
   return (
     <section className="mb-3 break-inside-avoid rounded-[11px] border border-bordo bg-white">
       <h3 className="flex min-h-10 items-center gap-2 border-b border-bordo px-3 py-1 font-semibold">
-        <span className="min-w-0 flex-1">{categoria.titolo}</span>
+        <span className="min-w-0 flex-1">
+          {categoria.titolo}
+          <IconeTipi tipi={categoria.tipi} />
+        </span>
         <span className={`text-sm ${completa ? 'font-semibold text-completo' : 'font-normal text-testo-tenue'}`}>
-          {prese}/{categoria.voci.length}
+          {prese}/{tutte.length}
         </span>
       </h3>
       {visibili.length === 0 ? (
         <p className="px-3 py-2 text-sm text-testo-tenue">Tutto in valigia.</p>
       ) : (
         <ul className="divide-y divide-bordo">
-          {visibili.map((voce) => {
-            const presa = spunte.has(voce.id)
-            const Icona = presa ? CircleCheck : Circle
-            return (
-              <li key={voce.id}>
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={presa}
-                  className="flex min-h-11 w-full touch-manipulation items-center gap-2 px-1.5 py-1 text-left hover:bg-fondo active:bg-bordo"
-                  onClick={() => onSegna(voce.id, !presa)}
-                >
-                  <span
-                    className={`grid size-8 shrink-0 place-items-center rounded-lg ${
-                      presa ? 'bg-completo text-completo-testo' : 'bg-dafare text-dafare-testo'
-                    }`}
-                  >
-                    <Icona className="size-4" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1 break-words">
-                    <span className={presa ? 'text-testo-tenue line-through' : ''}>{voce.etichetta}</span>
-                    {voce.dettaglio && <span className="block text-sm text-testo-tenue">{voce.dettaglio}</span>}
-                  </span>
-                  {voce.quantita !== undefined && (
-                    <span className="shrink-0 pr-1.5 text-sm font-semibold text-testo-tenue">×{voce.quantita}</span>
-                  )}
-                </button>
-              </li>
-            )
-          })}
+          {visibili.map(({ voce, caselle: sue, presa }) => (
+            <li key={voce.id} className="flex min-h-11 items-center gap-2 px-1.5 py-1">
+              <div className="grid shrink-0 grid-cols-[repeat(2,--spacing(8))] gap-1">
+                {sue.map((casella) => (
+                  <CasellaVoce
+                    key={casella.chiave}
+                    casella={casella}
+                    etichetta={voce.etichetta}
+                    presa={spunte.has(casella.chiave)}
+                    onSegna={(nuova) => onSegna(casella.chiave, nuova)}
+                  />
+                ))}
+              </div>
+              <span className="min-w-0 flex-1 break-words">
+                <span className={presa ? 'text-testo-tenue line-through' : ''}>{voce.etichetta}</span>
+                <IconeTipi tipi={voce.tipi} />
+                {voce.dettaglio && <span className="block text-sm text-testo-tenue">{voce.dettaglio}</span>}
+              </span>
+              {voce.quantita !== undefined && (
+                <span className="shrink-0 pr-1.5 text-sm font-semibold text-testo-tenue">×{voce.quantita}</span>
+              )}
+            </li>
+          ))}
         </ul>
       )}
     </section>
+  )
+}
+
+/** I simbolini dei tipi di viaggio che hanno fatto comparire una voce o una categoria. */
+function IconeTipi({ tipi }: { tipi: readonly TipoViaggio[] }) {
+  return tipi.map((tipo) => {
+    const { etichetta, icona: Icona } = infoTipi[tipo]
+    return (
+      <Icona
+        key={tipo}
+        className="ml-1.5 inline size-3.5 align-[-2px] text-testo-tenue"
+        aria-label={etichetta}
+        role="img"
+      >
+        <title>{etichetta}</title>
+      </Icona>
+    )
+  })
+}
+
+interface CasellaVoceProps {
+  casella: Casella
+  etichetta: string
+  presa: boolean
+  onSegna: (presa: boolean) => void
+}
+
+/**
+ * Una casella nel colore di chi la spunta, con la sigla (J, A, Com) da vuota e
+ * la spunta da presa; quella comune occupa le due colonne. Jack sta a sinistra, Ale a destra.
+ */
+function CasellaVoce({ casella, etichetta, presa, onSegna }: CasellaVoceProps) {
+  const { nome, sigla, vuota, presa: piena } = infoCaselle[casella.persona]
+  const posto = {
+    jack: 'col-start-1',
+    ale: 'col-start-2',
+    comune: 'col-span-2',
+  }[casella.persona]
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={presa}
+      aria-label={casella.persona === 'comune' ? etichetta : `${etichetta}, ${nome}`}
+      title={nome}
+      className={`flex h-8 touch-manipulation items-center justify-center rounded-lg text-xs font-bold ${posto} ${presa ? piena : vuota}`}
+      onClick={() => onSegna(!presa)}
+    >
+      {presa ? (
+        <Check className="size-4 shrink-0" strokeWidth={3} aria-hidden="true" />
+      ) : (
+        <span aria-hidden="true">{sigla}</span>
+      )}
+    </button>
   )
 }
