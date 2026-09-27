@@ -266,7 +266,7 @@ interface InterruttoreProps {
 }
 
 /** Un interruttore on/off a pillola: pieno salvia chiaro quando è acceso. */
-function Interruttore({ etichetta, icona: Icona, acceso, onCambia, ignorato = false }: InterruttoreProps) {
+export function Interruttore({ etichetta, icona: Icona, acceso, onCambia, ignorato = false }: InterruttoreProps) {
   return (
     <button
       type="button"

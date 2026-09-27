@@ -31,6 +31,7 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Sezioni | **Per stato** | `layout-list` |
 | Sezioni | **Attività** | `list-checks` |
 | Sezioni | **Faccende** | `broom` |
+| Sezioni | **Valigia** | `luggage` |
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
 
@@ -118,6 +119,18 @@ Pulizie e attività periodiche che si aggiungono da sole alle faccende ([04](04-
 - Toccare una riga apre lo stesso modale **in modifica**, con tutte le sezioni insieme (le frequenze come chip), **In pausa**, il riepilogo con le prossime date ed **Elimina** (rosso, con conferma): la faccenda già in elenco resta.
 - Non si sceglie una data di inizio: la ricava l'app dalle scelte, e in modifica ritrova quella che dà le stesse date.
 - Arrivato il giorno, la faccenda compare nella card (all'apertura dell'app o al ritorno in primo piano). Se quella precedente è ancora da fare **non se ne aggiunge un'altra**.
+
+## Valigia
+
+La lista delle cose da mettere in valigia (`#/valigia`), nata dalla [lista di controllo per le vacanze di Action](https://www.action.com/it-it/blog/vacanza/lista-di-controllo-per-le-vacanze/) e poi ritagliata su di noi. Le voci stanno nel codice (`src/dominio/valigia.ts`), **niente database**.
+
+- Intestazione "Valigia" con le voci **prese sul totale** (es. `12/80`) e a destra **Reset** (`rotate-ccw`): chiede conferma e toglie tutte le spunte; giorni e tipi restano.
+- Una card bianca col viaggio: **Giorni** (− N +, da 1 a 30) e i **tipi** come pillole da accendere e spegnere, anche più d'uno: *Mare* (`sun`), *Montagna* (`mountain`), *Rifugio* (`house`), *Città* (`landmark`), *Campeggio* (`tent`). Sotto la barra di avanzamento e l'interruttore **Nascondi prese** (`eye-off`).
+- Una card per **categoria**, in colonne (1 su mobile, fino a 3 da PC), con le prese sul totale nel titolo (verde quando è completa): bagaglio a mano, abbigliamento, beauty, tecnologia, giochi e letture, spiaggia, escursioni, per dormire in rifugio, campeggio. Le voci senza tipo servono sempre; le altre se il viaggio ha almeno uno dei loro tipi (quelle da escursione valgono per *Montagna* e per *Rifugio*). Le categorie senza voci spariscono.
+- Alcune voci **raggruppano** più cose e le elencano sotto l'etichetta, in piccolo (es. **Portafogli**: carta d'identità, patente, tessera sanitaria, bancomat / carta di credito, contanti; **Farmaci**; **Trucchi**; **Letture**; **Giochi**). Si spuntano con un tocco solo.
+- Le voci che dipendono dalla durata mostrano la **quantità** (`×4`): un capo al giorno più uno, fino a 8 (oltre si lava); pantaloni uno ogni 3 giorni, pigiama uno ogni 4.
+- **Tutta la riga** segna presa o da prendere, con l'icona delle faccende (`circle` / `circle-check`); le prese restano grigie e barrate.
+- Viaggio, spunte e "Nascondi prese" stanno nei cookie `projects_valigia`, `projects_valigia_prese` e `projects_valigia_nascondi`: restano sullo stesso dispositivo, non si condividono. Una voce tolta dal catalogo sparisce anche dalle spunte.
 
 ## Modale dettagli
 

@@ -17,6 +17,7 @@ import { ModaleNuova } from './ModaleNuova'
 import { PaginaAttivita } from './PaginaAttivita'
 import { PaginaFaccende } from './PaginaFaccende'
 import { PaginaPerStato } from './PaginaPerStato'
+import { PaginaValigia } from './PaginaValigia'
 import { indirizzi, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 import { useFaccende } from './useFaccende'
@@ -141,6 +142,7 @@ export function App() {
           </ConAttivita>
         )}
         {rotta === 'faccende' && <PaginaFaccende faccende={faccende} onAvviso={mostraAvviso} />}
+        {rotta === 'valigia' && <PaginaValigia />}
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
