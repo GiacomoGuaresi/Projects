@@ -77,12 +77,15 @@ const COOKIE_SPUNTE = 'projects_valigia_prese'
 
 /**
  * La pagina Valigia (doc/08-interfaccia.md, "Valigia"): giorni e tipi del viaggio
- * nel cookie `projects_valigia`, le voci già prese in `projects_valigia_prese`.
- * `azzera` toglie tutte le spunte e lascia il viaggio com'è.
+ * nel cookie `projects_valigia`, le voci già prese in `projects_valigia_prese`,
+ * il passo del wizard (impostazione o lista) in `projects_valigia_lista`.
+ * `ricomincia` toglie tutte le spunte e torna all'impostazione, con il viaggio
+ * di prima già scelto.
  */
 export function useValigia() {
   const [viaggio, setViaggio] = useState(() => leggiViaggio(leggiCookie(document.cookie, COOKIE_VIAGGIO)))
   const [spunte, setSpunte] = useState(() => leggiSpunte(leggiCookie(document.cookie, COOKIE_SPUNTE)))
+  const [inLista, setInLista] = useInterruttore('projects_valigia_lista', false)
 
   const cambiaViaggio = (nuovo: Viaggio) => {
     setViaggio(nuovo)
@@ -101,5 +104,10 @@ export function useValigia() {
     salvaSpunte(nuove)
   }
 
-  return { viaggio, cambiaViaggio, spunte, segna, azzera: () => salvaSpunte(new Set()) }
+  const ricomincia = () => {
+    salvaSpunte(new Set())
+    setInLista(false)
+  }
+
+  return { viaggio, cambiaViaggio, spunte, segna, inLista, prepara: () => setInLista(true), ricomincia }
 }

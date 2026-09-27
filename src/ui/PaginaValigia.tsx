@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  ArrowRight,
   Check,
   EyeOff,
   Landmark,
@@ -22,6 +23,7 @@ import {
   type Casella,
   type CategoriaDaPrendere,
   type TipoViaggio,
+  type Viaggio,
 } from '../dominio/valigia'
 import { Conferma } from './Conferma'
 import { Interruttore } from './Dashboard'
@@ -67,17 +69,129 @@ const pulsanteGiorni =
   'grid size-11 place-items-center rounded-[11px] border border-bordo bg-white text-testo-tenue enabled:hover:bg-fondo disabled:opacity-40'
 
 /**
- * La pagina Valigia (doc/08-interfaccia.md, "Valigia"): la lista delle cose da
- * mettere in valigia, nata dalla lista di controllo di Action. In cima i giorni e i
- * tipi di viaggio, che decidono le voci e le quantità; sotto una card per
- * categoria con le voci da spuntare. Tutto resta nei cookie, niente database.
+ * La pagina Valigia (doc/08-interfaccia.md, "Valigia"), un wizard in due passi:
+ * prima giorni e tipi di viaggio, poi la lista da spuntare, una card per
+ * categoria. In fondo alla lista "Nuova valigia" toglie le spunte e riporta al
+ * primo passo. Tutto resta nei cookie, niente database.
  */
 export function PaginaValigia() {
-  const { viaggio, cambiaViaggio, spunte, segna, azzera } = useValigia()
+  const { viaggio, cambiaViaggio, spunte, segna, inLista, prepara, ricomincia } = useValigia()
+  const lista = listaPerViaggio(viaggio)
+
+  return inLista ? (
+    <PassoLista viaggio={viaggio} lista={lista} spunte={spunte} onSegna={segna} onRicomincia={ricomincia} />
+  ) : (
+    <PassoViaggio viaggio={viaggio} lista={lista} onCambia={cambiaViaggio} onPrepara={prepara} />
+  )
+}
+
+interface PassoViaggioProps {
+  viaggio: Viaggio
+  lista: readonly CategoriaDaPrendere[]
+  onCambia: (viaggio: Viaggio) => void
+  onPrepara: () => void
+}
+
+/** Primo passo: quanti giorni e che tipo di viaggio, con quante voci verranno. */
+function PassoViaggio({ viaggio, lista, onCambia, onPrepara }: PassoViaggioProps) {
+  const voci = lista.reduce((n, c) => n + c.voci.length, 0)
+  const cambiaGiorni = (giorni: number) => onCambia({ ...viaggio, giorni: giorniValidi(giorni) })
+  const cambiaTipo = (tipo: TipoViaggio, acceso: boolean) =>
+    onCambia({
+      ...viaggio,
+      // Sempre nell'ordine della lista, così il cookie non cambia a seconda dei clic.
+      tipi: TIPI_VIAGGIO.filter((t) => (t === tipo ? acceso : viaggio.tipi.includes(t))),
+    })
+
+  return (
+    <div className="mx-auto flex w-full max-w-[720px] flex-col gap-3">
+      <h2 className="px-1 text-lg font-semibold">Valigia</h2>
+      <section className="flex flex-col gap-4 rounded-[11px] border border-bordo bg-white p-4" aria-label="Il viaggio">
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold" id="giorni">
+            Quanti giorni?
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={pulsanteGiorni}
+              aria-label="Un giorno in meno"
+              disabled={viaggio.giorni <= GIORNI_MIN}
+              onClick={() => cambiaGiorni(viaggio.giorni - 1)}
+            >
+              <Minus className="size-4" aria-hidden="true" />
+            </button>
+            <input
+              type="number"
+              inputMode="numeric"
+              aria-labelledby="giorni"
+              min={GIORNI_MIN}
+              max={GIORNI_MAX}
+              className="min-h-11 w-16 rounded-[11px] border border-bordo bg-white px-2 text-center focus:outline-2 focus:-outline-offset-1 focus:outline-salvia"
+              value={viaggio.giorni}
+              onChange={(e) => {
+                if (e.target.value !== '') cambiaGiorni(Number(e.target.value))
+              }}
+            />
+            <button
+              type="button"
+              className={pulsanteGiorni}
+              aria-label="Un giorno in più"
+              disabled={viaggio.giorni >= GIORNI_MAX}
+              onClick={() => cambiaGiorni(viaggio.giorni + 1)}
+            >
+              <Plus className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold" id="tipi">
+            Che viaggio è? <span className="font-normal text-testo-tenue">Anche più d'uno</span>
+          </span>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="tipi">
+            {TIPI_VIAGGIO.map((tipo) => (
+              <Interruttore
+                key={tipo}
+                etichetta={infoTipi[tipo].etichetta}
+                icona={infoTipi[tipo].icona}
+                acceso={viaggio.tipi.includes(tipo)}
+                onCambia={(acceso) => cambiaTipo(tipo, acceso)}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-3 border-t border-bordo pt-3">
+          <span className="text-sm text-testo-tenue">{voci} voci in lista</span>
+          <button
+            type="button"
+            className="flex min-h-11 items-center gap-1.5 rounded-[11px] bg-salvia px-4 font-semibold text-panna hover:bg-salvia-scura"
+            onClick={onPrepara}
+          >
+            Prepara la lista
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+interface PassoListaProps {
+  viaggio: Viaggio
+  lista: readonly CategoriaDaPrendere[]
+  spunte: ReadonlySet<string>
+  onSegna: (chiave: string, presa: boolean) => void
+  onRicomincia: () => void
+}
+
+/**
+ * Secondo passo: in cima il riepilogo del viaggio, l'avanzamento e la legenda;
+ * poi le card delle categorie; in fondo "Nuova valigia", con conferma.
+ */
+function PassoLista({ viaggio, lista, spunte, onSegna, onRicomincia }: PassoListaProps) {
   const [nascondiPrese, setNascondiPrese] = useInterruttore('projects_valigia_nascondi', false)
   const [conferma, setConferma] = useState(false)
 
-  const lista = listaPerViaggio(viaggio)
   // Si conta per casella: una voce di tutti e due vale due spunte.
   const tutte = lista.flatMap((c) => c.voci.flatMap(caselle))
   const totale = tutte.length
@@ -91,81 +205,28 @@ export function PaginaValigia() {
     }
   })
 
-  const cambiaGiorni = (giorni: number) => cambiaViaggio({ ...viaggio, giorni: giorniValidi(giorni) })
-  const cambiaTipo = (tipo: TipoViaggio, acceso: boolean) =>
-    cambiaViaggio({
-      ...viaggio,
-      // Sempre nell'ordine della lista, così il cookie non cambia a seconda dei clic.
-      tipi: TIPI_VIAGGIO.filter((t) => (t === tipo ? acceso : viaggio.tipi.includes(t))),
-    })
-
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2 px-1">
-        <h2 className="flex items-baseline gap-2 text-lg font-semibold">
-          Valigia{' '}
-          <span className="text-sm font-normal text-testo-tenue" title="Caselle spuntate sul totale">
-            {prese}/{totale}
-          </span>
-        </h2>
-        <button
-          type="button"
-          className="ml-auto flex min-h-9 items-center gap-1.5 rounded-[11px] px-2.5 font-semibold text-testo-tenue hover:bg-white disabled:opacity-40"
-          disabled={spunte.size === 0}
-          onClick={() => setConferma(true)}
-        >
-          <RotateCcw className="size-4" aria-hidden="true" />
-          Reset
-        </button>
-      </div>
+      <h2 className="flex items-baseline gap-2 px-1 text-lg font-semibold">
+        Valigia{' '}
+        <span className="text-sm font-normal text-testo-tenue" title="Caselle spuntate sul totale">
+          {prese}/{totale}
+        </span>
+      </h2>
 
       <section className="flex flex-col gap-3 rounded-[11px] border border-bordo bg-white p-3" aria-label="Il viaggio">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold" id="giorni">
-            Giorni
-          </span>
-          <button
-            type="button"
-            className={pulsanteGiorni}
-            aria-label="Un giorno in meno"
-            disabled={viaggio.giorni <= GIORNI_MIN}
-            onClick={() => cambiaGiorni(viaggio.giorni - 1)}
-          >
-            <Minus className="size-4" aria-hidden="true" />
-          </button>
-          <input
-            type="number"
-            inputMode="numeric"
-            aria-labelledby="giorni"
-            min={GIORNI_MIN}
-            max={GIORNI_MAX}
-            className="min-h-11 w-16 rounded-[11px] border border-bordo bg-white px-2 text-center focus:outline-2 focus:-outline-offset-1 focus:outline-salvia"
-            value={viaggio.giorni}
-            onChange={(e) => {
-              if (e.target.value !== '') cambiaGiorni(Number(e.target.value))
-            }}
-          />
-          <button
-            type="button"
-            className={pulsanteGiorni}
-            aria-label="Un giorno in più"
-            disabled={viaggio.giorni >= GIORNI_MAX}
-            onClick={() => cambiaGiorni(viaggio.giorni + 1)}
-          >
-            <Plus className="size-4" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Tipo di viaggio">
-          {TIPI_VIAGGIO.map((tipo) => (
-            <Interruttore
-              key={tipo}
-              etichetta={infoTipi[tipo].etichetta}
-              icona={infoTipi[tipo].icona}
-              acceso={viaggio.tipi.includes(tipo)}
-              onCambia={(acceso) => cambiaTipo(tipo, acceso)}
-            />
-          ))}
-        </div>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="font-semibold">{viaggio.giorni === 1 ? '1 giorno' : `${viaggio.giorni} giorni`}</span>
+          {viaggio.tipi.map((tipo) => {
+            const { etichetta, icona: Icona } = infoTipi[tipo]
+            return (
+              <span key={tipo} className="flex items-center gap-1 text-testo-tenue">
+                <Icona className="size-4" aria-hidden="true" />
+                {etichetta}
+              </span>
+            )
+          })}
+        </p>
         <div className="flex items-center gap-3">
           <div
             className="h-2 flex-1 overflow-hidden rounded-full bg-bordo"
@@ -201,23 +262,34 @@ export function PaginaValigia() {
             categoria={categoria}
             spunte={spunte}
             nascondiPrese={nascondiPrese}
-            onSegna={segna}
+            onSegna={onSegna}
           />
         ))}
       </div>
 
+      <button
+        type="button"
+        // Molto evidente: largo quanto la lista, pieno e alto, come l'azione principale della pagina.
+        className="mt-2 flex min-h-14 w-full items-center justify-center gap-2 rounded-[11px] bg-salvia px-4 text-lg font-semibold text-panna shadow-[0_2px_8px_rgb(46_58_45/0.2)] hover:bg-salvia-scura active:bg-salvia-scura"
+        onClick={() => setConferma(true)}
+      >
+        <RotateCcw className="size-5" aria-hidden="true" />
+        Nuova valigia
+      </button>
+
       {conferma && (
         <Conferma
-          titolo="Ricominciare la valigia?"
-          conferma="Reset"
+          titolo="Preparare una nuova valigia?"
+          conferma="Nuova valigia"
           pericolo
           onAnnulla={() => setConferma(false)}
           onConferma={() => {
-            azzera()
             setConferma(false)
+            onRicomincia()
+            window.scrollTo({ top: 0 })
           }}
         >
-          <p>Si tolgono tutte le spunte. Giorni e tipo di viaggio restano come sono.</p>
+          <p>Si tolgono tutte le spunte e si torna a scegliere giorni e tipo di viaggio.</p>
         </Conferma>
       )}
     </div>

@@ -53,3 +53,4 @@
 | 2026-09-27 | Valigia: via la sezione **bambini** e il tipo di viaggio *Bambini* (lista solo per noi) | deciso |
 | 2026-09-27 | Valigia ritagliata su di noi: tipi **mare, montagna, rifugio, città, campeggio** (via lavoro, aereo, auto, estero); voci **raggruppate con un sottotitolo** (portafogli, farmaci, trucchi, letture, giochi, tenda, cucina); categoria **Beauty** al posto di farmaci e cura personale; via snack, "prima di partire" e parte di spiaggia e campeggio | deciso |
 | 2026-09-27 | Valigia a due: ogni voce è **di tutti e due** (una casella a testa, Jack blu e Ale rossa), **di uno solo** o **comune** (una casella larga, gialla/arancione); categorie al massimo su **2 colonne** | deciso |
+| 2026-09-27 | Valigia a **wizard**: passo 1 giorni e tipi, passo 2 la lista; il vecchio Reset diventa **Nuova valigia** in fondo alla lista, che toglie le spunte e riporta al passo 1 tenendo il viaggio di prima come punto di partenza | deciso |
