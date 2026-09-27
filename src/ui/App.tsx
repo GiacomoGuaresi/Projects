@@ -142,7 +142,7 @@ export function App() {
           </ConAttivita>
         )}
         {rotta === 'faccende' && <PaginaFaccende faccende={faccende} onAvviso={mostraAvviso} />}
-        {rotta === 'valigia' && <PaginaValigia />}
+        {rotta === 'valigia' && <PaginaValigia onAvviso={mostraAvviso} />}
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}

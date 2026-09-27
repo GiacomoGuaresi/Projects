@@ -8,12 +8,14 @@ import { AttivitaSupabase } from './attivita'
 import { DiarioSupabase } from './diario'
 import { FaccendeSupabase } from './faccende'
 import { RicorrenzeSupabase } from './ricorrenze'
+import { ValigiaSupabase } from './valigia'
 
 export type { Accesso, EsitoAccesso } from './accesso'
 export type { AttivitaSupabase, RigaAttivita } from './attivita'
 export type { DiarioSupabase } from './diario'
 export type { FaccendeSupabase } from './faccende'
 export type { RicorrenzeSupabase } from './ricorrenze'
+export type { CambioValigia, StatoValigia, ValigiaSupabase } from './valigia'
 
 let connessione: {
   accesso: Accesso
@@ -21,6 +23,7 @@ let connessione: {
   diario: DiarioSupabase
   faccende: FaccendeSupabase
   ricorrenze: RicorrenzeSupabase
+  valigia: ValigiaSupabase
 } | null = null
 
 /**
@@ -50,6 +53,7 @@ function connetti() {
     diario: new DiarioSupabase(client),
     faccende: new FaccendeSupabase(client),
     ricorrenze: new RicorrenzeSupabase(client),
+    valigia: new ValigiaSupabase(client),
   }
   return connessione
 }
@@ -77,4 +81,9 @@ export function faccende(): FaccendeSupabase {
 /** Le query sulle ricorrenze. */
 export function ricorrenze(): RicorrenzeSupabase {
   return connetti().ricorrenze
+}
+
+/** Le query sulla valigia, con l'ascolto in tempo reale. */
+export function valigia(): ValigiaSupabase {
+  return connetti().valigia
 }

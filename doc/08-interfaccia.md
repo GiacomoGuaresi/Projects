@@ -122,9 +122,9 @@ Pulizie e attività periodiche che si aggiungono da sole alle faccende ([04](04-
 
 ## Valigia
 
-La lista delle cose da mettere in valigia (`#/valigia`), nata dalla [lista di controllo per le vacanze di Action](https://www.action.com/it-it/blog/vacanza/lista-di-controllo-per-le-vacanze/) e poi ritagliata su di noi. Le voci stanno nel codice (`src/dominio/valigia.ts`), **niente database**.
+La lista delle cose da mettere in valigia (`#/valigia`), nata dalla [lista di controllo per le vacanze di Action](https://www.action.com/it-it/blog/vacanza/lista-di-controllo-per-le-vacanze/) e poi ritagliata su di noi. Le voci stanno nel codice (`src/dominio/valigia.ts`); viaggio, passo e spunte stanno nel **database**, condivisi tra i telefoni ([04](04-modello-dati.md), `valigia`).
 
-Un **wizard in due passi**; il passo in cui si è arrivati resta nel cookie, così riaprendo l'app a metà valigia si torna alla lista.
+Un **wizard in due passi**, lo stesso su tutti i telefoni: se uno prepara la lista, anche gli altri passano alla lista. Riaprendo l'app a metà valigia si torna lì.
 
 1. **Il viaggio**: una card bianca stretta con **Quanti giorni?** (− N +, da 1 a 30) e **Che viaggio è?**, i tipi come pillole da accendere e spegnere, anche più d'uno: *Mare* (`sun`), *Montagna* (`mountain`), *Rifugio* (`house`), *Città* (`landmark`), *Campeggio* (`tent`). In fondo quante voci avrà la lista e il pulsante salvia **Prepara la lista** (`arrow-right`). Giorni e tipi partono da quelli dell'ultimo viaggio.
 2. **La lista**: intestazione "Valigia" con le **caselle spuntate sul totale** (es. `12/80`); una card col riepilogo del viaggio (giorni e tipi con le loro icone), la barra di avanzamento, l'interruttore **Nascondi prese** (`eye-off`) e la legenda dei colori con le caselle prese da ciascuno: **Jack** (blu), **Ale** (rossa), **Comuni** (arancioni). Poi le card delle categorie e **in fondo** il pulsante **Nuova valigia** (`rotate-ccw`), molto evidente: pieno salvia, alto e largo quanto la lista. Chiede conferma con un modale, toglie tutte le spunte e torna al passo 1.
@@ -136,7 +136,9 @@ Un **wizard in due passi**; il passo in cui si è arrivati resta nel cookie, cos
 - **Di chi è ogni voce**: di tutti e due, una casella a testa (il predefinito, es. le mutande); di uno solo (es. il rasoio è di Jack, le lenti di Ale); oppure **comune**, una casella sola per la coppia (es. le chiavi di casa, i giochi, la tenda).
 - A inizio riga **due colonne di caselle**, allineate tra le righe: a sinistra **Jack** (blu), a destra **Ale** (rossa). Una voce di uno solo lascia vuoto il posto dell'altro; una voce comune ha una **casella rettangolare larga quanto le due**, gialla da vuota e arancione da presa. Ogni casella porta la sigla **J**, **A** o **Com**; come il pulsante dello stato hanno **solo il fondo, senza bordo**: chiaro con la sigla colorata da vuote, pieno con solo `check` bianco, senza sigla, da prese.
 - Una voce è **presa** quando lo sono tutte le sue caselle: allora il testo diventa grigio e barrato, e "Nascondi prese" la toglie. I conteggi, delle card e in cima, sono per casella.
-- Viaggio, spunte, passo e "Nascondi prese" stanno nei cookie `projects_valigia`, `projects_valigia_prese` (una chiave per casella: `id` per le comuni, `id_j` e `id_a` per Jack e Ale), `projects_valigia_lista` e `projects_valigia_nascondi`: restano sullo stesso dispositivo, non si condividono. Una voce tolta dal catalogo sparisce anche dalle spunte.
+- **Sincronizzata in tempo reale**: una spunta, un cambio di giorni o tipi, "Prepara la lista" e "Nuova valigia" compaiono subito sugli altri telefoni aperti (Supabase Realtime). La pagina rilegge tutto anche all'apertura, al ritorno in primo piano e quando la connessione torna.
+- Ogni modifica si vede subito; se il salvataggio non riesce compare l'avviso e la valigia si rilegge. Durante il primo caricamento "Carico la valigia…", in caso di errore il messaggio e **Riprova**.
+- Solo **"Nascondi prese"** resta sul telefono, nel cookie `projects_valigia_nascondi`. Una voce tolta dal catalogo sparisce anche dalle spunte.
 
 ## Modale dettagli
 

@@ -1,17 +1,11 @@
 import { useState } from 'react'
 import type { Rilievo } from '../dominio/ordinamento'
-import { leggiSpunte, leggiViaggio, scriviSpunte, scriviViaggio, type Viaggio } from '../dominio/valigia'
 
 // Le preferenze dell'interfaccia (doc/08-interfaccia.md, "Dashboard"), salvate in
 // un cookie per ciascuna: restano tra una visita e l'altra sullo stesso dispositivo.
 
 /** Un anno: una preferenza scelta resta finché non la si cambia. */
 const DURATA = 60 * 60 * 24 * 365
-
-/** Scrive il cookie `nome` sul percorso dell'app, per un anno. */
-function scriviCookie(nome: string, valore: string) {
-  document.cookie = `${nome}=${encodeURIComponent(valore)}; path=${import.meta.env.BASE_URL}; max-age=${DURATA}; SameSite=Lax`
-}
 
 /** Il valore del cookie `nome` nel testo di `document.cookie`, o null se non c'è. */
 export function leggiCookie(testo: string, nome: string): string | null {
@@ -70,44 +64,4 @@ export function useRilievi(): [Record<string, Rilievo>, (chiave: string, rilievo
   }
 
   return [rilievi, cambia]
-}
-
-const COOKIE_VIAGGIO = 'projects_valigia'
-const COOKIE_SPUNTE = 'projects_valigia_prese'
-
-/**
- * La pagina Valigia (doc/08-interfaccia.md, "Valigia"): giorni e tipi del viaggio
- * nel cookie `projects_valigia`, le voci già prese in `projects_valigia_prese`,
- * il passo del wizard (impostazione o lista) in `projects_valigia_lista`.
- * `ricomincia` toglie tutte le spunte e torna all'impostazione, con il viaggio
- * di prima già scelto.
- */
-export function useValigia() {
-  const [viaggio, setViaggio] = useState(() => leggiViaggio(leggiCookie(document.cookie, COOKIE_VIAGGIO)))
-  const [spunte, setSpunte] = useState(() => leggiSpunte(leggiCookie(document.cookie, COOKIE_SPUNTE)))
-  const [inLista, setInLista] = useInterruttore('projects_valigia_lista', false)
-
-  const cambiaViaggio = (nuovo: Viaggio) => {
-    setViaggio(nuovo)
-    scriviCookie(COOKIE_VIAGGIO, scriviViaggio(nuovo))
-  }
-
-  const salvaSpunte = (nuove: Set<string>) => {
-    setSpunte(nuove)
-    scriviCookie(COOKIE_SPUNTE, scriviSpunte(nuove))
-  }
-
-  const segna = (id: string, presa: boolean) => {
-    const nuove = new Set(spunte)
-    if (presa) nuove.add(id)
-    else nuove.delete(id)
-    salvaSpunte(nuove)
-  }
-
-  const ricomincia = () => {
-    salvaSpunte(new Set())
-    setInLista(false)
-  }
-
-  return { viaggio, cambiaViaggio, spunte, segna, inLista, prepara: () => setInLista(true), ricomincia }
 }

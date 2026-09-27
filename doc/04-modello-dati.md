@@ -118,6 +118,29 @@ Le regole delle faccende ricorrenti ([08](08-interfaccia.md), "Faccende ricorren
 
 Le occorrenze saltate (app non aperta per giorni) non si recuperano: si crea una sola faccenda. Salvare una regola ricalcola `prossima` da oggi, senza ripetere il giorno di `ultima`.
 
+## `projects.valigia` e `projects.valigia_spunte`
+
+La valigia condivisa tra i telefoni ([08](08-interfaccia.md), "Valigia"). Le voci stanno nel codice (`src/dominio/valigia.ts`); qui solo il viaggio scelto e le caselle spuntate. Script `supabase/sql/005_valigia.sql`.
+
+`valigia`: **una riga sola** (creata dallo script), si legge e si modifica soltanto.
+
+| Campo | Tipo | Vincoli / default | Note |
+|---|---|---|---|
+| id | boolean | PK, default `true`, sempre `true` | garantisce la riga unica |
+| giorni | smallint | 1–30, default 7 | |
+| tipi | text[] | NOT NULL, default `{}` | `mare`, `montagna`, `rifugio`, `citta`, `campeggio`; l'app ignora quelli che non conosce |
+| in_lista | boolean | NOT NULL, default `false` | passo del wizard: `false` scelta del viaggio, `true` lista |
+| modificata_il | timestamptz | trigger | |
+
+`valigia_spunte`: una riga per **casella spuntata**; spuntare inserisce, togliere la spunta elimina, così due telefoni che spuntano insieme non si sovrascrivono.
+
+| Campo | Tipo | Vincoli / default | Note |
+|---|---|---|---|
+| chiave | text | PK, `^[a-z0-9-]+(_[ja])?$` | l'id della voce per le comuni, `id_j` / `id_a` per Jack e Ale; l'app ignora quelle non più nel catalogo |
+| presa_il | timestamptz | default `now()` | |
+
+Entrambe le tabelle sono nella pubblicazione **`supabase_realtime`**: i telefoni aperti ricevono subito spunte e cambi di viaggio.
+
 ## Viste
 
 - **`projects.attivita_elenco`** (`security_invoker = true`): le colonne di `attivita` più `ha_diario boolean`, usata da tutte le pagine.
@@ -128,6 +151,7 @@ Le occorrenze saltate (app non aperta per giorni) non si recuperano: si crea una
 | Funzione | Cosa fa |
 |---|---|
 | `projects.rinomina_progetto(vecchio text, nuovo text)` | aggiorna `progetto` su **tutte** le attività (completate comprese) il cui progetto corrisponde a `vecchio`, senza distinzione di maiuscole e minuscole. Una sola istruzione, quindi tutto o niente. `security invoker`, eseguibile solo da `authenticated`. Se `nuovo` coincide con un progetto esistente, i due progetti si uniscono. |
+| `projects.nuova_valigia()` | toglie tutte le spunte e riporta la valigia alla scelta del viaggio (`in_lista = false`), in una sola chiamata. `security invoker`, eseguibile solo da `authenticated`. |
 
 ## Regole nel database (trigger)
 
@@ -136,7 +160,7 @@ Le occorrenze saltate (app non aperta per giorni) non si recuperano: si crea una
 | insert/update di `attivita` con `stato = 'completo'` | `avanzamento = 100`; `completata_il = now()` se prima non era completa |
 | update di `attivita` da `completo` a un altro stato | `completata_il = NULL`; l'avanzamento resta modificabile a mano |
 | insert/update di `attivita` | `progetto`: spazi rimossi, stringa vuota → NULL |
-| update di `attivita` o `voci_diario` | `modificata_il = now()` |
+| update di `attivita`, `voci_diario` o `valigia` | `modificata_il = now()` |
 
 ## Permessi
 

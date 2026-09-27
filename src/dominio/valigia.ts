@@ -1,7 +1,7 @@
 // La lista per fare la valigia (doc/08-interfaccia.md, "Valigia"): nata dalla
 // lista di controllo per le vacanze del blog di Action, poi ritagliata su di noi,
 // divisa in categorie; il tipo di viaggio decide quali si vedono e i giorni le quantità.
-// Niente database: le spunte stanno in un cookie (ui/preferenze.ts).
+// Viaggio e spunte stanno nel database, condivisi tra i telefoni (dati/valigia.ts).
 
 export const TIPI_VIAGGIO = [
   'mare',
@@ -283,34 +283,20 @@ export function caselle(voce: { id: string; di: Di }): Casella[] {
   }))
 }
 
-// Nei cookie: il viaggio come `7.mare.rifugio`, le spunte come `calzini_j.chiavi`.
-// Punto e trattino basso restano uguali anche codificati, e gli id non ne contengono.
-
-export function scriviViaggio(viaggio: Viaggio): string {
-  return [viaggio.giorni, ...viaggio.tipi].join('.')
-}
-
-/** Il viaggio dal cookie; tipi sconosciuti o ripetuti si scartano, un valore rovinato vale il predefinito. */
-export function leggiViaggio(testo: string | null): Viaggio {
-  if (!testo) return VIAGGIO_PREDEFINITO
-  const [giorni = '', ...tipi] = testo.split('.')
-  const numero = Number(giorni)
-  if (giorni === '' || !Number.isFinite(numero)) return VIAGGIO_PREDEFINITO
-  return {
-    giorni: giorniValidi(numero),
-    tipi: TIPI_VIAGGIO.filter((t) => tipi.includes(t)),
-  }
-}
-
-export function scriviSpunte(spunte: ReadonlySet<string>): string {
-  return [...spunte].join('.')
-}
-
-/** Le spunte dal cookie; le chiavi che non sono più nel catalogo si scartano. */
-export function leggiSpunte(testo: string | null, catalogo: readonly Categoria[] = CATALOGO): Set<string> {
-  if (!testo) return new Set()
-  const noti = new Set(
+/** Tutte le chiavi delle caselle del catalogo, qualunque sia il viaggio. */
+function chiaviNote(catalogo: readonly Categoria[]): Set<string> {
+  return new Set(
     catalogo.flatMap((c) => c.voci.flatMap((v) => caselle({ id: v.id, di: v.di ?? 'entrambi' }).map((k) => k.chiave))),
   )
-  return new Set(testo.split('.').filter((id) => noti.has(id)))
+}
+
+/** Il viaggio letto dal database; tipi sconosciuti o ripetuti si scartano, i giorni si riportano tra 1 e 30. */
+export function viaggioDaRiga(riga: { giorni: number; tipi: readonly string[] }): Viaggio {
+  return { giorni: giorniValidi(riga.giorni), tipi: TIPI_VIAGGIO.filter((t) => riga.tipi.includes(t)) }
+}
+
+/** Le spunte lette dal database; le chiavi che non sono più nel catalogo si scartano. */
+export function spunteValide(chiavi: Iterable<string>, catalogo: readonly Categoria[] = CATALOGO): Set<string> {
+  const note = chiaviNote(catalogo)
+  return new Set([...chiavi].filter((k) => note.has(k)))
 }

@@ -59,7 +59,7 @@ Come in Grocery, i test coprono la **logica pura**, non i componenti:
 - filtri della pagina Attività, compreso "Mostra completate";
 - suggerimenti dei progetti (deduplica, maiuscole e minuscole);
 - decisione se chiedere "solo questa / tutte" al cambio di progetto;
-- voci e quantità della valigia per giorni e tipi di viaggio, lettura e scrittura dei suoi cookie.
+- voci e quantità della valigia per giorni e tipi di viaggio, validazione di viaggio e spunte letti dal database.
 
 Nessun test end-to-end. Le policy RLS si verificano a mano con la checklist in [05](05-sicurezza.md).
 

@@ -50,7 +50,8 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 - [ ] **Faccende**: tabella `faccende` (`supabase/sql/002_faccende.sql`, da applicare a mano), card in cima alla Dashboard, pagina nel menu, eliminazione delle fatte a fine giornata
 - [ ] **Faccende ricorrenti**: tabella `ricorrenze` (`supabase/sql/003_ricorrenze.sql`, da applicare a mano), card "Ricorrenti" nella pagina Faccende, creazione automatica alla lettura
 
-- [ ] **Valigia**: pagina `#/valigia` con la lista di Action, giorni e tipi di viaggio, spunte nei cookie e Reset
+- [ ] **Valigia**: pagina `#/valigia` a wizard con la lista, giorni e tipi di viaggio, caselle per Jack e Ale
+- [ ] **Valigia condivisa**: tabelle `valigia` e `valigia_spunte` (`supabase/sql/005_valigia.sql`, da applicare a mano), sincronizzazione in tempo reale
 
 ## Fase 4 · Assistente IA
 - [ ] Scelta del provider con tier gratuito

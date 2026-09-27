@@ -65,7 +65,7 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Giorni del viaggio (quantità dei vestiti) e tipi combinabili: mare, montagna, rifugio, città, campeggio | ✅ |
 | Caselle per **Jack** e **Ale**: voci di tutti e due, di uno solo o **comuni** (una casella sola) | ✅ |
 | **Wizard**: prima giorni e tipi, poi la lista; in fondo **Nuova valigia** toglie le spunte e torna all'inizio | ✅ |
-| Spunte, viaggio, passo e "Nascondi prese" nei **cookie** | ✅ |
+| Viaggio, passo e spunte **nel database**, sincronizzati **in tempo reale** tra i telefoni; "Nascondi prese" nel cookie di ciascuno | ✅ |
 | Voci personalizzate o liste salvate nel database | ❌ |
 
 ## Viste

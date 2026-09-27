@@ -27,7 +27,8 @@ import {
 } from '../dominio/valigia'
 import { Conferma } from './Conferma'
 import { Interruttore } from './Dashboard'
-import { useInterruttore, useValigia } from './preferenze'
+import { useInterruttore } from './preferenze'
+import { useValigia } from './useValigia'
 
 const infoTipi: Record<TipoViaggio, { etichetta: string; icona: LucideIcon }> = {
   mare: { etichetta: 'Mare', icona: Sun },
@@ -72,10 +73,29 @@ const pulsanteGiorni =
  * La pagina Valigia (doc/08-interfaccia.md, "Valigia"), un wizard in due passi:
  * prima giorni e tipi di viaggio, poi la lista da spuntare, una card per
  * categoria. In fondo alla lista "Nuova valigia" toglie le spunte e riporta al
- * primo passo. Tutto resta nei cookie, niente database.
+ * primo passo. Viaggio e spunte stanno nel database, condivisi in tempo reale
+ * tra i telefoni; solo "Nascondi prese" resta nel cookie di ciascuno.
  */
-export function PaginaValigia() {
-  const { viaggio, cambiaViaggio, spunte, segna, inLista, prepara, ricomincia } = useValigia()
+export function PaginaValigia({ onAvviso }: { onAvviso: (messaggio: string) => void }) {
+  const { stato, ricarica, cambiaViaggio, segna, prepara, ricomincia } = useValigia(onAvviso)
+
+  if (stato.fase === 'caricamento') return <p className="p-2 text-testo-tenue">Carico la valigia…</p>
+  if (stato.fase === 'errore') {
+    return (
+      <div className="flex flex-col items-start gap-2 p-2" role="alert">
+        <p className="text-pericolo">{stato.messaggio}</p>
+        <button
+          type="button"
+          className="min-h-11 rounded-[11px] bg-salvia px-4 font-semibold text-panna hover:bg-salvia-scura"
+          onClick={() => void ricarica()}
+        >
+          Riprova
+        </button>
+      </div>
+    )
+  }
+
+  const { viaggio, spunte, inLista } = stato
   const lista = listaPerViaggio(viaggio)
 
   return inLista ? (

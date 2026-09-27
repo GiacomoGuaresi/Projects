@@ -3,12 +3,10 @@ import {
   CATALOGO,
   caselle,
   giorniValidi,
-  leggiSpunte,
-  leggiViaggio,
   listaPerViaggio,
-  scriviSpunte,
-  scriviViaggio,
+  spunteValide,
   VIAGGIO_PREDEFINITO,
+  viaggioDaRiga,
   type Viaggio,
 } from './valigia'
 
@@ -102,32 +100,25 @@ describe('giorniValidi', () => {
   })
 })
 
-describe('cookie del viaggio', () => {
-  it('va e torna', () => {
-    const viaggio: Viaggio = { giorni: 5, tipi: ['mare', 'rifugio'] }
-    expect(scriviViaggio(viaggio)).toBe('5.mare.rifugio')
-    expect(leggiViaggio(scriviViaggio(viaggio))).toEqual(viaggio)
-  })
-
-  it('scarta tipi sconosciuti e ripetuti, e un valore rovinato vale il predefinito', () => {
-    expect(leggiViaggio('4.mare.boh.mare')).toEqual({ giorni: 4, tipi: ['mare'] })
-    expect(leggiViaggio('abc.mare')).toEqual(VIAGGIO_PREDEFINITO)
-    expect(leggiViaggio('')).toEqual(VIAGGIO_PREDEFINITO)
-    expect(leggiViaggio(null)).toEqual(VIAGGIO_PREDEFINITO)
-    expect(leggiViaggio('500')).toEqual({ giorni: 30, tipi: [] })
+describe('viaggioDaRiga', () => {
+  it('tiene i tipi noti, nell\'ordine dei tipi, e riporta i giorni tra 1 e 30', () => {
+    expect(viaggioDaRiga({ giorni: 4, tipi: ['rifugio', 'boh', 'mare', 'mare'] })).toEqual({
+      giorni: 4,
+      tipi: ['mare', 'rifugio'],
+    })
+    expect(viaggioDaRiga({ giorni: 500, tipi: [] })).toEqual({ giorni: 30, tipi: [] })
   })
 })
 
-describe('cookie delle spunte', () => {
-  it('va e torna, scartando le chiavi non più nel catalogo', () => {
-    const spunte = new Set(['calzini_j', 'calzini_a', 'tenda'])
-    expect(leggiSpunte(scriviSpunte(spunte))).toEqual(spunte)
-    expect(leggiSpunte('calzini_j.tolta_j.')).toEqual(new Set(['calzini_j']))
-    expect(leggiSpunte(null)).toEqual(new Set())
+describe('spunteValide', () => {
+  it('scarta le chiavi non più nel catalogo', () => {
+    expect(spunteValide(['calzini_j', 'calzini_a', 'tenda', 'tolta_j'])).toEqual(
+      new Set(['calzini_j', 'calzini_a', 'tenda']),
+    )
   })
 
   it('scarta le chiavi di chi non ha la voce, e quelle senza persona', () => {
     // Il rasoio è solo di Jack, le chiavi di casa sono comuni, i calzini di tutti e due.
-    expect(leggiSpunte('rasoio_j.rasoio_a.chiavi_j.calzini')).toEqual(new Set(['rasoio_j']))
+    expect(spunteValide(['rasoio_j', 'rasoio_a', 'chiavi_j', 'calzini'])).toEqual(new Set(['rasoio_j']))
   })
 })
