@@ -1,5 +1,4 @@
-// Ordinamento e sezioni della pagina Per stato (doc/08-interfaccia.md, "Per stato" e
-// "Pagina Attività").
+// Ordinamento delle card della Dashboard (doc/08-interfaccia.md, "Dashboard").
 
 import { chiaveProgetto } from './progetto'
 import { titoloSenzaTag } from './tag'
@@ -8,7 +7,7 @@ import type { Attivita, Stato } from './tipi'
 const confrontaTesto = (a: string, b: string) => a.localeCompare(b, 'it', { sensitivity: 'base' })
 
 /** Progetto A→Z (senza progetto in fondo), poi priorità decrescente, poi titolo. */
-export function confrontaAttivita(a: Attivita, b: Attivita): number {
+function confrontaAttivita(a: Attivita, b: Attivita): number {
   if (a.progetto !== b.progetto) {
     if (a.progetto === null) return 1
     if (b.progetto === null) return -1
@@ -20,42 +19,6 @@ export function confrontaAttivita(a: Attivita, b: Attivita): number {
     confrontaTesto(titoloSenzaTag(a.titolo), titoloSenzaTag(b.titolo)) ||
     a.id - b.id
   )
-}
-
-/** Le aperte con l'ordine di sempre; le completate in fondo, dalla più recente. */
-export function ordinaAttivita(attivita: readonly Attivita[]): Attivita[] {
-  return [...attivita].sort((a, b) => {
-    const completaA = a.stato === 'completo'
-    const completaB = b.stato === 'completo'
-    if (completaA !== completaB) return completaA ? 1 : -1
-    if (completaA && a.completata_il !== b.completata_il) {
-      if (a.completata_il === null) return 1
-      if (b.completata_il === null) return -1
-      return b.completata_il.localeCompare(a.completata_il)
-    }
-    return confrontaAttivita(a, b)
-  })
-}
-
-export interface SezionePerStato {
-  stato: Exclude<Stato, 'completo'>
-  titolo: string
-  apertaDiDefault: boolean
-  attivita: Attivita[]
-}
-
-const SEZIONI: readonly Omit<SezionePerStato, 'attivita'>[] = [
-  { stato: 'in_corso', titolo: 'In corso', apertaDiDefault: true },
-  { stato: 'da_fare', titolo: 'Da fare', apertaDiDefault: false },
-  { stato: 'bloccato', titolo: 'Bloccate', apertaDiDefault: false },
-]
-
-/** Le tre sezioni della pagina Per stato, ciascuna con le sue attività in ordine. */
-export function sezioniPerStato(attivita: readonly Attivita[]): SezionePerStato[] {
-  return SEZIONI.map((sezione) => ({
-    ...sezione,
-    attivita: attivita.filter((a) => a.stato === sezione.stato).sort(confrontaAttivita),
-  }))
 }
 
 /** Dove sta la card di un progetto nella Dashboard: in cima, in mezzo o in fondo. */
@@ -77,7 +40,7 @@ export interface SchedaProgetto {
 /** Nella card di un progetto: in corso, da fare, bloccate, e le completate in fondo. */
 const ORDINE_STATI: Record<Stato, number> = { in_corso: 0, da_fare: 1, bloccato: 2, completo: 3 }
 
-/** Nello stesso stato come la pagina Per stato; le completate dalla più recente. */
+/** Prima per stato; nello stesso stato con `confrontaAttivita`, le completate dalla più recente. */
 function confrontaInScheda(a: Attivita, b: Attivita): number {
   const stato = ORDINE_STATI[a.stato] - ORDINE_STATI[b.stato]
   if (stato !== 0) return stato

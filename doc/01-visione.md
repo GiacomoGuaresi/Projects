@@ -27,7 +27,7 @@ Il proprietario e la partner, **allo stesso livello**: vedono e modificano tutto
 - Attività in corso: **decine**
 - Archivio (attività completate): **centinaia**, nel tempo
 
-Serve quindi una ricerca e un filtro efficaci nella pagina delle attività. La pagina Per stato mostra solo quelle attive.
+La Dashboard mostra tutto, raggruppato per progetto.
 
 ## Cosa NON è
 
@@ -39,7 +39,7 @@ Serve quindi una ricerca e un filtro efficaci nella pagina delle attività. La p
 ## Cosa si riprende dal vecchio progetto (solo come idea)
 
 Il vecchio codice è in `OLD/`, solo come riferimento locale.
-- Dashboard con una card per progetto, pagina Per stato a sezioni collassabili
+- Dashboard con una card per progetto
 - Tabella su desktop e card su mobile, con modifica inline dei campi
 - Stelle di priorità e barra di avanzamento
 - Modale per il diario

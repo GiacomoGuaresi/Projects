@@ -28,8 +28,6 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Gruppo | Voce | Icona Lucide |
 |---|---|---|
 | Sezioni | **Dashboard** | `layout-dashboard` |
-| Sezioni | **Per stato** | `layout-list` |
-| Sezioni | **Attività** | `list-checks` |
 | Sezioni | **Faccende** | `broom` |
 | Sezioni | **Valigia** | `luggage` |
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
@@ -52,21 +50,6 @@ Stessa schermata di Grocery:
 - messaggi distinti per "Passphrase sbagliata" e per l'errore di connessione;
 - se Supabase non è raggiungibile per mancanza di configurazione, un avviso dedicato;
 - con la sessione condivisa, chi è già entrato in Grocery non vede questa schermata.
-
-## Per stato
-
-Tre sezioni collassabili, ciascuna con il conteggio tra parentesi:
-
-| Sezione | Stato mostrato | Aperta di default |
-|---|---|---|
-| **In corso** | `in_corso` | sì |
-| **Da fare** | `da_fare` | no |
-| **Bloccate** | `bloccato` | no |
-
-- Ordinamento dentro ogni sezione: progetto (A→Z, senza progetto in fondo), poi priorità decrescente, poi titolo.
-- Paginazione da 50 per sezione.
-- Righe e card identiche alla pagina Attività, ma senza il pulsante elimina.
-- Quando un'attività cambia stato, passa subito nella sezione giusta (o sparisce, se completata) con un'animazione breve.
 
 ## Dashboard
 
@@ -103,7 +86,7 @@ Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"
 - Le fatte restano visibili **fino a mezzanotte**, poi si **eliminano da sole** (all'apertura dell'app o al ritorno in primo piano).
 - Gli interruttori della Dashboard valgono anche qui: con **In corso** acceso o **Completi** spento le fatte si nascondono. Nella pagina Faccende si vedono sempre.
 - **Aggiunta rapida** come ultima riga, uguale a quella delle card dei progetti: "Aggiungi faccenda".
-- Le faccende non compaiono nelle pagine Per stato e Attività, né nel modale "Nuova attività".
+- Le faccende non compaiono nel modale "Nuova attività".
 - Una faccenda creata da una ricorrenza ha accanto al titolo una piccola icona `repeat`.
 
 ## Faccende ricorrenti
@@ -143,19 +126,11 @@ Un **wizard in due passi**, lo stesso su tutti i telefoni: se uno prepara la lis
 ## Modale dettagli
 
 Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
-- Campi modificabili con le stesse regole delle righe: **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Priorità**, **Stato** (conferma per *Completo*), **Avanzamento**.
+- Campi modificabili con le regole descritte in "Campi di un'attività": **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Priorità**, **Stato** (conferma per *Completo*), **Avanzamento**.
 - Date di creazione, modifica e completamento; pulsante **Diario** (con un pallino di notifica se ha voci) che apre il modale diario sopra.
-- In fondo, pulsante **Elimina** (`trash-2`, rosso) con la stessa conferma della pagina Attività; eliminata l'attività, il modale si chiude.
+- In fondo, pulsante **Elimina** (`trash-2`, rosso) con conferma; eliminata l'attività, il modale si chiude.
 
-## Pagina Attività
-
-- **Filtri**: testo (cerca nel titolo e nel progetto), stato, priorità, progetto (con suggerimenti), pulsante *Azzera*.
-- Interruttore **"Mostra completate"**, spento di default. Scegliere *Completo* nel filtro di stato lo accende da solo.
-- Ordinamento: come la pagina Per stato. Con le completate visibili, queste vanno in fondo, dalla più recente.
-- Paginazione con scelta di 25 / 50 / 100 righe.
-- Colonne fisse, senza selettore.
-
-## Riga (desktop) e card (mobile)
+## Campi di un'attività
 
 | Campo | Visualizzazione | Modifica |
 |---|---|---|
@@ -164,7 +139,7 @@ Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
 | Stato | gruppo di pulsanti con icona e colore | clic sul pulsante; passare a *Completo* chiede conferma |
 | Priorità | 5 stelle (`star`) | clic sulla stella |
 | Avanzamento | barra + % | clic → slider / numero |
-| Azioni | `book-open` diario · `trash-2` elimina (solo nella pagina Attività) | pallino di notifica sul diario se ha voci |
+| Azioni | `book-open` diario · `trash-2` elimina (nel modale dettagli) | pallino di notifica sul diario se ha voci |
 
 Icone degli stati: *Da fare* `circle` · *In corso* `play` · *Bloccato* `ban` · *Completo* `circle-check`.
 

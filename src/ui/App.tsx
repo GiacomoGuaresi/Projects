@@ -9,14 +9,11 @@ import { Dashboard } from './Dashboard'
 import { Installa } from './Installa'
 import { installa, useInstallazione } from './installazione'
 import { DialogoProgetto } from './DialogoProgetto'
-import type { AzioniAttivita } from './ElencoAttivita'
 import { MenuLaterale } from './MenuLaterale'
-import { ModaleDettagli } from './ModaleDettagli'
+import { ModaleDettagli, type AzioniAttivita } from './ModaleDettagli'
 import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
-import { PaginaAttivita } from './PaginaAttivita'
 import { PaginaFaccende } from './PaginaFaccende'
-import { PaginaPerStato } from './PaginaPerStato'
 import { PaginaValigia } from './PaginaValigia'
 import { indirizzi, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
@@ -129,16 +126,6 @@ export function App() {
                 onCrea={crea}
               />
             )}
-          </ConAttivita>
-        )}
-        {rotta === 'stato' && (
-          <ConAttivita stato={stato} onRiprova={ricarica}>
-            {(attivita) => <PaginaPerStato attivita={attivita} progetti={progetti} azioni={azioni} />}
-          </ConAttivita>
-        )}
-        {rotta === 'attivita' && (
-          <ConAttivita stato={stato} onRiprova={ricarica}>
-            {(attivita) => <PaginaAttivita attivita={attivita} progetti={progetti} azioni={azioni} />}
           </ConAttivita>
         )}
         {rotta === 'faccende' && <PaginaFaccende faccende={faccende} onAvviso={mostraAvviso} />}

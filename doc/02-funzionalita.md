@@ -73,9 +73,7 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Funzione | Stato |
 |---|---|
 | **Dashboard**: una card per progetto, dettagli in un modale | ✅ |
-| **Per stato**: sezioni "In corso", "Da fare", "Bloccate" | ✅ |
-| **Attività**: elenco completo con filtri (testo, stato, priorità, progetto) e paginazione | ✅ |
-| Completate nascoste di default, interruttore **"Mostra completate"** | ✅ |
+| Pagine **Per stato** e **Attività** (elenco con filtri e paginazione) | ❌ (tolte il 2026-09-27, non si usavano) |
 | Selettore delle colonne visibili | ❌ (eventualmente in futuro) |
 | Kanban, calendario | ❌ |
 

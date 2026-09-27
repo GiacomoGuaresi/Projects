@@ -2,13 +2,22 @@ import type { ReactNode } from 'react'
 import { BookOpen, Trash2 } from 'lucide-react'
 import type { ProgettoInUso } from '../dominio/progetto'
 import { titoloSenzaTag } from '../dominio/tag'
-import type { Attivita } from '../dominio/tipi'
+import type { Attivita, Modifica } from '../dominio/tipi'
 import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
-import type { AzioniAttivita } from './ElencoAttivita'
 import { AiutoTag } from './InputTitolo'
 import { Modale } from './Modale'
 import { dataOra } from './ModaleDiario'
 import { SceltaPriorita, SceltaStato } from './Scelte'
+
+/** Cosa si può fare su un'attività dalla Dashboard e dai dettagli. */
+export interface AzioniAttivita {
+  modifica: (attivita: Attivita, modifica: Modifica) => void
+  /** Il testo scritto nel campo progetto. */
+  cambiaProgetto: (attivita: Attivita, testo: string) => void
+  /** Chiede conferma prima di eliminare. */
+  elimina: (attivita: Attivita) => void
+  apriDiario: (attivita: Attivita) => void
+}
 
 interface Props {
   attivita: Attivita
@@ -22,8 +31,8 @@ const pulsante =
 
 /**
  * I dettagli di un'attività, aperti dalla Dashboard (doc/08-interfaccia.md,
- * "Modale dettagli"): tutti i campi modificabili come nelle righe, con le stesse
- * regole (conferma di *Completo*, "solo questa / tutte" sul progetto).
+ * "Modale dettagli"): tutti i campi modificabili con le regole di sempre
+ *  (conferma di *Completo*, "solo questa / tutte" sul progetto).
  * Il diario si modifica nel suo modale, che si apre sopra.
  */
 export function ModaleDettagli({ attivita: a, progetti, azioni, onChiudi }: Props) {

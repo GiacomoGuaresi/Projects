@@ -6,11 +6,11 @@ Lista delle attività di casa, raggruppate per progetto, con un diario per ogni 
 
 ## Cosa fa
 
-- **Dashboard** con una card per progetto e i dettagli in un modale, pagina **Per stato** con le attività divise in sezioni collassabili, **pagina Attività** con l'elenco completo
+- **Dashboard** con una card per progetto e i dettagli in un modale
 - Titolo con **tag** (`<urgente>`, `<fai da te>`, `<guasto>`, `<idea>`, `<progetto>`, `<inverno>`, `<estate>`, `<cucito>`, `<natalizio>`, `<cucina>`), progetto, stato, priorità a stelle, avanzamento: tutto modificabile al volo
 - **Diario** con le voci datate per ogni attività
 - **Valigia**: la lista per fare la valigia, per giorni e tipo di viaggio (mare, montagna, rifugio…), condivisa in tempo reale tra i telefoni
-- Filtri per testo, stato, priorità e progetto; rinomina di un progetto su tutte le sue attività
+- Rinomina di un progetto su tutte le sue attività
 - Accesso con la sola **passphrase**, sessione condivisa con Grocery; installabile sulla schermata Home
 
 ## Per iniziare
