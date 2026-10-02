@@ -59,10 +59,11 @@ describe('boschetti', () => {
 })
 
 describe('disponi', () => {
-  it('una foresta vuota ha solo il prato', () => {
+  it('una foresta vuota ha solo il prato (e magari qualche roccia)', () => {
     const foresta = disponi([], 0)
-    expect(foresta.elementi).toEqual([])
+    expect(foresta.elementi.every((e) => e.tipo === 'roccia')).toBe(true)
     expect(foresta.lotti).toEqual([])
+    expect(foresta.caselle.length).toBeGreaterThan(0)
   })
 
   it('mette un albero per attività, mai due nella stessa casella', () => {
@@ -110,23 +111,30 @@ describe('disponi', () => {
     expect(posto(posto3(dopo)!)).toBe(posto(posto3(prima)!))
   })
 
-  it('gli arbusti stanno sempre negli stessi posti e fuori dalle zolle', () => {
-    const gruppi = boschetti([attivita('Casa', giorno(1)), attivita('Casa', giorno(2))])
-    const una = disponi(gruppi, 6)
-    const due = disponi(gruppi, 6)
+  it('gli arbusti stanno sempre negli stessi posti, solo sul prato libero', () => {
+    const gruppi = boschetti([attivita('Casa', giorno(1)), attivita('Casa', giorno(2)), attivita('Auto', giorno(3))])
+    const una = disponi(gruppi, 25)
+    const due = disponi(gruppi, 25)
     expect(arbusti(una.elementi).map(posto)).toEqual(arbusti(due.elementi).map(posto))
-    const zolle = new Set(una.elementi.filter((e) => e.tipo === 'zolla').map(posto))
-    for (const a of arbusti(una.elementi)) expect(zolle.has(posto(a))).toBe(false)
+    const tipi = new Map(una.caselle.map((c) => [posto(c as Elemento), c.tipo]))
+    for (const a of arbusti(una.elementi)) expect(tipi.get(posto(a))).toBe('prato')
   })
 
-  it('disegna prima le zolle, poi da dietro in avanti', () => {
+  it('gli alberi di un boschetto stanno tutti alla stessa altezza, quella della zolla', () => {
+    const elenco = Array.from({ length: 12 }, () => attivita('Casa', giorno(1)))
+    const { elementi, caselle, lotti } = disponi(boschetti(elenco), 0)
+    const zolle = caselle.filter((c) => c.tipo === 'zolla')
+    expect(new Set(zolle.map((c) => c.altezza))).toEqual(new Set([lotti[0].altezza]))
+    for (const a of alberi(elementi)) expect(a.altezza).toBe(lotti[0].altezza)
+  })
+
+  it('caselle ed elementi sono in ordine di disegno, da dietro in avanti', () => {
     const elenco = Array.from({ length: 8 }, () => attivita('Casa', giorno(1)))
-    const { elementi } = disponi(boschetti(elenco), 5)
-    const ultimaZolla = elementi.map((e) => e.tipo).lastIndexOf('zolla')
-    const resto = elementi.slice(ultimaZolla + 1)
-    expect(resto.every((e) => e.tipo !== 'zolla')).toBe(true)
-    for (let i = 1; i < resto.length; i++) {
-      expect(resto[i].col + resto[i].riga).toBeGreaterThanOrEqual(resto[i - 1].col + resto[i - 1].riga)
+    const { elementi, caselle } = disponi(boschetti(elenco), 5)
+    for (const lista of [elementi, caselle]) {
+      for (let i = 1; i < lista.length; i++) {
+        expect(lista[i].col + lista[i].riga).toBeGreaterThanOrEqual(lista[i - 1].col + lista[i - 1].riga)
+      }
     }
   })
 

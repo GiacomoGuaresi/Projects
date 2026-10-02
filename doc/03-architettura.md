@@ -22,7 +22,8 @@ flowchart LR
    - la lettura e la scrittura sulle tabelle.
 3. Postgres applica i permessi con la **Row Level Security**: senza sessione non si vede nulla.
 4. Le regole di business stanno nel database: vincoli, trigger (completo ⇒ 100%), date automatiche, rinomina di un progetto.
-5. Nessun backend e nessuna Edge Function nella prima versione. L'assistente IA arriverà con una Edge Function, che custodirà la chiave del provider.
+5. L'unica altra chiamata esterna è il meteo della Foresta, da [Open-Meteo](https://open-meteo.com/): API pubblica senza chiave, con le sole coordinate fisse di Milano ([08](08-interfaccia.md), "Foresta").
+6. Nessun backend e nessuna Edge Function nella prima versione. L'assistente IA arriverà con una Edge Function, che custodirà la chiave del provider.
 
 ## Convivenza con Grocery sullo stesso progetto Supabase
 

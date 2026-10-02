@@ -1,19 +1,17 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import { Minus, Plus, Sprout, X } from 'lucide-react'
 import { faccende } from '../../dati'
-import {
-  boschetti,
-  disponi,
-  LATO,
-  proietta,
-  statisticheBosco,
-  verdeZolla,
-  type AlberoForesta,
-} from '../../dominio/foresta'
+import { boschetti, disponi, statisticheBosco, type AlberoForesta } from '../../dominio/foresta'
 import { coloreProgetto, iniziali } from '../../dominio/progetto'
 import type { Attivita, Stato } from '../../dominio/tipi'
 import { infoStati } from '../stati'
-import { Albero, Arbusto } from './Albero'
+import { CASA } from '../../dominio/ambiente'
+import { usePressioneLunga } from '../pressioneLunga'
+import { Cielo, copertura } from './Cielo'
+import { Particelle } from './Particelle'
+import { Scena } from './Scena'
+import { nomiAmbiente, SelettoreAmbiente } from './SelettoreAmbiente'
+import { comandiConsole, useAmbiente, type ComandiForesta } from './useAmbiente'
 
 interface Props {
   attivita: readonly Attivita[]
@@ -21,12 +19,6 @@ interface Props {
 
 /** Le piante già viste (`id:stato`), per far crescere solo le nuove e quelle cambiate. */
 const VISTI = 'projects_foresta_visti'
-/** Lo spessore della zolla di terra sotto il prato, in px. */
-const SPESSORE = 10
-/** Spazio sopra il prato per le chiome. */
-const CHIOME = 48
-/** La vista più piccola: una foresta di pochi alberi non diventa gigante. */
-const VISTA_MINIMA = { larga: 560, alta: 320 }
 const ZOOM = [1, 1.5, 2, 3] as const
 /** Le caselle del bosco scelto: prima quello che è fatto. */
 const ORDINE_STATI: Stato[] = ['completo', 'in_corso', 'da_fare', 'bloccato']
@@ -74,27 +66,6 @@ const data = (iso: string | null) =>
 
 const plurale = (n: number, uno: string, tanti: string) => `${n} ${n === 1 ? uno : tanti}`
 
-/** Le nuvole del cielo, ferme se si è chiesto meno movimento. */
-const NUVOLE = [
-  { sinistra: '6%', alto: '7%', scala: 1, durata: 70 },
-  { sinistra: '58%', alto: '4%', scala: 0.7, durata: 90 },
-  { sinistra: '78%', alto: '22%', scala: 1.2, durata: 80 },
-  { sinistra: '28%', alto: '30%', scala: 0.55, durata: 110 },
-]
-
-function Nuvola({ scala }: { scala: number }) {
-  return (
-    <svg width={120 * scala} height={48 * scala} viewBox="0 0 120 48" aria-hidden="true">
-      <g fill="#fff">
-        <ellipse cx={60} cy={34} rx={52} ry={13} />
-        <circle cx={40} cy={26} r={16} />
-        <circle cx={66} cy={20} r={20} />
-        <circle cx={88} cy={30} r={12} />
-      </g>
-    </svg>
-  )
-}
-
 /**
  * La Foresta (doc/08-interfaccia.md): un prato isometrico nel cielo, grande
  * quanto la pagina. Ogni attività è una pianta che cresce col suo stato, i progetti sono
@@ -114,6 +85,35 @@ export function PaginaForesta({ attivita }: Props) {
   // In verticale l'isola, larga e bassa, verrebbe piccola: si parte già ingranditi.
   const [zoom, setZoom] = useState(() => (window.matchMedia(VERTICALE).matches ? 1 : 0))
   const [bosco, setBosco] = useState<string | null>(null)
+  const ambiente = useAmbiente()
+  // Tenendo premuto il titolo si apre il selettore nascosto di stagione, ora e meteo.
+  const [selettore, setSelettore] = useState(false)
+  const chiudiSelettore = useCallback(() => setSelettore(false), [])
+  const titolo = usePressioneLunga<HTMLDivElement>({ onInizio: () => setSelettore(true) })
+
+  // Lo stesso selettore con Alt+Shift+F, e dalla console dei DevTools con `foresta.*`.
+  const ultimo = useRef(ambiente)
+  ultimo.current = ambiente
+  const { setForza } = ambiente
+  useEffect(() => {
+    const tasto = (e: KeyboardEvent) => {
+      if (e.altKey && e.shiftKey && e.code === 'KeyF') {
+        e.preventDefault()
+        setSelettore((aperto) => !aperto)
+      }
+    }
+    document.addEventListener('keydown', tasto)
+    const finestra = window as typeof window & { foresta?: ComandiForesta }
+    finestra.foresta = comandiConsole(() => ultimo.current, setForza)
+    console.info(
+      "Foresta: prova stagione, ora, meteo e vento con foresta.stagione('inverno'), foresta.ora('notte'), " +
+        "foresta.meteo('temporale'), foresta.vento(0.8), foresta.reset(), foresta.stato(). Solo in questa scheda.",
+    )
+    return () => {
+      document.removeEventListener('keydown', tasto)
+      delete finestra.foresta
+    }
+  }, [setForza])
   const scelto = bosco === null ? null : (gruppi.find((g) => g.chiave === bosco) ?? null)
   const statistiche = useMemo(() => (scelto ? statisticheBosco(attivita, scelto.chiave) : null), [attivita, scelto])
   const contenitore = useRef<HTMLDivElement>(null)
@@ -153,187 +153,75 @@ export function PaginaForesta({ attivita }: Props) {
     // Il clic arriva dopo: lo si lascia passare solo se non si è trascinato.
     window.setTimeout(() => (trascina.current = null))
   }
-  const scegli = (chiave: string | null) => {
+  const scegli = useCallback((chiave: string | null) => {
     if (trascina.current?.mosso) return
     setBosco(chiave)
-  }
+  }, [])
 
-  const { minCol, maxCol, minRiga, maxRiga } = foresta.limiti
-  const alto = proietta(minCol - 0.5, minRiga - 0.5)
-  const destra = proietta(maxCol + 0.5, minRiga - 0.5)
-  const basso = proietta(maxCol + 0.5, maxRiga + 0.5)
-  const sinistra = proietta(minCol - 0.5, maxRiga + 0.5)
-  const contenuto = {
-    x: sinistra.x - 8,
-    y: alto.y - CHIOME,
-    larga: destra.x - sinistra.x + 16,
-    alta: basso.y - alto.y + CHIOME + SPESSORE + 32,
-  }
-  // Con pochi alberi la vista si allarga attorno al prato, che resta al centro.
-  const larga = Math.max(contenuto.larga, VISTA_MINIMA.larga)
-  const alta = Math.max(contenuto.alta, VISTA_MINIMA.alta)
-  const vista = {
-    x: contenuto.x - (larga - contenuto.larga) / 2,
-    y: contenuto.y - (alta - contenuto.alta) / 2,
-    larga,
-    alta,
-  }
-  const punti = (...p: { x: number; y: number }[]) => p.map(({ x, y }) => `${x},${y}`).join(' ')
-  const sotto = (p: { x: number; y: number }) => ({ x: p.x, y: p.y + SPESSORE })
-
-  // Le caselle a scacchiera, per dare il senso della griglia.
-  const caselle: { col: number; riga: number }[] = []
-  for (let col = minCol; col <= maxCol; col++) {
-    for (let riga = minRiga; riga <= maxRiga; riga++) {
-      if ((col + riga) % 2 === 0) caselle.push({ col, riga })
-    }
-  }
-  const rombo = (col: number, riga: number) =>
-    punti(
-      proietta(col - 0.5, riga - 0.5),
-      proietta(col + 0.5, riga - 0.5),
-      proietta(col + 0.5, riga + 0.5),
-      proietta(col - 0.5, riga + 0.5),
-    )
-  /** Con un bosco scelto, il resto si spegne. */
-  const spento = (chiave: string | null) => bosco !== null && chiave !== bosco
-
-  let ordine = 0
   const vuota = piante.length === 0 && !arbusti
 
   return (
-    <div className="relative h-[calc(100dvh-45px-env(safe-area-inset-top))] min-h-[360px] lg:h-[calc(100dvh-44px)] overflow-hidden bg-linear-to-b from-cielo via-cielo-chiaro to-fondo">
-      {NUVOLE.map((n) => (
-        <div
-          key={n.sinistra}
-          className="animate-deriva pointer-events-none absolute opacity-80"
-          style={{ left: n.sinistra, top: n.alto, animationDuration: `${n.durata}s` }}
-        >
-          <Nuvola scala={n.scala} />
-        </div>
-      ))}
+    <div className="relative h-[calc(100dvh-45px-env(safe-area-inset-top))] min-h-[360px] lg:h-[calc(100dvh-44px)] overflow-hidden bg-fondo">
+      <Cielo luce={ambiente.luce} meteo={ambiente.meteo} vento={ambiente.vento} luna={ambiente.luna} />
 
       <div
         ref={contenitore}
         className="absolute inset-0 overflow-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ '--vento': ambiente.vento } as CSSProperties}
         onPointerDown={giu}
         onPointerMove={muovi}
         onPointerUp={su}
         onPointerLeave={su}
       >
-        <svg
-          viewBox={`${vista.x} ${vista.y} ${vista.larga} ${vista.alta}`}
-          preserveAspectRatio="xMidYMid meet"
-          className="block select-none"
-          style={{ width: `${ZOOM[zoom] * 100}%`, height: `${ZOOM[zoom] * 100}%` }}
-          role="img"
-          aria-label={`La foresta: ${plurale(alberi, 'albero', 'alberi')} in ${plurale(gruppi.length, 'boschetto', 'boschetti')}${arbusti ? ` e ${plurale(arbusti, 'arbusto', 'arbusti')}` : ''}.`}
-          onClick={() => scegli(null)}
-        >
-          <defs>
-            <filter id="sfuma-ombra" x="-50%" y="-200%" width="200%" height="500%">
-              <feGaussianBlur stdDeviation={10} />
-            </filter>
-          </defs>
-
-          {/* L'ombra dell'isola, la terra, poi il prato sopra. */}
-          <ellipse
-            cx={(sinistra.x + destra.x) / 2}
-            cy={basso.y + SPESSORE + 6}
-            rx={(destra.x - sinistra.x) * 0.32}
-            ry={6 + (basso.y - alto.y) * 0.04}
-            fill="#2e3a2d"
-            fillOpacity={0.18}
-            filter="url(#sfuma-ombra)"
-          />
-          <polygon points={punti(sinistra, basso, sotto(basso), sotto(sinistra))} fill="#8f6a47" />
-          <polygon points={punti(basso, destra, sotto(destra), sotto(basso))} fill="#76563a" />
-          <polygon points={punti(alto, destra, basso, sinistra)} fill="#b7d5a4" />
-          {caselle.map(({ col, riga }) => (
-            <polygon key={`${col},${riga}`} points={rombo(col, riga)} fill="#c1dcb0" />
-          ))}
-
-          {foresta.elementi.map((e) => {
-            const { x, y } = proietta(e.col, e.riga)
-            if (e.tipo === 'zolla') {
-              const acceso = bosco === e.chiave
-              const { h, s, l } = verdeZolla(e.chiave)
-              return (
-                <polygon
-                  key={`z${e.col},${e.riga}`}
-                  points={rombo(e.col, e.riga)}
-                  fill={`hsl(${h}, ${s}%, ${acceso ? l + 8 : l}%)`}
-                  fillOpacity={acceso ? 1 : spento(e.chiave) ? 0.3 : 0.8}
-                  className="cursor-pointer transition-[fill-opacity] duration-200"
-                  onClick={(evento) => {
-                    evento.stopPropagation()
-                    scegli(e.chiave)
-                  }}
-                />
-              )
-            }
-            if (e.tipo === 'arbusto') {
-              return (
-                <g
-                  key={`a${e.seed}`}
-                  transform={`translate(${x} ${y})`}
-                  opacity={bosco !== null ? 0.45 : 1}
-                  className="pointer-events-none transition-opacity duration-200"
-                >
-                  <Arbusto seed={e.seed} />
-                </g>
-              )
-            }
-            const nuovo = !visti?.has(pianta(e.albero))
-            return (
-              <g
-                key={`t${e.albero.id}`}
-                transform={`translate(${x} ${y})`}
-                opacity={spento(e.chiave) ? 0.3 : 1}
-                className="cursor-pointer transition-opacity duration-200"
-                onClick={(evento) => {
-                  evento.stopPropagation()
-                  scegli(e.chiave)
-                }}
-              >
-                <g
-                  className={nuovo ? 'animate-cresci' : undefined}
-                  style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
-                >
-                  <Albero seed={e.albero.id} stato={e.albero.stato} frutti={e.albero.priorita >= 4} />
-                </g>
-              </g>
-            )
-          })}
-
-          {/* I nomi dei boschi, sopra tutto. */}
-          {foresta.lotti.map((l) => {
-            const { x, y } = proietta(l.col, l.riga)
-            return (
-              <text
-                key={l.chiave}
-                x={x}
-                y={y + (l.raggio * Math.SQRT2 * LATO) / 4 + 14}
-                textAnchor="middle"
-                fontSize={bosco === l.chiave ? 11 : 9}
-                fontWeight={600}
-                fill="var(--color-testo)"
-                opacity={spento(l.chiave) ? 0.4 : 1}
-                stroke="#fff"
-                strokeWidth={3}
-                strokeLinejoin="round"
-                paintOrder="stroke"
-                className="pointer-events-none transition-opacity duration-200"
-              >
-                {l.nome}
-              </text>
-            )
-          })}
-        </svg>
+        <Scena
+          foresta={foresta}
+          bosco={bosco}
+          visti={visti}
+          onScegli={scegli}
+          stagione={ambiente.stagione}
+          farfalle={
+            ambiente.luce.buio < 0.5 &&
+            (ambiente.stagione === 'primavera' || ambiente.stagione === 'estate') &&
+            (ambiente.meteo.cielo === 'sereno' || ambiente.meteo.cielo === 'nuvoloso')
+          }
+          ingrandimento={ZOOM[zoom]}
+          etichetta={`La foresta: ${plurale(alberi, 'albero', 'alberi')} in ${plurale(gruppi.length, 'boschetto', 'boschetti')}${arbusti ? ` e ${plurale(arbusti, 'arbusto', 'arbusti')}` : ''}.`}
+        />
       </div>
 
+      {/* La luce sulla foresta: blu di notte, grigia col brutto tempo, rosa ad alba e tramonto. */}
+      <div
+        className="pointer-events-none absolute inset-0 mix-blend-multiply transition-opacity duration-1000"
+        style={{ background: '#28407a', opacity: ambiente.luce.buio * 0.5 * (1 - ambiente.luce.tinta * 0.6) }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 mix-blend-multiply transition-opacity duration-1000"
+        style={{ background: '#7d8794', opacity: copertura(ambiente.meteo) * 0.3 }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 mix-blend-soft-light transition-opacity duration-1000"
+        style={{ background: '#ff7a6b', opacity: ambiente.luce.tinta * 0.4 }}
+        aria-hidden="true"
+      />
+
+      {/* La nebbia: un velo bianco, più fitto in basso. */}
+      {ambiente.meteo.cielo === 'nebbia' && (
+        <div
+          className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/20 via-white/45 to-white/70 transition-opacity duration-1000"
+          style={{ opacity: 0.5 + ambiente.meteo.intensita * 0.5 }}
+          aria-hidden="true"
+        />
+      )}
+      <Particelle meteo={ambiente.meteo} stagione={ambiente.stagione} luce={ambiente.luce} vento={ambiente.vento} />
+
       {/* Il titolo, in alto a sinistra. */}
-      <div className="pointer-events-none absolute top-2 left-2 max-w-[calc(100%-64px)] rounded-xl bg-white/85 px-3 py-2 shadow-sm backdrop-blur-sm">
+      <div
+        ref={titolo.ref}
+        {...titolo.gestori}
+        className="absolute top-2 left-2 max-w-[calc(100%-64px)] touch-none rounded-xl bg-white/85 px-3 py-2 shadow-sm backdrop-blur-sm select-none"
+      >
         <h2 className="text-lg leading-tight font-semibold">Foresta</h2>
         <p className="text-testo-tenue">
           {plurale(alberi, 'albero', 'alberi')} · {plurale(gruppi.length, 'boschetto', 'boschetti')}
@@ -346,7 +234,14 @@ export function PaginaForesta({ attivita }: Props) {
               .join(' · ')}
           </p>
         )}
+        <p className="text-xs text-testo-tenue">
+          {nomiAmbiente[ambiente.stagione]} · {nomiAmbiente[ambiente.meteo.cielo].toLowerCase()}
+          {ambiente.meteoVero && ` a ${CASA.nome}`}
+        </p>
       </div>
+      {selettore && (
+        <SelettoreAmbiente forza={ambiente.forza} onForza={ambiente.setForza} onChiudi={chiudiSelettore} />
+      )}
 
       {/* Lo zoom, in alto a destra. */}
       <div className="absolute top-2 right-2 flex flex-col gap-1">

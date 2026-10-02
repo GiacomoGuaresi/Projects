@@ -53,6 +53,7 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 - [ ] **Valigia**: pagina `#/valigia` a wizard con la lista, giorni e tipi di viaggio, caselle per Jack e Ale
 - [ ] **Valigia condivisa**: tabelle `valigia` e `valigia_spunte` (`supabase/sql/005_valigia.sql`, da applicare a mano), sincronizzazione in tempo reale
 - [ ] **Foresta**: pagina `#/foresta` con prato isometrico, alberi dalle attività completate e arbusti dal contatore `contatori.faccende_fatte` (`supabase/sql/006_foresta.sql`, da applicare a mano)
+- [ ] **Foresta viva**: terreno in rilievo con laghetti, sentieri e rocce; stagioni, giorno e notte dal calendario e dall'ora veri; meteo reale di Milano da Open-Meteo (pioggia, neve, temporale, nebbia); vento, uccelli, farfalle, lucciole, foglie che cadono, stelle e luna; selettore nascosto per provare tutto
 
 ## Fase 4 · Assistente IA
 - [ ] Scelta del provider con tier gratuito

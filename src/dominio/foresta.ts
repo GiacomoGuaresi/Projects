@@ -4,8 +4,8 @@
 // boschetto, le faccende fatte sono arbusti sparsi. Qui solo la disposizione su una griglia di
 // caselle e la proiezione isometrica; il disegno sta in src/ui/foresta.
 
-import { generatore } from './caso'
 import { chiaveProgetto, tonalita } from './progetto'
+import { sorteggio, terreno, type CasellaTerreno } from './terreno'
 import type { Attivita, Stato } from './tipi'
 
 export type AlberoForesta = Pick<Attivita, 'id' | 'titolo' | 'progetto' | 'stato' | 'priorita' | 'creata_il'>
@@ -112,17 +112,22 @@ export interface Lotto {
   riga: number
   /** Il raggio della zolla, in caselle. */
   raggio: number
+  /** Il livello del pianoro. */
+  altezza: number
   alberi: number
 }
 
+/** Quello che sta sopra il terreno, ciascuno sulla sua casella e alla sua altezza. */
 export type Elemento =
-  | ({ tipo: 'zolla'; chiave: string } & Casella)
-  | ({ tipo: 'albero'; chiave: string; albero: AlberoForesta } & Casella)
-  | ({ tipo: 'arbusto'; seed: number } & Casella)
+  | ({ tipo: 'albero'; chiave: string; albero: AlberoForesta; altezza: number } & Casella)
+  | ({ tipo: 'arbusto'; seed: number; altezza: number } & Casella)
+  | ({ tipo: 'roccia'; seed: number; altezza: number } & Casella)
 
 export interface Foresta {
   lotti: Lotto[]
-  /** Zolle, alberi e arbusti, già in ordine di disegno (da dietro in avanti). */
+  /** Tutte le caselle del prato, in ordine di disegno (da dietro in avanti). */
+  caselle: CasellaTerreno[]
+  /** Alberi, arbusti e rocce, in ordine di disegno. */
   elementi: Elemento[]
   /** Le caselle estreme, prato compreso. */
   limiti: { minCol: number; maxCol: number; minRiga: number; maxRiga: number }
@@ -130,48 +135,29 @@ export interface Foresta {
 
 const chiaveCasella = (col: number, riga: number) => `${col},${riga}`
 
-/** Un numero fisso per casella: ordina i posti candidati per gli arbusti. */
-function sorteggio(col: number, riga: number): number {
-  return generatore(Math.imul(col, 73856093) ^ Math.imul(riga, 19349663) ^ SEED_ARBUSTI)()
-}
-
 /**
  * Mette i boschetti su una griglia a partire dal centro: ciascuno occupa un
  * disco di caselle (la zolla) con gli alberi a spirale, e va nella prima
- * posizione della spirale grande che non tocca i boschetti già messi. Gli
- * arbusti finiscono sulle caselle libere attorno, sempre nello stesso ordine.
+ * posizione della spirale grande che non tocca i boschetti già messi. Attorno
+ * il terreno (colline, acqua, sentieri, rocce); gli arbusti finiscono sul
+ * prato libero, sempre nello stesso ordine.
  */
 export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta {
-  const lotti: Lotto[] = []
-  const elementi: Elemento[] = []
-  const occupate = new Set<string>()
+  const lotti: Omit<Lotto, 'altezza'>[] = []
+  const piante: { chiave: string; albero: AlberoForesta; col: number; riga: number }[] = []
 
   for (const gruppo of gruppi) {
     const posti = primeCaselle(gruppo.alberi.length)
     const raggio = Math.sqrt(posti[posti.length - 1].d2)
     const centro = trovaPosto(lotti, raggio)
     lotti.push({ chiave: gruppo.chiave, nome: gruppo.nome, ...centro, raggio, alberi: gruppo.alberi.length })
-
-    for (const c of caselleFino(Math.ceil(raggio))) {
-      if (c.d2 > raggio * raggio) break
-      const col = centro.col + c.col
-      const riga = centro.riga + c.riga
-      occupate.add(chiaveCasella(col, riga))
-      elementi.push({ tipo: 'zolla', chiave: gruppo.chiave, col, riga })
-    }
     gruppo.alberi.forEach((albero, i) =>
-      elementi.push({
-        tipo: 'albero',
-        chiave: gruppo.chiave,
-        albero,
-        col: centro.col + posti[i].col,
-        riga: centro.riga + posti[i].riga,
-      }),
+      piante.push({ chiave: gruppo.chiave, albero, col: centro.col + posti[i].col, riga: centro.riga + posti[i].riga }),
     )
   }
 
   // Il prato: i boschetti più un bordo, allargato finché gli arbusti stanno
-  // radi (al massimo una casella libera su due).
+  // radi (al massimo una casella di prato libera su due).
   const bordo = lotti.reduce(
     (b, l) => ({
       minCol: Math.min(b.minCol, Math.floor(l.col - l.raggio)),
@@ -182,37 +168,51 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
     { minCol: 0, maxCol: 0, minRiga: 0, maxRiga: 0 },
   )
   let margine = 2
-  let libere: Casella[] = []
+  let limiti = bordo
+  let mappa: Map<string, CasellaTerreno>
+  let libere: CasellaTerreno[]
   for (;;) {
-    libere = []
-    for (let col = bordo.minCol - margine; col <= bordo.maxCol + margine; col++) {
-      for (let riga = bordo.minRiga - margine; riga <= bordo.maxRiga + margine; riga++) {
-        if (!occupate.has(chiaveCasella(col, riga))) libere.push({ col, riga })
-      }
-    }
-    if (libere.length >= arbusti * 2) break
-    margine++
-  }
-  libere
-    .map((c) => ({ ...c, n: sorteggio(c.col, c.riga) }))
-    .sort((a, b) => a.n - b.n)
-    .slice(0, arbusti)
-    .forEach(({ col, riga }, seed) => elementi.push({ tipo: 'arbusto', seed, col, riga }))
-
-  return {
-    lotti,
-    elementi: elementi.sort(inProfondita),
-    limiti: {
+    limiti = {
       minCol: bordo.minCol - margine,
       maxCol: bordo.maxCol + margine,
       minRiga: bordo.minRiga - margine,
       maxRiga: bordo.maxRiga + margine,
-    },
+    }
+    mappa = terreno(limiti, lotti)
+    libere = [...mappa.values()].filter((c) => c.tipo === 'prato')
+    if (libere.length >= arbusti * 2) break
+    margine++
+  }
+
+  const altezza = (col: number, riga: number) => mappa.get(chiaveCasella(col, riga))?.altezza ?? 0
+  const elementi: Elemento[] = [
+    ...piante.map((p) => ({ tipo: 'albero' as const, ...p, altezza: altezza(p.col, p.riga) })),
+    ...libere
+      .map((c) => ({ c, n: sorteggio(c.col, c.riga, SEED_ARBUSTI) }))
+      .sort((a, b) => a.n - b.n)
+      .slice(0, arbusti)
+      .map(({ c }, seed) => ({ tipo: 'arbusto' as const, seed, col: c.col, riga: c.riga, altezza: c.altezza })),
+    ...[...mappa.values()]
+      .filter((c) => c.tipo === 'roccia')
+      .map((c) => ({
+        tipo: 'roccia' as const,
+        seed: Math.floor(sorteggio(c.col, c.riga, 1) * 1e6),
+        col: c.col,
+        riga: c.riga,
+        altezza: c.altezza,
+      })),
+  ]
+
+  return {
+    lotti: lotti.map((l) => ({ ...l, altezza: altezza(l.col, l.riga) })),
+    caselle: [...mappa.values()].sort(inProfondita),
+    elementi: elementi.sort(inProfondita),
+    limiti,
   }
 }
 
 /** Il primo centro, lungo la spirale, lontano abbastanza da tutti i lotti. */
-function trovaPosto(lotti: readonly Lotto[], raggio: number): Casella {
+function trovaPosto(lotti: readonly Pick<Lotto, 'col' | 'riga' | 'raggio'>[], raggio: number): Casella {
   for (let r = 8; ; r *= 2) {
     for (const c of caselleFino(r)) {
       const libero = lotti.every(
@@ -223,10 +223,9 @@ function trovaPosto(lotti: readonly Lotto[], raggio: number): Casella {
   }
 }
 
-/** Prima le zolle, poi il resto da dietro (in alto) in avanti (in basso). */
-function inProfondita(a: Elemento, b: Elemento): number {
-  const piatta = (e: Elemento) => (e.tipo === 'zolla' ? 0 : 1)
-  return piatta(a) - piatta(b) || a.col + a.riga - (b.col + b.riga) || a.col - b.col
+/** Da dietro (in alto) in avanti (in basso): la profondità è `col + riga`. */
+export function inProfondita(a: Casella, b: Casella): number {
+  return a.col + a.riga - (b.col + b.riga) || a.col - b.col
 }
 
 // Colore della zolla -------------------------------------------------------------------
@@ -249,9 +248,12 @@ export function verdeZolla(chiave: string): { h: number; s: number; l: number } 
 /** La larghezza di una casella sullo schermo; l'altezza è la metà (rombo 2:1). */
 export const LATO = 32
 
-/** Il centro della casella sullo schermo, in vista isometrica. */
-export function proietta(col: number, riga: number): { x: number; y: number } {
-  return { x: ((col - riga) * LATO) / 2, y: ((col + riga) * LATO) / 4 }
+/** Quanto sale sullo schermo un livello di terreno, in px. */
+export const GRADINO = 6
+
+/** Il centro della casella sullo schermo, in vista isometrica, alla sua altezza. */
+export function proietta(col: number, riga: number, altezza = 0): { x: number; y: number } {
+  return { x: ((col - riga) * LATO) / 2, y: ((col + riga) * LATO) / 4 - altezza * GRADINO }
 }
 
 // Statistiche ----------------------------------------------------------------------
