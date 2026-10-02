@@ -1,4 +1,4 @@
-import { memo, type ReactNode, type SVGProps } from 'react'
+import { memo, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { GRADINO, inProfondita, LATO, proietta, verdeZolla, type Foresta } from '../../dominio/foresta'
 import type { Stagione } from '../../dominio/ambiente'
 import { LIVELLI, sorteggio, type CasellaTerreno } from '../../dominio/terreno'
@@ -161,102 +161,111 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
     alta,
   }
 
-  const altezze = new Map(foresta.caselle.map((c) => [`${c.col},${c.riga}`, c.altezza]))
   const spento = (chiave: string) => bosco !== null && chiave !== bosco
-  const scegli = (chiave: string) => (evento: { stopPropagation: () => void }) => {
-    evento.stopPropagation()
-    onScegli(chiave)
-  }
+  // Col mouse, il boschetto sotto il puntatore: se ne mostra il nome.
+  const [sopra, setSopra] = useState<string | null>(null)
 
-  /** Una casella: il piano alla sua altezza e le pareti verso le caselle davanti più basse. */
-  const casella = (c: CasellaTerreno): ReactNode => {
-    const { col, riga, altezza } = c
-    const sx = proietta(col - 0.5, riga + 0.5, altezza)
-    const su = proietta(col - 0.5, riga - 0.5, altezza)
-    const dx = proietta(col + 0.5, riga - 0.5, altezza)
-    const gi = proietta(col + 0.5, riga + 0.5, altezza)
-    // Quanto scende la parete: fino alla casella davanti, o fino al fondo dell'isola.
-    const caduta = (vicina: number | undefined) =>
-      vicina === undefined ? altezza * GRADINO + SPESSORE : (altezza - vicina) * GRADINO
-    const sinistraGiu = caduta(altezze.get(`${col},${riga + 1}`))
-    const destraGiu = caduta(altezze.get(`${col + 1},${riga}`))
-    const bordo = (vicina: number | undefined) => vicina === undefined
-    const zolla = c.tipo === 'zolla' && c.chiave !== undefined
-    return (
-      <g key={`c${col},${riga}`}>
-        {sinistraGiu > 0 && (
-          <Faccia
-            punti={punti(sx, gi, giu(gi, sinistraGiu), giu(sx, sinistraGiu))}
-            colore={bordo(altezze.get(`${col},${riga + 1}`)) ? '#8f6a47' : PARETI[stagione][0]}
-          />
-        )}
-        {destraGiu > 0 && (
-          <Faccia
-            punti={punti(gi, dx, giu(dx, destraGiu), giu(gi, destraGiu))}
-            colore={bordo(altezze.get(`${col + 1},${riga}`)) ? '#76563a' : PARETI[stagione][1]}
-          />
-        )}
-        <Faccia
-          punti={punti(su, dx, gi, sx)}
-          colore={colorePiano(c, bosco, stagione)}
-          className={zolla ? 'cursor-pointer' : undefined}
-          onClick={zolla ? scegli(c.chiave!) : undefined}
-        />
-        <Decoro c={c} stagione={stagione} {...proietta(col, riga, altezza)} />
-      </g>
-    )
-  }
+  // L'isola si ridisegna solo se cambia qualcosa che conta: passare col mouse non la tocca.
+  const disegno = useMemo(() => {
+    const altezze = new Map(foresta.caselle.map((c) => [`${c.col},${c.riga}`, c.altezza]))
+    const scegli = (chiave: string) => (evento: { stopPropagation: () => void }) => {
+      evento.stopPropagation()
+      onScegli(chiave)
+    }
 
-  let ordine = 0
-  const oggetto = (e: Foresta['elementi'][number]): ReactNode => {
-    const { x, y } = proietta(e.col, e.riga, e.altezza)
-    if (e.tipo === 'roccia') {
+    /** Una casella: il piano alla sua altezza e le pareti verso le caselle davanti più basse. */
+    const casella = (c: CasellaTerreno): ReactNode => {
+      const { col, riga, altezza } = c
+      const sx = proietta(col - 0.5, riga + 0.5, altezza)
+      const su = proietta(col - 0.5, riga - 0.5, altezza)
+      const dx = proietta(col + 0.5, riga - 0.5, altezza)
+      const gi = proietta(col + 0.5, riga + 0.5, altezza)
+      // Quanto scende la parete: fino alla casella davanti, o fino al fondo dell'isola.
+      const caduta = (vicina: number | undefined) =>
+        vicina === undefined ? altezza * GRADINO + SPESSORE : (altezza - vicina) * GRADINO
+      const sinistraGiu = caduta(altezze.get(`${col},${riga + 1}`))
+      const destraGiu = caduta(altezze.get(`${col + 1},${riga}`))
+      const bordo = (vicina: number | undefined) => vicina === undefined
+      const zolla = c.tipo === 'zolla' && c.chiave !== undefined
       return (
-        <g key={`r${e.col},${e.riga}`} transform={`translate(${x} ${y})`} className="pointer-events-none">
-          <Roccia seed={e.seed} stagione={stagione} />
+        <g key={`c${col},${riga}`}>
+          {sinistraGiu > 0 && (
+            <Faccia
+              punti={punti(sx, gi, giu(gi, sinistraGiu), giu(sx, sinistraGiu))}
+              colore={bordo(altezze.get(`${col},${riga + 1}`)) ? '#8f6a47' : PARETI[stagione][0]}
+            />
+          )}
+          {destraGiu > 0 && (
+            <Faccia
+              punti={punti(gi, dx, giu(dx, destraGiu), giu(gi, destraGiu))}
+              colore={bordo(altezze.get(`${col + 1},${riga}`)) ? '#76563a' : PARETI[stagione][1]}
+            />
+          )}
+          <Faccia
+            punti={punti(su, dx, gi, sx)}
+            colore={colorePiano(c, bosco, stagione)}
+            className={zolla ? 'cursor-pointer' : undefined}
+            onClick={zolla ? scegli(c.chiave!) : undefined}
+            data-bosco={zolla ? c.chiave : undefined}
+          />
+          <Decoro c={c} stagione={stagione} {...proietta(col, riga, altezza)} />
         </g>
       )
     }
-    if (e.tipo === 'arbusto') {
+
+    let ordine = 0
+    const oggetto = (e: Foresta['elementi'][number]): ReactNode => {
+      const { x, y } = proietta(e.col, e.riga, e.altezza)
+      if (e.tipo === 'roccia') {
+        return (
+          <g key={`r${e.col},${e.riga}`} transform={`translate(${x} ${y})`} className="pointer-events-none">
+            <Roccia seed={e.seed} stagione={stagione} />
+          </g>
+        )
+      }
+      if (e.tipo === 'arbusto') {
+        return (
+          <g
+            key={`a${e.seed}`}
+            transform={`translate(${x} ${y})`}
+            opacity={bosco !== null ? 0.45 : 1}
+            className="pointer-events-none transition-opacity duration-200"
+          >
+            <Vento seed={e.seed + 13}>
+              <Arbusto seed={e.seed} stagione={stagione} />
+            </Vento>
+          </g>
+        )
+      }
+      const nuovo = !visti?.has(`${e.albero.id}:${e.albero.stato}`)
       return (
         <g
-          key={`a${e.seed}`}
+          key={`t${e.albero.id}`}
           transform={`translate(${x} ${y})`}
-          opacity={bosco !== null ? 0.45 : 1}
-          className="pointer-events-none transition-opacity duration-200"
+          opacity={spento(e.chiave) ? 0.3 : 1}
+          className="cursor-pointer transition-opacity duration-200"
+          onClick={scegli(e.chiave)}
+          data-bosco={e.chiave}
         >
-          <Vento seed={e.seed + 13}>
-            <Arbusto seed={e.seed} stagione={stagione} />
-          </Vento>
+          <g
+            className={nuovo ? 'animate-cresci' : undefined}
+            style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
+          >
+            <Vento seed={e.albero.id}>
+              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} frutti={e.albero.priorita >= 4} />
+            </Vento>
+          </g>
         </g>
       )
     }
-    const nuovo = !visti?.has(`${e.albero.id}:${e.albero.stato}`)
-    return (
-      <g
-        key={`t${e.albero.id}`}
-        transform={`translate(${x} ${y})`}
-        opacity={spento(e.chiave) ? 0.3 : 1}
-        className="cursor-pointer transition-opacity duration-200"
-        onClick={scegli(e.chiave)}
-      >
-        <g
-          className={nuovo ? 'animate-cresci' : undefined}
-          style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
-        >
-          <Vento seed={e.albero.id}>
-            <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} frutti={e.albero.priorita >= 4} />
-          </Vento>
-        </g>
-      </g>
-    )
-  }
 
-  // Caselle e oggetti insieme, da dietro in avanti; a parità, prima la casella.
-  const strati = [
-    ...foresta.caselle.map((c) => ({ c, o: 0 as const, disegna: () => casella(c) })),
-    ...foresta.elementi.map((e) => ({ c: e, o: 1 as const, disegna: () => oggetto(e) })),
-  ].sort((a, b) => inProfondita(a.c, b.c) || a.o - b.o)
+    // Caselle e oggetti insieme, da dietro in avanti; a parità, prima la casella.
+    const strati = [
+      ...foresta.caselle.map((c) => ({ c, o: 0 as const, disegna: () => casella(c) })),
+      ...foresta.elementi.map((e) => ({ c: e, o: 1 as const, disegna: () => oggetto(e) })),
+    ].sort((a, b) => inProfondita(a.c, b.c) || a.o - b.o)
+    return strati.map((s) => s.disegna())
+  }, [foresta, bosco, visti, stagione, onScegli])
 
   return (
     <svg
@@ -267,6 +276,11 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
       role="img"
       aria-label={etichetta}
       onClick={() => onScegli(null)}
+      onPointerOver={(e) => {
+        if (e.pointerType !== 'mouse') return
+        setSopra((e.target as Element).closest('[data-bosco]')?.getAttribute('data-bosco') ?? null)
+      }}
+      onPointerLeave={() => setSopra(null)}
     >
       <defs>
         <filter id="sfuma-ombra" x="-50%" y="-200%" width="200%" height="500%">
@@ -285,7 +299,7 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
         filter="url(#sfuma-ombra)"
       />
 
-      {strati.map((s) => s.disegna())}
+      {disegno}
 
       {/* Le farfalle girano attorno ai boschetti. */}
       {farfalle &&
@@ -304,8 +318,8 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
           )
         })}
 
-      {/* I nomi dei boschetti, sopra tutto. */}
-      {foresta.lotti.map((l) => {
+      {/* Il nome del boschetto scelto o sotto il mouse, sopra tutto. */}
+      {foresta.lotti.filter((l) => l.chiave === bosco || l.chiave === sopra).map((l) => {
         const { x, y } = proietta(l.col, l.riga, l.altezza)
         return (
           <text
@@ -313,15 +327,14 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
             x={x}
             y={y + (l.raggio * Math.SQRT2 * LATO) / 4 + 14}
             textAnchor="middle"
-            fontSize={bosco === l.chiave ? 11 : 9}
+            fontSize={bosco === l.chiave ? 11 : 10}
             fontWeight={600}
             fill="var(--color-testo)"
-            opacity={spento(l.chiave) ? 0.4 : 1}
             stroke="#fff"
             strokeWidth={3}
             strokeLinejoin="round"
             paintOrder="stroke"
-            className="pointer-events-none transition-opacity duration-200"
+            className="animate-dissolvi pointer-events-none"
           >
             {l.nome}
           </text>
