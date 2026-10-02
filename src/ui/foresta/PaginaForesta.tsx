@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Minus, Plus, Sprout, X } from 'lucide-react'
 import { faccende } from '../../dati'
 import { boschetti, disponi, statisticheBosco, type AlberoForesta } from '../../dominio/foresta'
@@ -11,6 +11,7 @@ import { Cielo, copertura } from './Cielo'
 import { Particelle } from './Particelle'
 import { Scena } from './Scena'
 import { nomiAmbiente, SelettoreAmbiente } from './SelettoreAmbiente'
+import { useGesti, ZOOM_MASSIMO, ZOOM_MINIMO } from './useGesti'
 import { comandiConsole, useAmbiente, type ComandiForesta } from './useAmbiente'
 
 interface Props {
@@ -19,12 +20,9 @@ interface Props {
 
 /** Le piante già viste (`id:stato`), per far crescere solo le nuove e quelle cambiate. */
 const VISTI = 'projects_foresta_visti'
-const ZOOM = [1, 1.5, 2, 3] as const
 /** Le caselle del bosco scelto: prima quello che è fatto. */
 const ORDINE_STATI: Stato[] = ['completo', 'in_corso', 'da_fare', 'bloccato']
 const VERTICALE = '(orientation: portrait) and (max-width: 767px)'
-/** Oltre questi px un trascinamento col mouse non è più un clic. */
-const SOGLIA_TRASCINAMENTO = 4
 
 const pianta = (a: AlberoForesta) => `${a.id}:${a.stato}`
 
@@ -71,7 +69,8 @@ const plurale = (n: number, uno: string, tanti: string) => `${n} ${n === 1 ? uno
  * quanto la pagina. Ogni attività è una pianta che cresce col suo stato, i progetti sono
  * boschi su una zolla del loro colore, le faccende fatte sono arbusti sparsi.
  * Toccando un albero (o la sua zolla) si illumina il bosco e sotto compaiono
- * i suoi numeri; + e − ingrandiscono, col mouse si trascina.
+ * i suoi numeri; si trascina col dito o col mouse, si ingrandisce con due dita
+ * (o Ctrl+rotella, o + e −).
  */
 export function PaginaForesta({ attivita }: Props) {
   const arbusti = useArbusti()
@@ -83,7 +82,7 @@ export function PaginaForesta({ attivita }: Props) {
   const secchi = piante.filter((a) => a.stato === 'bloccato').length
 
   // In verticale l'isola, larga e bassa, verrebbe piccola: si parte già ingranditi.
-  const [zoom, setZoom] = useState(() => (window.matchMedia(VERTICALE).matches ? 1 : 0))
+  const gesti = useGesti(window.matchMedia(VERTICALE).matches ? 1.5 : 1)
   const [bosco, setBosco] = useState<string | null>(null)
   const ambiente = useAmbiente()
   // Tenendo premuto il titolo si apre il selettore nascosto di stagione, ora e meteo.
@@ -116,7 +115,6 @@ export function PaginaForesta({ attivita }: Props) {
   }, [setForza])
   const scelto = bosco === null ? null : (gruppi.find((g) => g.chiave === bosco) ?? null)
   const statistiche = useMemo(() => (scelto ? statisticheBosco(attivita, scelto.chiave) : null), [attivita, scelto])
-  const contenitore = useRef<HTMLDivElement>(null)
 
   // Le piante nuove o cambiate dall'ultima visita crescono; poi diventano "viste".
   const [visti] = useState(leggiVisti)
@@ -124,39 +122,15 @@ export function PaginaForesta({ attivita }: Props) {
     salvaVisti(gruppi.flatMap((g) => g.alberi.map(pianta)))
   }, [gruppi])
 
-  // Ingrandendo resta al centro.
-  useEffect(() => {
-    const c = contenitore.current
-    if (!c) return
-    c.scrollLeft = (c.scrollWidth - c.clientWidth) / 2
-    c.scrollTop = (c.scrollHeight - c.clientHeight) / 2
-  }, [zoom])
-
-  // Col mouse si trascina il prato; al tocco scorre già da sé.
-  const trascina = useRef<{ x: number; y: number; sx: number; sy: number; mosso: boolean } | null>(null)
-  const giu = (e: PointerEvent) => {
-    const c = contenitore.current
-    if (e.pointerType !== 'mouse' || !c) return
-    trascina.current = { x: e.clientX, y: e.clientY, sx: c.scrollLeft, sy: c.scrollTop, mosso: false }
-  }
-  const muovi = (e: PointerEvent) => {
-    const t = trascina.current
-    const c = contenitore.current
-    if (!t || !c) return
-    const dx = e.clientX - t.x
-    const dy = e.clientY - t.y
-    if (Math.hypot(dx, dy) > SOGLIA_TRASCINAMENTO) t.mosso = true
-    c.scrollLeft = t.sx - dx
-    c.scrollTop = t.sy - dy
-  }
-  const su = () => {
-    // Il clic arriva dopo: lo si lascia passare solo se non si è trascinato.
-    window.setTimeout(() => (trascina.current = null))
-  }
-  const scegli = useCallback((chiave: string | null) => {
-    if (trascina.current?.mosso) return
-    setBosco(chiave)
-  }, [])
+  // Il click che chiude un trascinamento o un pinch non sceglie niente.
+  const { trascinato } = gesti
+  const scegli = useCallback(
+    (chiave: string | null) => {
+      if (trascinato()) return
+      setBosco(chiave)
+    },
+    [trascinato],
+  )
 
   const vuota = piante.length === 0 && !arbusti
 
@@ -165,13 +139,11 @@ export function PaginaForesta({ attivita }: Props) {
       <Cielo luce={ambiente.luce} meteo={ambiente.meteo} vento={ambiente.vento} luna={ambiente.luna} />
 
       <div
-        ref={contenitore}
-        className="absolute inset-0 overflow-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        ref={gesti.contenitore}
+        // Niente gesti del browser qui: trascinamento e pinch li gestisce useGesti, e la pagina non si ingrandisce.
+        className="absolute inset-0 touch-none overflow-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         style={{ '--vento': ambiente.vento } as CSSProperties}
-        onPointerDown={giu}
-        onPointerMove={muovi}
-        onPointerUp={su}
-        onPointerLeave={su}
+        {...gesti.gestori}
       >
         <Scena
           foresta={foresta}
@@ -184,7 +156,7 @@ export function PaginaForesta({ attivita }: Props) {
             (ambiente.stagione === 'primavera' || ambiente.stagione === 'estate') &&
             (ambiente.meteo.cielo === 'sereno' || ambiente.meteo.cielo === 'nuvoloso')
           }
-          ingrandimento={ZOOM[zoom]}
+          ingrandimento={gesti.zoom}
           etichetta={`La foresta: ${plurale(alberi, 'albero', 'alberi')} in ${plurale(gruppi.length, 'boschetto', 'boschetti')}${arbusti ? ` e ${plurale(arbusti, 'arbusto', 'arbusti')}` : ''}.`}
         />
       </div>
@@ -249,8 +221,8 @@ export function PaginaForesta({ attivita }: Props) {
           type="button"
           className="grid size-10 place-items-center rounded-[11px] bg-white/85 shadow-sm backdrop-blur-sm hover:bg-white disabled:opacity-40"
           aria-label="Ingrandisci"
-          disabled={zoom === ZOOM.length - 1}
-          onClick={() => setZoom((z) => Math.min(z + 1, ZOOM.length - 1))}
+          disabled={gesti.zoom >= ZOOM_MASSIMO}
+          onClick={gesti.piu}
         >
           <Plus className="size-5" aria-hidden="true" />
         </button>
@@ -258,8 +230,8 @@ export function PaginaForesta({ attivita }: Props) {
           type="button"
           className="grid size-10 place-items-center rounded-[11px] bg-white/85 shadow-sm backdrop-blur-sm hover:bg-white disabled:opacity-40"
           aria-label="Rimpicciolisci"
-          disabled={zoom === 0}
-          onClick={() => setZoom((z) => Math.max(z - 1, 0))}
+          disabled={gesti.zoom <= ZOOM_MINIMO}
+          onClick={gesti.meno}
         >
           <Minus className="size-5" aria-hidden="true" />
         </button>
