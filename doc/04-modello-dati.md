@@ -141,6 +141,17 @@ La valigia condivisa tra i telefoni ([08](08-interfaccia.md), "Valigia"). Le voc
 
 Entrambe le tabelle sono nella pubblicazione **`supabase_realtime`**: i telefoni aperti ricevono subito spunte e cambi di viaggio.
 
+## `projects.contatori`
+
+I conti che non hanno bisogno di uno storico. Per ora uno solo, `faccende_fatte`: gli **arbusti della Foresta** ([08](08-interfaccia.md), "Foresta"). Le faccende fatte si eliminano a fine giornata, quindi non si possono contare dopo: le conta un trigger mentre succede. Script `supabase/sql/006_foresta.sql`, che parte dalle faccende spuntate al momento.
+
+| Campo | Tipo | Vincoli / default | Note |
+|---|---|---|---|
+| nome | text | PK | `faccende_fatte` |
+| valore | integer | NOT NULL, ≥ 0, default 0 | |
+
+Il conto è **approssimato per scelta**: togliere la spunta lo abbassa, eliminare una faccenda fatta no. La sessione lo legge e basta; lo scrive solo il trigger. Gli alberi invece non hanno tabella: sono le righe di `attivita` con `stato = 'completo'`.
+
 ## Viste
 
 - **`projects.attivita_elenco`** (`security_invoker = true`): le colonne di `attivita` più `ha_diario boolean`, usata da tutte le pagine.
@@ -161,6 +172,7 @@ Entrambe le tabelle sono nella pubblicazione **`supabase_realtime`**: i telefoni
 | update di `attivita` da `completo` a un altro stato | `completata_il = NULL`; l'avanzamento resta modificabile a mano |
 | insert/update di `attivita` | `progetto`: spazi rimossi, stringa vuota → NULL |
 | update di `attivita`, `voci_diario` o `valigia` | `modificata_il = now()` |
+| update di `faccende` da non fatta a fatta (o viceversa) | `contatori.faccende_fatte` +1 (o −1, mai sotto zero) |
 
 ## Permessi
 

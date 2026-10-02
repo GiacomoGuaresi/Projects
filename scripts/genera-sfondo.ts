@@ -12,6 +12,7 @@
 import { writeFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { generatore } from '../src/dominio/caso.ts'
 import { Hammer, House, KeyRound, Lightbulb, PaintRoller, Wrench, type LucideIcon } from 'lucide-react'
 
 const USCITA = new URL('../src/ui/sfondo-casa.svg', import.meta.url)
@@ -28,18 +29,6 @@ const TRATTO = 3 // px a schermo, uguale per le icone grandi e per le piccole
 const COLORE = '#fff'
 // Scelto perché piazza tutte e 12 le icone: con altri seed alcune restano fuori.
 const SEED = 20260916
-
-/** Generatore pseudo-casuale con seed (mulberry32): risultato riproducibile. */
-function generatore(seed: number) {
-  let stato = seed >>> 0
-  return () => {
-    stato = (stato + 0x6d2b79f5) >>> 0
-    let t = stato
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 const caso = generatore(SEED)
 const tra = ([min, max]: readonly [number, number]) => min + caso() * (max - min)

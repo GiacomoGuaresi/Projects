@@ -52,6 +52,7 @@ Step piccoli e incrementali: ognuno si chiude con test verdi, build riuscita, **
 
 - [ ] **Valigia**: pagina `#/valigia` a wizard con la lista, giorni e tipi di viaggio, caselle per Jack e Ale
 - [ ] **Valigia condivisa**: tabelle `valigia` e `valigia_spunte` (`supabase/sql/005_valigia.sql`, da applicare a mano), sincronizzazione in tempo reale
+- [ ] **Foresta**: pagina `#/foresta` con prato isometrico, alberi dalle attività completate e arbusti dal contatore `contatori.faccende_fatte` (`supabase/sql/006_foresta.sql`, da applicare a mano)
 
 ## Fase 4 · Assistente IA
 - [ ] Scelta del provider con tier gratuito

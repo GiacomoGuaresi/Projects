@@ -80,6 +80,17 @@ export class FaccendeSupabase {
     return data as Faccenda
   }
 
+  /** Quante faccende sono state segnate fatte da sempre: gli arbusti della foresta. */
+  async fatte(): Promise<number> {
+    const { data, error } = await this.client
+      .from('contatori')
+      .select('valore')
+      .eq('nome', 'faccende_fatte')
+      .maybeSingle()
+    if (error) throw fallita('Arbusti non contati', error)
+    return (data as { valore: number } | null)?.valore ?? 0
+  }
+
   async elimina(id: number): Promise<void> {
     const { error } = await this.client.from('faccende').delete().eq('id', id)
     if (error) throw fallita('Faccenda non eliminata', error)

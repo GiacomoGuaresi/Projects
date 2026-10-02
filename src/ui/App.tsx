@@ -1,5 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { ListChecks, Menu, Plus } from 'lucide-react'
+import { SENZA_PROGETTO } from '../dominio/foresta'
 import { cambioProgetto, progettiInUso } from '../dominio/progetto'
 import { titoloSenzaTag } from '../dominio/tag'
 import type { Attivita, Modifica } from '../dominio/tipi'
@@ -9,6 +10,7 @@ import { Dashboard } from './Dashboard'
 import { Installa } from './Installa'
 import { installa, useInstallazione } from './installazione'
 import { DialogoProgetto } from './DialogoProgetto'
+import { PaginaForesta } from './foresta/PaginaForesta'
 import { MenuLaterale } from './MenuLaterale'
 import { ModaleDettagli, type AzioniAttivita } from './ModaleDettagli'
 import { ModaleDiario } from './ModaleDiario'
@@ -113,7 +115,14 @@ export function App() {
               }
         }
       />
-      <main className="mx-auto w-full max-w-[1200px] flex-1 p-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:col-start-2">
+      <main
+        className={
+          // La Foresta va da bordo a bordo: niente margini né larghezza massima.
+          rotta === 'foresta'
+            ? 'min-w-0 flex-1 lg:col-start-2'
+            : 'mx-auto w-full max-w-[1200px] flex-1 p-3 pb-[calc(12px+env(safe-area-inset-bottom))] lg:col-start-2'
+        }
+      >
         {rotta === 'dashboard' && (
           <ConAttivita stato={stato} onRiprova={ricarica}>
             {(attivita) => (
@@ -130,6 +139,11 @@ export function App() {
         )}
         {rotta === 'faccende' && <PaginaFaccende faccende={faccende} onAvviso={mostraAvviso} />}
         {rotta === 'valigia' && <PaginaValigia onAvviso={mostraAvviso} />}
+        {rotta === 'foresta' && (
+          <ConAttivita stato={stato} onRiprova={ricarica}>
+            {(attivita) => <PaginaForesta attivita={attivita} />}
+          </ConAttivita>
+        )}
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
@@ -150,6 +164,8 @@ export function App() {
           onAnnulla={() => setDaCompletare(null)}
           onConferma={() => {
             void modifica(daCompletare.attivita.id, daCompletare.modifica)
+            // La Foresta (doc/08): ogni attività completata pianta un albero.
+            mostraAvviso(`🌳 Albero piantato in ${daCompletare.attivita.progetto ?? SENZA_PROGETTO}`)
             setDaCompletare(null)
           }}
         >

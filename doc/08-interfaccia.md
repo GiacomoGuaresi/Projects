@@ -30,6 +30,7 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Sezioni | **Dashboard** | `layout-dashboard` |
 | Sezioni | **Faccende** | `broom` |
 | Sezioni | **Valigia** | `luggage` |
+| Sezioni | **Foresta** | `trees` |
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
 
@@ -122,6 +123,19 @@ Un **wizard in due passi**, lo stesso su tutti i telefoni: se uno prepara la lis
 - **Sincronizzata in tempo reale**: una spunta, un cambio di giorni o tipi, "Prepara la lista" e "Nuova valigia" compaiono subito sugli altri telefoni aperti (Supabase Realtime). La pagina rilegge tutto anche all'apertura, al ritorno in primo piano e quando la connessione torna.
 - Ogni modifica si vede subito; se il salvataggio non riesce compare l'avviso e la valigia si rilegge. Durante il primo caricamento "Carico la valigia…", in caso di errore il messaggio e **Riprova**.
 - Solo **"Nascondi prese"** resta sul telefono, nel cookie `projects_valigia_nascondi`. Una voce tolta dal catalogo sparisce anche dalle spunte.
+
+## Foresta
+
+Una piccola gamification (`#/foresta`), ispirata a Forest e Treedom: un **prato isometrico** sospeso in un **cielo con le nuvole**, grande quanto tutta la pagina, che cresce con quello che si completa. In alto a sinistra un pannello col titolo e i numeri ("Foresta · 32 alberi · 10 boschetti · 1 arbusto"), in alto a destra **+** e **−**.
+
+- Ogni **attività** è una pianta che cresce col suo stato: **da fare** un germoglio, **in corso** un alberello, **completa** un albero, **bloccata** un albero secco. Le attività dello stesso progetto formano un **boschetto** su una zolla di un **verde suo** (dall'oliva al verde acqua, ricavato dal nome con `verdeZolla()`, sempre lo stesso per lo stesso progetto), col nome sotto; quelle senza progetto stanno nel boschetto **Sparsi**. La foresta si legge sempre da `attivita`: se un'attività si riapre, il suo albero torna alberello; se si elimina, la pianta sparisce. Le piante stanno in ordine di creazione, quindi crescendo restano al loro posto.
+- Ogni **faccenda fatta** è un **arbusto** sparso sul prato, dal conto `contatori.faccende_fatte` ([04](04-modello-dati.md)).
+- Gli alberi sono **SVG disegnati nel codice** (`src/ui/foresta/Albero.tsx`): quattro specie (abete, chioma tonda, betulla, cipresso), altezza e verde scelti dall'id dell'attività, quindi l'alberello diventa proprio quell'albero. Le attività completate con priorità 4–5 portano qualche frutto. Nel pannello del titolo, sotto i numeri, quante piante sono in crescita e quante secche.
+- La disposizione è nella logica pura (`src/dominio/foresta.ts`): gli alberi di un boschetto riempiono una spirale dal centro, in ordine di completamento, così un albero nuovo non sposta gli altri; i boschetti più vecchi stanno al centro; gli arbusti finiscono sempre negli stessi posti liberi.
+- Toccando un albero (o la sua zolla) si **illumina il suo boschetto**, il resto si spegne, e in basso compare un pannello col nome del progetto, la barra delle completate e le attività per stato (completate, in corso, da fare, bloccate), con la data del primo e dell'ultimo albero. Toccando il prato vuoto o ✕ si torna a tutta la foresta.
+- **+** e **−** ingrandiscono; il prato scorre al tocco e si trascina col mouse. Su telefono in verticale si parte già ingranditi di un livello.
+- Le piante nuove o cambiate di stato dall'ultima visita **spuntano** con una breve animazione (le coppie id e stato già viste stanno in `localStorage`).
+- Confermando *Completo* compare l'avviso "🌳 Albero piantato in …".
 
 ## Modale dettagli
 

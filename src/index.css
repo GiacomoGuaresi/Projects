@@ -8,6 +8,9 @@
   --color-salvia-chiara: #7e9f7a;
   --color-pastello: #d6e8cf;
   --color-fondo: #f3f8f0;
+  /* Il cielo della Foresta (doc/08, "Foresta"). */
+  --color-cielo: #bfe0f4;
+  --color-cielo-chiaro: #e4f2fa;
   --color-panna: #fffbf6;
   --color-testo: #2e3a2d;
   /* Contrasto ≥ 4.5:1 sia sul bianco sia sul fondo verde. */
@@ -78,6 +81,10 @@
   --animate-entra: entra 200ms ease-out;
   --animate-compari: compari 180ms ease-out;
   --animate-dissolvi: dissolvi 180ms ease-out;
+  /* Un albero nuovo nella Foresta spunta dal prato (doc/08, "Foresta"). */
+  --animate-cresci: cresci 600ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  /* Le nuvole vanno avanti e indietro piano; la durata la sceglie ogni nuvola. */
+  --animate-deriva: deriva 80s ease-in-out infinite alternate;
 
   @keyframes entra {
     from {
@@ -94,6 +101,16 @@
   @keyframes dissolvi {
     from {
       opacity: 0;
+    }
+  }
+  @keyframes deriva {
+    to {
+      transform: translateX(80px);
+    }
+  }
+  @keyframes cresci {
+    from {
+      transform: scale(0);
     }
   }
 }
@@ -128,6 +145,12 @@ body {
    card e modali restano su bianco pieno, quindi si vede solo ai margini. */
 .sfondo-casa {
   background: var(--color-fondo) url('./ui/sfondo-casa.svg') 0 0 / 480px 480px repeat;
+}
+
+/* Negli SVG la trasformazione parte dalla base dell'albero, non dall'angolo. */
+.animate-cresci {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
 }
 
 /* I campi di testo restano a 16px: sotto, iOS zooma da solo al tocco. */

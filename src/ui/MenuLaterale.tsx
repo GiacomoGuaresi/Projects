@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Broom, Download, LayoutDashboard, Luggage, Plus, X, type LucideIcon } from 'lucide-react'
+import { Broom, Download, LayoutDashboard, Luggage, Plus, Trees, X, type LucideIcon } from 'lucide-react'
 import { indirizzi, type Rotta } from './rotta'
 
 /** Da questa larghezza il menu è sempre aperto: la stessa soglia di `lg:`. */
@@ -9,6 +9,7 @@ const sezioni: { rotta: Rotta; etichetta: string; icona: LucideIcon }[] = [
   { rotta: 'dashboard', etichetta: 'Dashboard', icona: LayoutDashboard },
   { rotta: 'faccende', etichetta: 'Faccende', icona: Broom },
   { rotta: 'valigia', etichetta: 'Valigia', icona: Luggage },
+  { rotta: 'foresta', etichetta: 'Foresta', icona: Trees },
 ]
 
 interface Props {
