@@ -18,13 +18,19 @@ interface Props {
   numeri: NumeriForesta
 }
 
-/** Lontano dai bordi: barra dei menu del Mac, Dock, barra di Windows. */
+/**
+ * Lontano dai bordi (barra dei menu del Mac, Dock, barra di Windows), e
+ * rimpicciolita verso il suo angolo: così resta alla stessa distanza dai bordi.
+ */
 const POSIZIONI: Record<PosizioneSfondo, string> = {
-  'basso-sinistra': 'bottom-24 left-8',
-  'alto-sinistra': 'top-12 left-8',
-  'basso-destra': 'bottom-24 right-8',
-  'alto-destra': 'top-12 right-8',
+  'basso-sinistra': 'bottom-24 left-8 origin-bottom-left',
+  'alto-sinistra': 'top-12 left-8 origin-top-left',
+  'basso-destra': 'bottom-24 right-8 origin-bottom-right',
+  'alto-destra': 'top-12 right-8 origin-top-right',
 }
+
+/** La card è disegnata a 380px di larghezza e mostrata a 2/3: discreta, sullo sfondo. */
+const SCALA = 2 / 3
 
 const ICONE_CIELO: Record<Cielo, typeof Sun> = {
   sereno: Sun,
@@ -44,7 +50,7 @@ export function OverlaySfondo({ opzioni, ambiente, numeri }: Props) {
     <div
       className={`pointer-events-none absolute ${POSIZIONI[opzioni.posizione]} flex w-[380px] flex-col gap-3 rounded-2xl bg-[#0f1a14]/55 p-4 text-white shadow-lg backdrop-blur-md`}
       // Inter dopo Avenir: sul runner Linux della pipeline Avenir non c'è.
-      style={{ fontFamily: "'Avenir Next', Inter, 'Segoe UI', system-ui, sans-serif" }}
+      style={{ fontFamily: "'Avenir Next', Inter, 'Segoe UI', system-ui, sans-serif", scale: SCALA }}
     >
       {opzioni.pannelli.map((pannello) =>
         pannello === 'oggi' ? (
