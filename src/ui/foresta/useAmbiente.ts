@@ -95,6 +95,8 @@ export function calcolaAmbiente(ora: Date, letto: MeteoLetto | null, forza: Forz
 export function useAmbiente() {
   const [ora, setOra] = useState(() => new Date())
   const [letto, setLetto] = useState<MeteoLetto | null>(null)
+  /** Vero dopo la prima risposta di Open-Meteo, anche se non è riuscita. */
+  const [meteoCaricato, setMeteoCaricato] = useState(false)
   const [forza, impostaForza] = useState<Forzature>(leggiForzature)
   // Accetta anche una funzione dalla prova di prima: più comandi di fila si sommano.
   const setForza = useCallback((nuova: Forzature | ((prima: Forzature) => Forzature)) => {
@@ -114,7 +116,9 @@ export function useAmbiente() {
     let attivo = true
     const leggi = () =>
       void leggiMeteo(CASA.lat, CASA.lon).then((m) => {
-        if (attivo && m) setLetto(m)
+        if (!attivo) return
+        if (m) setLetto(m)
+        setMeteoCaricato(true)
       })
     leggi()
     const timer = window.setInterval(leggi, OGNI_MEZZORA)
@@ -132,7 +136,7 @@ export function useAmbiente() {
     }
   }, [])
 
-  return { ...calcolaAmbiente(ora, letto, forza), forza, setForza }
+  return { ...calcolaAmbiente(ora, letto, forza), meteoCaricato, forza, setForza }
 }
 
 /** I comandi della console, `foresta.*`, per provare la Foresta dai DevTools. */

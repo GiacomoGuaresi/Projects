@@ -17,7 +17,7 @@ import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
 import { PaginaFaccende } from './PaginaFaccende'
 import { PaginaValigia } from './PaginaValigia'
-import { indirizzi, useRotta } from './rotta'
+import { inModalitaSfondo, indirizzi, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 import { useFaccende } from './useFaccende'
 
@@ -69,6 +69,15 @@ export function App() {
     },
     elimina: setDaEliminare,
     apriDiario: (attivita) => setDiarioDi(attivita.id),
+  }
+
+  // La foto per lo sfondo dei dispositivi (doc/08, "Foresta"): solo la scena, a tutto schermo.
+  if (rotta === 'foresta' && inModalitaSfondo()) {
+    return (
+      <ConAttivita stato={stato} onRiprova={ricarica}>
+        {(attivita) => <PaginaForesta attivita={attivita} sfondo />}
+      </ConAttivita>
+    )
   }
 
   return (

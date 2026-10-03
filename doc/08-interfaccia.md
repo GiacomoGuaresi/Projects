@@ -152,6 +152,10 @@ L'ambiente (`src/dominio/ambiente.ts`, `src/ui/foresta/useAmbiente.ts`) segue il
 - Pioggia, neve, foglie, petali, lucciole e lampi sono un solo `<canvas>` (`src/ui/foresta/Particelle.tsx`); il resto sono animazioni CSS e SVG. Con **"riduci movimento"** il canvas non parte, nuvole e stelle stanno ferme, uccelli e farfalle spariscono.
 - **Prova la foresta** (override temporaneo, mai inviato al server): tenendo premuto il pannello del titolo, o con **Alt+Shift+F**, si apre un selettore con stagione, ora (alba, giorno, tramonto, notte), meteo e vento (calma, brezza, forte) da forzare; "Vero" torna al reale. Dalla **console dei DevTools**, finché la Foresta è aperta: `foresta.stagione('inverno')`, `foresta.ora('notte')`, `foresta.meteo('temporale')`, `foresta.vento(0.8)` (da 0 a 1); senza argomento un comando torna al vero, `foresta.reset()` toglie tutto, `foresta.stato()` mostra l'ambiente attuale. Un valore sbagliato è segnalato in console con quelli ammessi. L'override sta in `sessionStorage`: sopravvive al ricaricamento ma finisce chiudendo la scheda.
 
+### Modalità sfondo
+
+`#/foresta?sfondo` mostra **solo la scena**, a tutto schermo e senza intestazione, menu, pannelli né pulsanti; le piante sono tutte già cresciute (niente animazione) e lo zoom parte da 1×. Quando attività, arbusti e meteo sono arrivati segna `data-sfondo-pronto` su `<html>`. Serve al repo **ProjectsWallpaper**, che ogni ora la fotografa (con "riduci movimento" e l'ora di Roma) e pubblica la PNG usata come sfondo da PC e telefono. Senza sessione chiede la passphrase come il resto dell'app.
+
 ## Modale dettagli
 
 Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.

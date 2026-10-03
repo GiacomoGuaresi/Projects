@@ -31,6 +31,14 @@ function iscriviti(avvisa: () => void) {
   return () => window.removeEventListener('hashchange', avvisa)
 }
 
+/**
+ * `#/foresta?sfondo`: solo la scena della Foresta, senza interfaccia, per la
+ * foto che diventa lo sfondo dei dispositivi (repo ProjectsWallpaper, doc/08).
+ */
+export function inModalitaSfondo(hash = window.location.hash): boolean {
+  return hash.startsWith(`${indirizzi.foresta}?`) && new URLSearchParams(hash.split('?')[1]).has('sfondo')
+}
+
 export function useRotta(): Rotta {
   return useSyncExternalStore(iscriviti, leggi)
 }

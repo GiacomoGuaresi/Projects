@@ -16,6 +16,12 @@ import { comandiConsole, useAmbiente, type ComandiForesta } from './useAmbiente'
 
 interface Props {
   attivita: readonly Attivita[]
+  /**
+   * Solo la scena, ferma e senza interfaccia: è la foto che diventa lo sfondo
+   * dei dispositivi (`#/foresta?sfondo`, repo ProjectsWallpaper). Quando è
+   * tutto caricato segna `data-sfondo-pronto` su `<html>`.
+   */
+  sfondo?: boolean
 }
 
 /** Le piante già viste (`id:stato`), per far crescere solo le nuove e quelle cambiate. */
@@ -43,20 +49,23 @@ function salvaVisti(piante: string[]) {
   }
 }
 
-/** Il conto delle faccende fatte; `null` finché non arriva o se non si riesce a leggerlo. */
-function useArbusti(): number | null {
-  const [quanti, setQuanti] = useState<number | null>(null)
+/**
+ * Il conto delle faccende fatte; `null` finché non arriva o se non si riesce a
+ * leggerlo. `arrivato` diventa vero alla risposta, anche se è un errore.
+ */
+function useArbusti(): { quanti: number | null; arrivato: boolean } {
+  const [stato, setStato] = useState<{ quanti: number | null; arrivato: boolean }>({ quanti: null, arrivato: false })
   useEffect(() => {
     let attivo = true
     faccende()
       .fatte()
-      .then((n) => attivo && setQuanti(n))
-      .catch(() => attivo && setQuanti(null))
+      .then((n) => attivo && setStato({ quanti: n, arrivato: true }))
+      .catch(() => attivo && setStato({ quanti: null, arrivato: true }))
     return () => {
       attivo = false
     }
   }, [])
-  return quanti
+  return stato
 }
 
 const data = (iso: string | null) =>
@@ -72,8 +81,8 @@ const plurale = (n: number, uno: string, tanti: string) => `${n} ${n === 1 ? uno
  * i suoi numeri; si trascina col dito o col mouse, si ingrandisce con due dita
  * (o Ctrl+rotella, o + e −).
  */
-export function PaginaForesta({ attivita }: Props) {
-  const arbusti = useArbusti()
+export function PaginaForesta({ attivita, sfondo = false }: Props) {
+  const { quanti: arbusti, arrivato: arbustiArrivati } = useArbusti()
   const gruppi = useMemo(() => boschetti(attivita), [attivita])
   const foresta = useMemo(() => disponi(gruppi, arbusti ?? 0), [gruppi, arbusti])
   const piante = gruppi.flatMap((g) => g.alberi)
@@ -82,7 +91,7 @@ export function PaginaForesta({ attivita }: Props) {
   const secchi = piante.filter((a) => a.stato === 'bloccato').length
 
   // In verticale l'isola, larga e bassa, verrebbe piccola: si parte già ingranditi.
-  const gesti = useGesti(window.matchMedia(VERTICALE).matches ? 1.5 : 1)
+  const gesti = useGesti(!sfondo && window.matchMedia(VERTICALE).matches ? 1.5 : 1)
   const [bosco, setBosco] = useState<string | null>(null)
   const ambiente = useAmbiente()
   // Tenendo premuto il titolo si apre il selettore nascosto di stagione, ora e meteo.
@@ -95,6 +104,7 @@ export function PaginaForesta({ attivita }: Props) {
   ultimo.current = ambiente
   const { setForza } = ambiente
   useEffect(() => {
+    if (sfondo) return
     const tasto = (e: KeyboardEvent) => {
       if (e.altKey && e.shiftKey && e.code === 'KeyF') {
         e.preventDefault()
@@ -112,15 +122,33 @@ export function PaginaForesta({ attivita }: Props) {
       document.removeEventListener('keydown', tasto)
       delete finestra.foresta
     }
-  }, [setForza])
+  }, [setForza, sfondo])
   const scelto = bosco === null ? null : (gruppi.find((g) => g.chiave === bosco) ?? null)
   const statistiche = useMemo(() => (scelto ? statisticheBosco(attivita, scelto.chiave) : null), [attivita, scelto])
 
   // Le piante nuove o cambiate dall'ultima visita crescono; poi diventano "viste".
-  const [visti] = useState(leggiVisti)
+  // Nello sfondo sono tutte già viste: la foto le vuole cresciute.
+  const [vistiPrima] = useState(leggiVisti)
+  const tutte = useMemo(() => new Set(gruppi.flatMap((g) => g.alberi.map(pianta))), [gruppi])
+  const visti = sfondo ? tutte : vistiPrima
   useEffect(() => {
-    salvaVisti(gruppi.flatMap((g) => g.alberi.map(pianta)))
-  }, [gruppi])
+    if (!sfondo) salvaVisti([...tutte])
+  }, [tutte, sfondo])
+
+  // Nello sfondo: quando arbusti e meteo sono arrivati e la scena è disegnata, la foto si può scattare.
+  const { meteoCaricato } = ambiente
+  useEffect(() => {
+    if (!sfondo || !arbustiArrivati || !meteoCaricato) return
+    let fotogramma = requestAnimationFrame(() => {
+      fotogramma = requestAnimationFrame(() => {
+        document.documentElement.dataset.sfondoPronto = '1'
+      })
+    })
+    return () => {
+      cancelAnimationFrame(fotogramma)
+      delete document.documentElement.dataset.sfondoPronto
+    }
+  }, [sfondo, arbustiArrivati, meteoCaricato])
 
   // Il click che chiude un trascinamento o un pinch non sceglie niente.
   const { trascinato } = gesti
@@ -135,7 +163,9 @@ export function PaginaForesta({ attivita }: Props) {
   const vuota = piante.length === 0 && !arbusti
 
   return (
-    <div className="relative h-[calc(100dvh-45px-env(safe-area-inset-top))] min-h-[360px] lg:h-[calc(100dvh-44px)] overflow-hidden bg-fondo">
+    <div
+      className={`relative overflow-hidden bg-fondo ${sfondo ? 'h-dvh' : 'h-[calc(100dvh-45px-env(safe-area-inset-top))] min-h-[360px] lg:h-[calc(100dvh-44px)]'}`}
+    >
       <Cielo luce={ambiente.luce} meteo={ambiente.meteo} vento={ambiente.vento} luna={ambiente.luna} />
 
       <div
@@ -189,55 +219,59 @@ export function PaginaForesta({ attivita }: Props) {
       <Particelle meteo={ambiente.meteo} stagione={ambiente.stagione} luce={ambiente.luce} vento={ambiente.vento} />
 
       {/* Il titolo, in alto a sinistra. */}
-      <div
-        ref={titolo.ref}
-        {...titolo.gestori}
-        className="absolute top-2 left-2 max-w-[calc(100%-64px)] touch-none rounded-xl bg-white/85 px-3 py-2 shadow-sm backdrop-blur-sm select-none"
-      >
-        <h2 className="text-lg leading-tight font-semibold">Foresta</h2>
-        <p className="text-testo-tenue">
-          {plurale(alberi, 'albero', 'alberi')} · {plurale(gruppi.length, 'boschetto', 'boschetti')}
-          {arbusti !== null && ` · ${plurale(arbusti, 'arbusto', 'arbusti')}`}
-        </p>
-        {(inCrescita > 0 || secchi > 0) && (
-          <p className="text-xs text-testo-tenue">
-            {[inCrescita && `${inCrescita} in crescita`, secchi && plurale(secchi, 'secco', 'secchi')]
-              .filter(Boolean)
-              .join(' · ')}
+      {!sfondo && (
+        <div
+          ref={titolo.ref}
+          {...titolo.gestori}
+          className="absolute top-2 left-2 max-w-[calc(100%-64px)] touch-none rounded-xl bg-white/85 px-3 py-2 shadow-sm backdrop-blur-sm select-none"
+        >
+          <h2 className="text-lg leading-tight font-semibold">Foresta</h2>
+          <p className="text-testo-tenue">
+            {plurale(alberi, 'albero', 'alberi')} · {plurale(gruppi.length, 'boschetto', 'boschetti')}
+            {arbusti !== null && ` · ${plurale(arbusti, 'arbusto', 'arbusti')}`}
           </p>
-        )}
-        <p className="text-xs text-testo-tenue">
-          {nomiAmbiente[ambiente.stagione]} · {nomiAmbiente[ambiente.meteo.cielo].toLowerCase()}
-          {ambiente.meteoVero && ` a ${CASA.nome}`}
-        </p>
-      </div>
+          {(inCrescita > 0 || secchi > 0) && (
+            <p className="text-xs text-testo-tenue">
+              {[inCrescita && `${inCrescita} in crescita`, secchi && plurale(secchi, 'secco', 'secchi')]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
+          <p className="text-xs text-testo-tenue">
+            {nomiAmbiente[ambiente.stagione]} · {nomiAmbiente[ambiente.meteo.cielo].toLowerCase()}
+            {ambiente.meteoVero && ` a ${CASA.nome}`}
+          </p>
+        </div>
+      )}
       {selettore && (
         <SelettoreAmbiente forza={ambiente.forza} onForza={ambiente.setForza} onChiudi={chiudiSelettore} />
       )}
 
       {/* Lo zoom, in alto a destra. */}
-      <div className="absolute top-2 right-2 flex flex-col gap-1">
-        <button
-          type="button"
-          className="grid size-10 place-items-center rounded-[11px] bg-white/85 shadow-sm backdrop-blur-sm hover:bg-white disabled:opacity-40"
-          aria-label="Ingrandisci"
-          disabled={gesti.zoom >= ZOOM_MASSIMO}
-          onClick={gesti.piu}
-        >
-          <Plus className="size-5" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="grid size-10 place-items-center rounded-[11px] bg-white/85 shadow-sm backdrop-blur-sm hover:bg-white disabled:opacity-40"
-          aria-label="Rimpicciolisci"
-          disabled={gesti.zoom <= ZOOM_MINIMO}
-          onClick={gesti.meno}
-        >
-          <Minus className="size-5" aria-hidden="true" />
-        </button>
-      </div>
+      {!sfondo && (
+        <div className="absolute top-2 right-2 flex flex-col gap-1">
+          <button
+            type="button"
+            className="grid size-10 place-items-center rounded-[11px] bg-white/85 shadow-sm backdrop-blur-sm hover:bg-white disabled:opacity-40"
+            aria-label="Ingrandisci"
+            disabled={gesti.zoom >= ZOOM_MASSIMO}
+            onClick={gesti.piu}
+          >
+            <Plus className="size-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="grid size-10 place-items-center rounded-[11px] bg-white/85 shadow-sm backdrop-blur-sm hover:bg-white disabled:opacity-40"
+            aria-label="Rimpicciolisci"
+            disabled={gesti.zoom <= ZOOM_MINIMO}
+            onClick={gesti.meno}
+          >
+            <Minus className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
-      {vuota && (
+      {vuota && !sfondo && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center p-4">
           <p className="flex max-w-xs flex-col items-center gap-2 rounded-xl bg-white/85 p-4 text-center backdrop-blur-sm">
             <Sprout className="size-8 text-salvia" aria-hidden="true" />
