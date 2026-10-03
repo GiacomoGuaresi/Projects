@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { CircleCheck, Play, Trees, type LucideIcon } from 'lucide-react'
+import { CircleCheck, Play, type LucideIcon } from 'lucide-react'
 import { schedeProgetti } from '../dominio/ordinamento'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
@@ -7,7 +7,6 @@ import { CardFaccende } from './CardFaccende'
 import { useInterruttore, useRilievi } from './preferenze'
 import { usePressioneLunga } from './pressioneLunga'
 import { ProgettoConIcona } from './ProgettoConIcona'
-import { indirizzi } from './rotta'
 import { PulsanteDiario } from './PulsanteDiario'
 import { PulsanteStato } from './PulsanteStato'
 import { PulsanteStella } from './PulsanteStella'
@@ -78,13 +77,6 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
             ignorato={soloInCorso}
           />
         </div>
-        <a
-          href={indirizzi.foresta}
-          className="ml-auto flex min-h-9 items-center gap-1.5 rounded-[11px] bg-salvia px-3 text-sm font-semibold text-white hover:bg-salvia-scura active:bg-salvia-scura"
-        >
-          <Trees className="size-4" aria-hidden="true" />
-          Vai alla foresta
-        </a>
       </div>
 
       {mostrate.length === 0 ? (

@@ -34,6 +34,8 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
 
+**"Vai alla foresta"**: nell'intestazione, subito a sinistra del **+**, un pulsante con l'icona `trees` che apre `#/foresta`; su mobile solo l'icona, da desktop anche l'etichetta. Sulla Foresta non c'è.
+
 **Scorciatoia "Nuova attività"**: un pulsante **+** (`plus`) **a destra nell'intestazione**, sempre visibile, così su mobile non serve aprire il menu. Su mobile mostra solo l'icona, da desktop anche l'etichetta "Nuova attività".
 
 ## Sfondo
@@ -59,7 +61,6 @@ La pagina iniziale (`#/`).
 - In alto il titolo **"Progetti"** con il numero di card e, accanto, una fila di **interruttori on/off** a pillola (acceso: salvia chiaro; spento: bianco con bordo). Ognuno è ricordato in un **cookie** (percorso `/Projects/`, durata un anno).
   - **In corso** (`play`, cookie `projects_in_corso`, spento di default): acceso mostra **solo** le attività in corso e **ha la precedenza** sugli altri interruttori, che restano com'erano ma attenuati e non toccabili. Le card senza attività in corso spariscono; l'aggiunta rapida crea l'attività già *In corso* ("Aggiungi attività in corso"). Spento, la vista torna normale.
   - **Completi** (`circle-check`, cookie `projects_completi`, acceso di default): spento nasconde le attività completate dalle card; il conto `completate/totale` non cambia e le card restano, con l'aggiunta rapida. Fanno eccezione i progetti con **tutte** le attività completate: la loro card compare solo con *Completi* acceso.
-  - A destra, nella stessa riga, il pulsante salvia **"Vai alla foresta"** (`trees`), che apre `#/foresta`.
 
 - Una **card per progetto** con **tutte** le sue attività, completate comprese.
 - Card in tre gruppi: prima i **preferiti**, poi gli altri, poi gli **accantonati**; in ogni gruppo ordine di progetto (A→Z, senza distinguere maiuscole e minuscole), la card **"Senza progetto"** in fondo al suo gruppo.

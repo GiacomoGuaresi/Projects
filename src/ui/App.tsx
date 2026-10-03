@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from 'react'
-import { ListChecks, Menu, Plus } from 'lucide-react'
+import { ListChecks, Menu, Plus, Trees } from 'lucide-react'
 import { SENZA_PROGETTO } from '../dominio/foresta'
 import { cambioProgetto, progettiInUso } from '../dominio/progetto'
 import { titoloSenzaTag } from '../dominio/tag'
@@ -86,8 +86,19 @@ export function App() {
         </button>
         <ListChecks className="size-[22px] shrink-0" aria-hidden="true" />
         <h1 className="ml-1 text-lg font-semibold tracking-[0.01em]">Projects</h1>
+        {/* Sulla Foresta ci si è già: il pulsante sparisce. */}
+        {rotta !== 'foresta' && (
+          <a
+            href={indirizzi.foresta}
+            className="ml-auto flex min-h-9 items-center gap-1.5 rounded-[11px] px-2.5 font-semibold hover:bg-salvia-scura active:bg-salvia-scura"
+            aria-label="Vai alla foresta"
+          >
+            <Trees className="size-[22px]" aria-hidden="true" />
+            <span className="hidden lg:inline">Vai alla foresta</span>
+          </a>
+        )}
         <button
-          className="ml-auto flex min-h-9 items-center gap-1.5 rounded-[11px] px-2.5 font-semibold hover:bg-salvia-scura active:bg-salvia-scura"
+          className={`${rotta === 'foresta' ? 'ml-auto ' : ''}flex min-h-9 items-center gap-1.5 rounded-[11px] px-2.5 font-semibold hover:bg-salvia-scura active:bg-salvia-scura`}
           type="button"
           aria-label="Nuova attività"
           onClick={() => setNuovaAperta(true)}
