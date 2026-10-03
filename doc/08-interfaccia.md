@@ -156,6 +156,12 @@ L'ambiente (`src/dominio/ambiente.ts`, `src/ui/foresta/useAmbiente.ts`) segue il
 
 `#/foresta?sfondo` mostra **solo la scena**, a tutto schermo e senza intestazione, menu, pannelli né pulsanti; le piante sono tutte già cresciute (niente animazione) e lo zoom parte da 1×. Quando attività, arbusti e meteo sono arrivati segna `data-sfondo-pronto` su `<html>`. Serve al repo **ProjectsWallpaper**, che ogni ora la fotografa (con "riduci movimento" e l'ora di Roma) e pubblica la PNG usata come sfondo da PC e telefono. Senza sessione chiede la passphrase come il resto dell'app.
 
+**Overlay** (`src/ui/foresta/OverlaySfondo.tsx`): con `pannelli=oggi,numeri` sopra la scena c'è una card a vetro scuro, in una delle quattro posizioni (`posizione=basso-sinistra`, il valore predefinito, oppure `alto-sinistra`, `basso-destra`, `alto-destra`), staccata dai bordi per non finire sotto la barra dei menu, il Dock o la barra di Windows. Senza `pannelli` c'è solo la scena.
+- **oggi**: giorno e stagione; icona del cielo, temperatura e meteo di Milano (la temperatura è `temperature_2m` di Open-Meteo); alba, tramonto e fase della luna col suo nome (`nomeFaseLunare`).
+- **numeri**: alberi, boschetti e arbusti; la barra delle completate su tutte le attività; gli alberi piantati negli ultimi 7 giorni, le piante in crescita e quelle secche, quando è stato piantato l'ultimo albero ("ieri", "3 giorni fa"). I numeri vengono da `numeriForesta()`, la stessa funzione del pannello del titolo.
+- In fondo, "aggiornato alle": la foto cambia ogni ora, quindi **niente orologio**.
+- La PNG è pubblica: **solo numeri, meteo e date**, mai titoli di attività o faccende né nomi di progetti.
+
 ## Modale dettagli
 
 Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.

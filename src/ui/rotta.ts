@@ -31,12 +31,33 @@ function iscriviti(avvisa: () => void) {
   return () => window.removeEventListener('hashchange', avvisa)
 }
 
+export const PANNELLI_SFONDO = ['oggi', 'numeri'] as const
+export type PannelloSfondo = (typeof PANNELLI_SFONDO)[number]
+export const POSIZIONI_SFONDO = ['basso-sinistra', 'alto-sinistra', 'basso-destra', 'alto-destra'] as const
+export type PosizioneSfondo = (typeof POSIZIONI_SFONDO)[number]
+
+export interface OpzioniSfondo {
+  /** I pannelli dell'overlay, nell'ordine in cui si disegnano; nessuno = solo la scena. */
+  pannelli: PannelloSfondo[]
+  posizione: PosizioneSfondo
+}
+
 /**
  * `#/foresta?sfondo`: solo la scena della Foresta, senza interfaccia, per la
  * foto che diventa lo sfondo dei dispositivi (repo ProjectsWallpaper, doc/08).
+ * Con `pannelli=oggi,numeri` e `posizione=basso-sinistra` sopra c'è l'overlay.
+ * Fuori dalla modalità sfondo `null`; i valori sconosciuti si ignorano.
  */
-export function inModalitaSfondo(hash = window.location.hash): boolean {
-  return hash.startsWith(`${indirizzi.foresta}?`) && new URLSearchParams(hash.split('?')[1]).has('sfondo')
+export function opzioniSfondo(hash = window.location.hash): OpzioniSfondo | null {
+  if (!hash.startsWith(`${indirizzi.foresta}?`)) return null
+  const parametri = new URLSearchParams(hash.slice(hash.indexOf('?') + 1))
+  if (!parametri.has('sfondo')) return null
+  const scelti = (parametri.get('pannelli') ?? '').split(',')
+  const posizione = parametri.get('posizione')
+  return {
+    pannelli: PANNELLI_SFONDO.filter((p) => scelti.includes(p)),
+    posizione: POSIZIONI_SFONDO.find((p) => p === posizione) ?? 'basso-sinistra',
+  }
 }
 
 export function useRotta(): Rotta {

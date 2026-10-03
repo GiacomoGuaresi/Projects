@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { boschetti, disponi, proietta, SENZA_PROGETTO, statisticheBosco, verdeZolla, type Elemento } from './foresta'
+import {
+  boschetti,
+  disponi,
+  numeriForesta,
+  proietta,
+  quandoFa,
+  SENZA_PROGETTO,
+  statisticheBosco,
+  verdeZolla,
+  type Elemento,
+} from './foresta'
 import type { Attivita, Stato } from './tipi'
 
 let prossimoId = 1
@@ -202,5 +212,42 @@ describe('verdeZolla', () => {
 
   it('cambia da progetto a progetto', () => {
     expect(verdeZolla('casa')).not.toEqual(verdeZolla('auto'))
+  })
+})
+
+describe('numeriForesta', () => {
+  const adesso = new Date('2026-01-20T12:00:00Z')
+
+  it('conta piante per stato, boschetti e percentuale', () => {
+    const elenco = [
+      attivita('Casa', giorno(19)),
+      attivita('Casa', giorno(2)),
+      attivita('Orto', null, 'in_corso'),
+      attivita(null, null, 'da_fare'),
+      attivita('Orto', null, 'bloccato'),
+    ]
+    expect(numeriForesta(elenco, 4, adesso)).toEqual({
+      alberi: 2,
+      boschetti: 3,
+      arbusti: 4,
+      inCrescita: 2,
+      secchi: 1,
+      percentuale: 40,
+      settimana: 1,
+      ultimo: giorno(19),
+    })
+  })
+
+  it('una foresta vuota è tutta a zero', () => {
+    expect(numeriForesta([], null, adesso)).toMatchObject({ alberi: 0, boschetti: 0, percentuale: 0, ultimo: null })
+  })
+})
+
+describe('quandoFa', () => {
+  const adesso = new Date(2026, 0, 20, 9, 0)
+  it('conta i giorni di calendario', () => {
+    expect(quandoFa(new Date(2026, 0, 20, 8, 0).toISOString(), adesso)).toBe('oggi')
+    expect(quandoFa(new Date(2026, 0, 19, 23, 0).toISOString(), adesso)).toBe('ieri')
+    expect(quandoFa(new Date(2026, 0, 17, 10, 0).toISOString(), adesso)).toBe('3 giorni fa')
   })
 })

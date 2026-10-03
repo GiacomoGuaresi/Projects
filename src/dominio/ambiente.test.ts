@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { albaTramonto, CASA, daCodiceMeteo, faseLunare, forzaVento, luce, stagione } from './ambiente'
+import { albaTramonto, CASA, daCodiceMeteo, faseLunare, forzaVento, luce, nomeFaseLunare, stagione } from './ambiente'
 
 describe('stagione', () => {
   it('cambia ai giorni astronomici', () => {
@@ -66,6 +66,18 @@ describe('faseLunare', () => {
       expect(f).toBeGreaterThanOrEqual(0)
       expect(f).toBeLessThan(1)
     }
+  })
+})
+
+describe('nomeFaseLunare', () => {
+  it('dà il nome della fase, coi confini a metà tra due fasi', () => {
+    expect(nomeFaseLunare(0).nome).toBe('Luna nuova')
+    expect(nomeFaseLunare(0.98).nome).toBe('Luna nuova')
+    expect(nomeFaseLunare(0.25).nome).toBe('Primo quarto')
+    expect(nomeFaseLunare(0.5)).toEqual({ nome: 'Luna piena', emoji: '🌕' })
+    expect(nomeFaseLunare(0.74).nome).toBe('Ultimo quarto')
+    expect(nomeFaseLunare(0.06).nome).toBe('Luna nuova')
+    expect(nomeFaseLunare(0.07).nome).toBe('Falce crescente')
   })
 })
 

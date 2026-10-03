@@ -19,6 +19,10 @@ describe('calcolaAmbiente', () => {
     expect(a.meteo.cielo).toBe('pioggia')
     expect(a.vento).toBe(0.5)
     expect(a.meteoVero).toBe(true)
+    expect(a.sole.alba.toISOString()).toBe('2026-10-02T05:20:00.000Z')
+    // Salvato prima che si leggesse la temperatura: non c'è.
+    expect(a.temperatura).toBeNull()
+    expect(calcolaAmbiente(ora, { ...letto, temperatura: 14.6 }, {}).temperatura).toBe(14.6)
   })
 
   it('senza meteo è sereno, con alba e tramonto calcolati', () => {
@@ -26,6 +30,7 @@ describe('calcolaAmbiente', () => {
     expect(a.meteo.cielo).toBe('sereno')
     expect(a.luce.fase).toBe('notte')
     expect(a.meteoVero).toBe(false)
+    expect(a.temperatura).toBeNull()
   })
 
   it('le forzature vincono sul vero', () => {

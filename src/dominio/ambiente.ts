@@ -88,6 +88,23 @@ export function faseLunare(data: Date): number {
   return (((giorni / MESE_LUNARE) % 1) + 1) % 1
 }
 
+/** Le otto fasi col loro nome, ognuna centrata sul suo punto: la piena a 0.5. */
+const FASI_LUNARI = [
+  { nome: 'Luna nuova', emoji: '🌑' },
+  { nome: 'Falce crescente', emoji: '🌒' },
+  { nome: 'Primo quarto', emoji: '🌓' },
+  { nome: 'Gibbosa crescente', emoji: '🌔' },
+  { nome: 'Luna piena', emoji: '🌕' },
+  { nome: 'Gibbosa calante', emoji: '🌖' },
+  { nome: 'Ultimo quarto', emoji: '🌗' },
+  { nome: 'Falce calante', emoji: '🌘' },
+] as const
+
+/** Il nome della fase (da `faseLunare`): ogni nome copre un ottavo del mese lunare. */
+export function nomeFaseLunare(fase: number): { nome: string; emoji: string } {
+  return FASI_LUNARI[Math.round(fase * 8) % 8]
+}
+
 // Meteo ------------------------------------------------------------------------------
 
 export const CIELI = ['sereno', 'nuvoloso', 'nebbia', 'pioggia', 'temporale', 'neve'] as const

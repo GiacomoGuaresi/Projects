@@ -17,7 +17,7 @@ import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
 import { PaginaFaccende } from './PaginaFaccende'
 import { PaginaValigia } from './PaginaValigia'
-import { inModalitaSfondo, indirizzi, useRotta } from './rotta'
+import { indirizzi, opzioniSfondo, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 import { useFaccende } from './useFaccende'
 
@@ -72,10 +72,11 @@ export function App() {
   }
 
   // La foto per lo sfondo dei dispositivi (doc/08, "Foresta"): solo la scena, a tutto schermo.
-  if (rotta === 'foresta' && inModalitaSfondo()) {
+  const sfondo = rotta === 'foresta' ? opzioniSfondo() : null
+  if (sfondo) {
     return (
       <ConAttivita stato={stato} onRiprova={ricarica}>
-        {(attivita) => <PaginaForesta attivita={attivita} sfondo />}
+        {(attivita) => <PaginaForesta attivita={attivita} sfondo={sfondo} />}
       </ConAttivita>
     )
   }

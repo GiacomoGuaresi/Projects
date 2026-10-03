@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Minus, Plus, Sprout, X } from 'lucide-react'
 import { faccende } from '../../dati'
-import { boschetti, disponi, statisticheBosco, type AlberoForesta } from '../../dominio/foresta'
+import { boschetti, disponi, numeriForesta, statisticheBosco, type AlberoForesta } from '../../dominio/foresta'
 import { coloreProgetto, iniziali } from '../../dominio/progetto'
 import type { Attivita, Stato } from '../../dominio/tipi'
+import type { OpzioniSfondo } from '../rotta'
 import { infoStati } from '../stati'
 import { CASA } from '../../dominio/ambiente'
 import { usePressioneLunga } from '../pressioneLunga'
 import { Cielo, copertura } from './Cielo'
+import { OverlaySfondo } from './OverlaySfondo'
 import { Particelle } from './Particelle'
 import { Scena } from './Scena'
 import { nomiAmbiente, SelettoreAmbiente } from './SelettoreAmbiente'
@@ -19,9 +21,10 @@ interface Props {
   /**
    * Solo la scena, ferma e senza interfaccia: è la foto che diventa lo sfondo
    * dei dispositivi (`#/foresta?sfondo`, repo ProjectsWallpaper). Quando è
-   * tutto caricato segna `data-sfondo-pronto` su `<html>`.
+   * tutto caricato segna `data-sfondo-pronto` su `<html>`. Con dei pannelli,
+   * sopra la scena c'è l'overlay coi numeri e il meteo.
    */
-  sfondo?: boolean
+  sfondo?: OpzioniSfondo
 }
 
 /** Le piante già viste (`id:stato`), per far crescere solo le nuove e quelle cambiate. */
@@ -81,14 +84,14 @@ const plurale = (n: number, uno: string, tanti: string) => `${n} ${n === 1 ? uno
  * i suoi numeri; si trascina col dito o col mouse, si ingrandisce con due dita
  * (o Ctrl+rotella, o + e −).
  */
-export function PaginaForesta({ attivita, sfondo = false }: Props) {
+export function PaginaForesta({ attivita, sfondo: opzioniSfondo }: Props) {
+  const sfondo = opzioniSfondo !== undefined
   const { quanti: arbusti, arrivato: arbustiArrivati } = useArbusti()
   const gruppi = useMemo(() => boschetti(attivita), [attivita])
   const foresta = useMemo(() => disponi(gruppi, arbusti ?? 0), [gruppi, arbusti])
   const piante = gruppi.flatMap((g) => g.alberi)
-  const alberi = piante.filter((a) => a.stato === 'completo').length
-  const inCrescita = piante.filter((a) => a.stato === 'in_corso' || a.stato === 'da_fare').length
-  const secchi = piante.filter((a) => a.stato === 'bloccato').length
+  const numeri = useMemo(() => numeriForesta(attivita, arbusti), [attivita, arbusti])
+  const { alberi, inCrescita, secchi } = numeri
 
   // In verticale l'isola, larga e bassa, verrebbe piccola: si parte già ingranditi.
   const gesti = useGesti(!sfondo && window.matchMedia(VERTICALE).matches ? 1.5 : 1)
@@ -217,6 +220,10 @@ export function PaginaForesta({ attivita, sfondo = false }: Props) {
         />
       )}
       <Particelle meteo={ambiente.meteo} stagione={ambiente.stagione} luce={ambiente.luce} vento={ambiente.vento} />
+
+      {opzioniSfondo && opzioniSfondo.pannelli.length > 0 && (
+        <OverlaySfondo opzioni={opzioniSfondo} ambiente={ambiente} numeri={numeri} />
+      )}
 
       {/* Il titolo, in alto a sinistra. */}
       {!sfondo && (

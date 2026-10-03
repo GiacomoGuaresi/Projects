@@ -289,3 +289,63 @@ export function statisticheBosco(attivita: readonly Attivita[], chiave: string):
     ultimo: date[date.length - 1] ?? null,
   }
 }
+
+// Numeri -------------------------------------------------------------------------
+
+/** I numeri di tutta la foresta: il pannello del titolo e l'overlay dello sfondo. */
+export interface NumeriForesta {
+  /** Le attività completate. */
+  alberi: number
+  boschetti: number
+  /** Le faccende fatte; `null` se il conto non è arrivato. */
+  arbusti: number | null
+  /** Da fare e in corso. */
+  inCrescita: number
+  /** Bloccate. */
+  secchi: number
+  /** Le completate su tutte le attività, da 0 a 100. */
+  percentuale: number
+  /** Gli alberi piantati negli ultimi 7 giorni. */
+  settimana: number
+  /** Quando è stato piantato l'ultimo albero. */
+  ultimo: string | null
+}
+
+const SETTIMANA = 7 * 86_400_000
+
+export function numeriForesta(attivita: readonly Attivita[], arbusti: number | null, adesso = new Date()): NumeriForesta {
+  let alberi = 0
+  let inCrescita = 0
+  let secchi = 0
+  let settimana = 0
+  let ultimo: string | null = null
+  for (const a of attivita) {
+    if (a.stato === 'completo') {
+      alberi++
+      if (a.completata_il) {
+        if (adesso.getTime() - new Date(a.completata_il).getTime() < SETTIMANA) settimana++
+        if (!ultimo || a.completata_il > ultimo) ultimo = a.completata_il
+      }
+    } else if (a.stato === 'bloccato') secchi++
+    else inCrescita++
+  }
+  return {
+    alberi,
+    boschetti: boschetti(attivita).length,
+    arbusti,
+    inCrescita,
+    secchi,
+    percentuale: attivita.length ? Math.round((alberi / attivita.length) * 100) : 0,
+    settimana,
+    ultimo,
+  }
+}
+
+/** "oggi", "ieri", "3 giorni fa": i giorni di calendario tra la data e adesso, nel fuso locale. */
+export function quandoFa(iso: string, adesso = new Date()): string {
+  const mezzanotte = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const giorni = Math.round((mezzanotte(adesso) - mezzanotte(new Date(iso))) / 86_400_000)
+  if (giorni <= 0) return 'oggi'
+  if (giorni === 1) return 'ieri'
+  return `${giorni} giorni fa`
+}

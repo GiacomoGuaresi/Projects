@@ -75,15 +75,18 @@ function Nuvola({ scala, colore }: { scala: number; colore: string }) {
   )
 }
 
-/** La luna con la sua fase: la parte illuminata a destra mentre cresce, a sinistra mentre cala. */
-function Luna({ fase }: { fase: number }) {
+/**
+ * La luna con la sua fase: la parte illuminata a destra mentre cresce, a
+ * sinistra mentre cala. In cielo è grande 40px; l'overlay dello sfondo la usa più piccola.
+ */
+export function Luna({ fase, dimensione = 40 }: { fase: number; dimensione?: number }) {
   const r = 14
   const k = Math.cos(2 * Math.PI * fase)
   const terminatore = Math.abs(k) * r
   // Falce (k > 0): il terminatore curva verso il lato illuminato; gobba: verso l'altro.
   const illuminata = `M0,${-r} A${r},${r} 0 0 1 0,${r} A${terminatore},${r} 0 0 ${k > 0 ? 0 : 1} 0,${-r} Z`
   return (
-    <svg width={40} height={40} viewBox="-20 -20 40 40" aria-hidden="true">
+    <svg width={dimensione} height={dimensione} viewBox="-20 -20 40 40" aria-hidden="true">
       <circle r={r + 5} fill="#fff8e1" opacity={0.12} />
       <circle r={r} fill="#3a4865" />
       <path d={illuminata} fill="#fdf6dc" transform={fase > 0.5 ? 'scale(-1 1)' : undefined} />

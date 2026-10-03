@@ -61,6 +61,10 @@ export interface Ambiente {
   luna: number
   /** Se il meteo è quello vero (letto da Open-Meteo). */
   meteoVero: boolean
+  /** In °C, dal meteo vero; `null` se non c'è. */
+  temperatura: number | null
+  /** Alba e tramonto di oggi. */
+  sole: { alba: Date; tramonto: Date }
 }
 
 const OGNI_MINUTO = 60 * 1000
@@ -85,6 +89,8 @@ export function calcolaAmbiente(ora: Date, letto: MeteoLetto | null, forza: Forz
     vento,
     luna: faseLunare(ora),
     meteoVero: letto !== null && !forza.cielo,
+    temperatura: letto?.temperatura ?? null,
+    sole,
   }
 }
 

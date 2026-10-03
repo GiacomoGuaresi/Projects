@@ -7,6 +7,8 @@ export interface MeteoLetto {
   /** Il codice WMO del tempo attuale. */
   codice: number
   ventoKmh: number
+  /** In °C. Manca nei valori salvati prima che si leggesse. */
+  temperatura?: number
   alba: string
   tramonto: string
   /** Quando è stato letto, in ms. */
@@ -41,17 +43,18 @@ export async function leggiMeteo(lat: number, lon: number): Promise<MeteoLetto |
   if (ricordato) return ricordato
   const indirizzo =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    '&current=weather_code,wind_speed_10m&daily=sunrise,sunset&timezone=GMT&forecast_days=1'
+    '&current=weather_code,wind_speed_10m,temperature_2m&daily=sunrise,sunset&timezone=GMT&forecast_days=1'
   try {
     const risposta = await fetch(indirizzo, { signal: AbortSignal.timeout(ATTESA_MASSIMA) })
     if (!risposta.ok) return null
     const dati = (await risposta.json()) as {
-      current: { weather_code: number; wind_speed_10m: number }
+      current: { weather_code: number; wind_speed_10m: number; temperature_2m?: number }
       daily: { sunrise: string[]; sunset: string[] }
     }
     const meteo: MeteoLetto = {
       codice: dati.current.weather_code,
       ventoKmh: dati.current.wind_speed_10m,
+      temperatura: dati.current.temperature_2m,
       // Con timezone=GMT le ore arrivano senza fuso: sono UTC.
       alba: `${dati.daily.sunrise[0]}Z`,
       tramonto: `${dati.daily.sunset[0]}Z`,
