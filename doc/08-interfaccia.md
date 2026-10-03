@@ -32,6 +32,7 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Sezioni | **Valigia** | `luggage` |
 | Sezioni | **Foresta** | `trees` |
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
+| Piede | **Widget Android**: apre in una nuova scheda l'ultima Release di ProjectsWallpaper, con l'APK del widget della Foresta | `smartphone` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
 
 **"Vai alla foresta"**: nell'intestazione, subito a sinistra del **+**, un pulsante con l'icona `trees` che apre `#/foresta`; su mobile solo l'icona, da desktop anche l'etichetta. Sulla Foresta non c'è.

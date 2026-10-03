@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
-import { Broom, Download, LayoutDashboard, Luggage, Plus, Trees, X, type LucideIcon } from 'lucide-react'
+import { Broom, Download, LayoutDashboard, Luggage, Plus, Smartphone, Trees, X, type LucideIcon } from 'lucide-react'
 import { indirizzi, type Rotta } from './rotta'
+
+/** L'APK del widget Android con la Foresta, dall'ultima Release di ProjectsWallpaper. */
+const WIDGET_ANDROID = 'https://github.com/GiacomoGuaresi/ProjectsWallpaper/releases/latest'
 
 /** Da questa larghezza il menu è sempre aperto: la stessa soglia di `lg:`. */
 const SEMPRE_APERTO = '(min-width: 1024px)'
@@ -118,12 +121,22 @@ export function MenuLaterale({ aperto, corrente, onChiudi, onNuova, onInstalla }
           Nuova attività
         </button>
         {/* Le voci di servizio stanno in fondo, lontane dall'uso di tutti i giorni. */}
+        <a
+          href={WIDGET_ANDROID}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onChiudi}
+          className="mt-auto flex min-h-11 items-center gap-3 rounded-lg px-3 hover:bg-fondo active:bg-bordo"
+        >
+          <Smartphone className="size-[18px] text-testo-tenue" aria-hidden="true" />
+          Widget Android
+        </a>
         {onInstalla && (
           <button
             type="button"
             onClick={onInstalla}
             aria-current={corrente === 'installa' ? 'page' : undefined}
-            className="group mt-auto flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left hover:bg-fondo active:bg-bordo aria-[current=page]:bg-pastello aria-[current=page]:font-semibold"
+            className="group flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left hover:bg-fondo active:bg-bordo aria-[current=page]:bg-pastello aria-[current=page]:font-semibold"
           >
             <Download
               className="size-[18px] text-testo-tenue group-aria-[current=page]:text-salvia-scura"
