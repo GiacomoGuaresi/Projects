@@ -32,7 +32,7 @@ function Faccia({ punti, colore, ...resto }: { punti: string; colore: string } &
 const ERBA: Record<Stagione, [number, number, number]> = {
   primavera: [104, 46, 72],
   estate: [97, 37, 74],
-  autunno: [68, 36, 70],
+  autunno: [22, 34, 52],
   inverno: [205, 30, 95],
 }
 
@@ -44,8 +44,10 @@ function colorePiano(c: CasellaTerreno, bosco: string | null, stagione: Stagione
     case 'zolla': {
       const { h, s, l } = verdeZolla(c.chiave ?? '')
       // D'inverno la zolla è innevata, con appena il colore del boschetto.
-      const [sa, lu] = inverno ? [Math.round(s * 0.35), 86] : stagione === 'autunno' ? [s, l + 2] : [s, l]
-      const tinta = stagione === 'autunno' ? h - 18 : h
+      // D'autunno, dal rosso all'oro: i boschetti restano diversi, ma senza verde.
+      const autunno = stagione === 'autunno'
+      const [sa, lu] = inverno ? [Math.round(s * 0.35), 86] : autunno ? [s + 8, l - 2] : [s, l]
+      const tinta = autunno ? 6 + (h - 75) * 0.45 : h
       if (bosco === null) return `hsl(${tinta}, ${sa}%, ${lu}%)`
       return bosco === c.chiave ? `hsl(${tinta}, ${sa + 5}%, ${lu + (inverno ? 4 : 8)}%)` : `hsl(${tinta}, ${Math.round(sa * 0.45)}%, ${Math.min(lu + 14, 94)}%)`
     }
@@ -67,16 +69,16 @@ function colorePiano(c: CasellaTerreno, bosco: string | null, stagione: Stagione
 const PARETI: Record<Stagione, [string, string]> = {
   primavera: ['#8db878', '#78a365'],
   estate: ['#93b07f', '#7e9a6b'],
-  autunno: ['#a9a86e', '#93915c'],
+  autunno: ['#9c6446', '#85533a'],
   inverno: ['#c7d3de', '#b2c0cd'],
 }
 
-/** Sul prato: fiorellini in primavera, foglie cadute in autunno. Una casella su sei. */
+/** Sul prato: fiorellini in primavera (una casella su sei), foglie cadute in autunno (più fitte). */
 function Decoro({ c, stagione, x, y }: { c: CasellaTerreno; stagione: Stagione; x: number; y: number }) {
   if (c.tipo !== 'prato' || (stagione !== 'primavera' && stagione !== 'autunno')) return null
   const n = sorteggio(c.col, c.riga, 77)
-  if (n > 0.17) return null
-  const colori = stagione === 'primavera' ? ['#ffffff', '#f6c6d8', '#fff0a6'] : ['#d9822b', '#c4532f', '#e6b33c']
+  if (n > (stagione === 'autunno' ? 0.4 : 0.17)) return null
+  const colori = stagione === 'primavera' ? ['#ffffff', '#f6c6d8', '#fff0a6'] : ['#e07b2e', '#a8321e', '#e3a33a']
   const punti: [number, number][] = [
     [-5, -1],
     [3, -2.5],
@@ -129,6 +131,8 @@ interface Props {
   bosco: string | null
   /** Le piante già viste (`id:stato`): le altre crescono. */
   visti: Set<string> | null
+  /** Le piante create o cambiate oggi (id): bordate di bianco. */
+  diOggi: Set<number> | null
   onScegli: (chiave: string | null) => void
   stagione: Stagione
   /** Di giorno in primavera ed estate, senza pioggia. */
@@ -139,7 +143,7 @@ interface Props {
 }
 
 /** L'isola: il disegno è pesante, quindi si rifà solo se cambia qualcosa che conta. */
-export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stagione, farfalle, etichetta, ingrandimento }: Props) {
+export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onScegli, stagione, farfalle, etichetta, ingrandimento }: Props) {
   const { minCol, maxCol, minRiga, maxRiga } = foresta.limiti
   const alto = proietta(minCol - 0.5, minRiga - 0.5)
   const destra = proietta(maxCol + 0.5, minRiga - 0.5)
@@ -252,7 +256,9 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
             style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
           >
             <Vento seed={e.albero.id}>
-              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} frutti={e.albero.priorita >= 4} />
+              <g filter={diOggi?.has(e.albero.id) ? 'url(#bordo-oggi)' : undefined}>
+                <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} frutti={e.albero.priorita >= 4} />
+              </g>
             </Vento>
           </g>
         </g>
@@ -265,7 +271,7 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
       ...foresta.elementi.map((e) => ({ c: e, o: 1 as const, disegna: () => oggetto(e) })),
     ].sort((a, b) => inProfondita(a.c, b.c) || a.o - b.o)
     return strati.map((s) => s.disegna())
-  }, [foresta, bosco, visti, stagione, onScegli])
+  }, [foresta, bosco, visti, diOggi, stagione, onScegli])
 
   return (
     <svg
@@ -285,6 +291,19 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, onScegli, stag
       <defs>
         <filter id="sfuma-ombra" x="-50%" y="-200%" width="200%" height="500%">
           <feGaussianBlur stdDeviation={10} />
+        </filter>
+        {/* Il bordo bianco delle piante di oggi: la sagoma piena (non l'ombra, che è trasparente) allargata. */}
+        <filter id="bordo-oggi" x="-40%" y="-40%" width="180%" height="180%">
+          <feComponentTransfer in="SourceAlpha" result="sagoma">
+            <feFuncA type="discrete" tableValues="0 1" />
+          </feComponentTransfer>
+          <feMorphology in="sagoma" operator="dilate" radius={1.1} result="larga" />
+          <feFlood floodColor="#fff" />
+          <feComposite in2="larga" operator="in" result="bordo" />
+          <feMerge>
+            <feMergeNode in="bordo" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
       </defs>
 

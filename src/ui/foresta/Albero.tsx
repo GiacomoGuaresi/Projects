@@ -63,10 +63,10 @@ function chiomaLatifoglia(stagione: Stagione, h: number, s: number, l: number, c
     case 'inverno':
       return null
     case 'autunno': {
-      // Dal rosso al giallo, ogni albero il suo.
-      const t = 12 + caso() * 38
-      const sa = 62 + caso() * 15
-      const lu = 46 + caso() * 8
+      // Dal rosso scuro all'arancio bruciato, ogni albero il suo.
+      const t = caso() * 30
+      const sa = 58 + caso() * 17
+      const lu = 38 + caso() * 10
       return { base: hsl(t, sa, lu), scuro: hsl(t - 6, sa, lu - 10), chiaro: hsl(t + 8, sa, lu + 12) }
     }
     case 'primavera':
@@ -227,7 +227,7 @@ function Germoglio({ seed, stagione }: { seed: number; stagione: Stagione }) {
   const caso = generatore(seed)
   caso() // la specie: il germoglio non ce l'ha ancora
   caso()
-  const h = stagione === 'autunno' ? 62 : Math.round(95 + caso() * 40)
+  const h = stagione === 'autunno' ? 32 : Math.round(95 + caso() * 40)
   const verso = caso() < 0.5 ? 1 : -1
   return (
     <g>
@@ -310,9 +310,9 @@ export function Arbusto({ seed, stagione }: { seed: number; stagione: Stagione }
   const caso = generatore(seed + 7919)
   const autunno = stagione === 'autunno'
   const inverno = stagione === 'inverno'
-  const h = autunno ? Math.round(15 + caso() * 30) : Math.round(85 + caso() * 40)
+  const h = autunno ? Math.round(caso() * 26) : Math.round(85 + caso() * 40)
   const s = autunno ? 58 : inverno ? 25 : 35
-  const l = Math.round((autunno ? 44 : 42) + caso() * 10) - (inverno ? 6 : 0)
+  const l = Math.round((autunno ? 38 : 42) + caso() * 10) - (inverno ? 6 : 0)
   const fiorisce = caso() < (stagione === 'primavera' ? 0.85 : stagione === 'estate' ? 0.4 : 0)
   const fiore = fiorisce ? FIORI[Math.floor(caso() * FIORI.length)] : null
   const palle: [number, number, number][] = [

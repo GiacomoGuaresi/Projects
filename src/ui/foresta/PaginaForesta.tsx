@@ -138,6 +138,15 @@ export function PaginaForesta({ attivita, sfondo: opzioniSfondo }: Props) {
     if (!sfondo) salvaVisti([...tutte])
   }, [tutte, sfondo])
 
+  // Le piante create o cambiate oggi hanno il bordo bianco; non nello sfondo.
+  const diOggi = useMemo(() => {
+    if (sfondo) return null
+    const oggi = new Date().toDateString()
+    return new Set(
+      gruppi.flatMap((g) => g.alberi.filter((a) => new Date(a.modificata_il).toDateString() === oggi).map((a) => a.id)),
+    )
+  }, [gruppi, sfondo])
+
   // Nello sfondo: quando arbusti e meteo sono arrivati e la scena è disegnata, la foto si può scattare.
   const { meteoCaricato } = ambiente
   useEffect(() => {
@@ -182,6 +191,7 @@ export function PaginaForesta({ attivita, sfondo: opzioniSfondo }: Props) {
           foresta={foresta}
           bosco={bosco}
           visti={visti}
+          diOggi={diOggi}
           onScegli={scegli}
           stagione={ambiente.stagione}
           farfalle={

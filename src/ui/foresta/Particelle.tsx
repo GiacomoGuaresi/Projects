@@ -28,7 +28,7 @@ interface Props {
   vento: number
 }
 
-const FOGLIE = ['#d9822b', '#c4532f', '#e6b33c', '#b9472a']
+const FOGLIE = ['#d0692a', '#b23a22', '#8a3a1e', '#e09a36']
 const PETALI = ['#f8c8d8', '#fbe0ea', '#ffffff']
 /** I px quadrati di cielo per ogni particella, a intensità piena. */
 const DENSITA = { goccia: 2200, fiocco: 4500 }
