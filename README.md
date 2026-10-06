@@ -7,7 +7,7 @@ Lista delle attività di casa, raggruppate per progetto, con un diario per ogni 
 ## Cosa fa
 
 - **Dashboard** con una card per progetto e i dettagli in un modale
-- Titolo con **tag** (`<urgente>`, `<fai da te>`, `<guasto>`, `<idea>`, `<progetto>`, `<inverno>`, `<estate>`, `<cucito>`, `<natalizio>`, `<cucina>`), progetto, stato, priorità a stelle, avanzamento: tutto modificabile al volo
+- Titolo con **tag** (`<urgente>`, `<fai da te>`, `<guasto>`, `<idea>`, `<progetto>`, `<inverno>`, `<estate>`, `<cucito>`, `<natalizio>`, `<cucina>`, `<bug>`, `<acquisto>`, `<chiamare>`, `<pratica>`, `<veloce>`, `<giardino>`, `<auto>`, `<moto>`, `<insieme>`, `<regalo>`, `<scadenza 31/12/26>`, `<attesa 31/12/26>`), progetto, stato, priorità a stelle, avanzamento: tutto modificabile al volo
 - **Diario** con le voci datate per ogni attività
 - **Valigia**: la lista per fare la valigia, per giorni e tipo di viaggio (mare, montagna, rifugio…), condivisa in tempo reale tra i telefoni
 - Rinomina di un progetto su tutte le sue attività

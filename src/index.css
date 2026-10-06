@@ -68,6 +68,32 @@
   --color-tag-verde-testo: #2e6b35;
   --color-tag-pesca: #fbe0d6;
   --color-tag-pesca-testo: #8e4a36;
+  --color-tag-acqua: #d3ece8;
+  --color-tag-acqua-testo: #22665e;
+  --color-tag-indaco: #dde0f6;
+  --color-tag-indaco-testo: #3d4690;
+  --color-tag-lime: #e6f0c8;
+  --color-tag-lime-testo: #4f6516;
+  --color-tag-cielo: #d4ecf7;
+  --color-tag-cielo-testo: #23607e;
+  --color-tag-ocra: #f2e4c2;
+  --color-tag-ocra-testo: #7d5a10;
+  --color-tag-corallo: #fbd9d0;
+  --color-tag-corallo-testo: #9a3b26;
+  --color-tag-muschio: #dfe8d0;
+  --color-tag-muschio-testo: #46592b;
+  --color-tag-grafite: #e2e2e2;
+  --color-tag-grafite-testo: #3f3f3f;
+  --color-tag-bronzo: #ecdcca;
+  --color-tag-bronzo-testo: #6e4a26;
+  --color-tag-lampone: #f6d4e0;
+  --color-tag-lampone-testo: #8f2450;
+  --color-tag-malva: #eddaf0;
+  --color-tag-malva-testo: #723f7a;
+  --color-tag-lavanda: #e4e0f7;
+  --color-tag-lavanda-testo: #4d4291;
+  /* Scadenze e attese passate: si devono vedere subito. */
+  --color-tag-allarme: #d62828;
   --color-tag-neutro: #eceeea;
   --color-tag-neutro-testo: #5f665d;
 

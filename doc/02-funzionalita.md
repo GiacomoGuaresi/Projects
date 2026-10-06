@@ -18,13 +18,14 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Funzione | Stato |
 |---|---|
 | Crea, modifica, elimina (con conferma) | ✅ |
-| Titolo, con tag `<tag>` da una lista fissa | ✅ urgente, fai da te, guasto, idea, progetto, inverno, estate, cucito, natalizio, cucina (+ `ia` riservato), vedi [08](08-interfaccia.md) |
+| Titolo, con tag `<tag>` da una lista fissa | ✅ urgente, fai da te, guasto, idea, progetto, inverno, estate, cucito, natalizio, cucina, bug, acquisto, chiamare, pratica, veloce, giardino, auto, moto, insieme, regalo, scadenza e attesa con data (+ `ia` riservato), vedi [08](08-interfaccia.md) |
 | **Progetto**: campo di testo libero, facoltativo, con suggerimenti dai progetti già usati | ✅ |
 | Stato: **da fare · in corso · bloccato · completo** | ✅ |
 | Priorità da 1 a 5 stelle | ✅ |
 | Avanzamento % manuale; va a 100% da solo quando l'attività è completa | ✅ |
 | Annullare un'attività = eliminarla | ✅ |
-| Scadenze, ricorrenze, assegnatario | ❌ |
+| Scadenze come tag `<scadenza gg/mm/aa>`: ordinano la card, passate in rosso acceso | ✅ |
+| Scadenze come campo, avvisi, ricorrenze, assegnatario | ❌ |
 
 ## Faccende
 

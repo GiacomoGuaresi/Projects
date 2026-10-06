@@ -67,7 +67,7 @@ La pagina iniziale (`#/`).
 - Card in tre gruppi: prima i **preferiti**, poi gli altri, poi gli **accantonati**; in ogni gruppo ordine di progetto (A→Z, senza distinguere maiuscole e minuscole), la card **"Senza progetto"** in fondo al suo gruppo.
 - **Stellina** a destra nell'intestazione della card: piena (`star`, colore stella) se preferito, vuota se normale, `star-off` se accantonato. **Toccarla** mette o toglie il progetto dai preferiti (un accantonato diventa preferito). **Tenerla premuta** (~400ms) apre un menu *Preferito* / *Normale* / *Accantonato* che si usa come quello dello stato. La scelta è per progetto (senza distinguere maiuscole e minuscole) e ricordata nel cookie `projects_rilievi` (percorso `/Projects/`, durata un anno), quindi vale solo su quel dispositivo. Da PC (almeno 1024px) **due colonne sfalsate**, come il disegno di `layout-dashboard`: ogni card è alta quanto il suo contenuto e quella sotto le sta subito sotto, senza allinearsi alle righe dell'altra colonna. Sotto, una colonna sola.
 - Intestazione della card: icona e nome del progetto, attività **completate sul totale** del progetto (es. `4/10`).
-- Dentro la card: prima *In corso*, poi *Da fare*, poi *Bloccate*; a parità di stato priorità decrescente, poi titolo.
+- Dentro la card: prima *In corso*, poi *Da fare*, poi *Bloccate*; a parità di stato la scadenza più vicina (quelle senza dopo), poi priorità decrescente, poi titolo.
 - **Toccare l'icona dello stato** a inizio riga lo fa avanzare: *Da fare* → *In corso* → *Completo* (con la solita conferma); *Completo* e *Bloccato* → *In corso*.
 - **Tenere premuta l'icona dello stato** (~400ms, con una breve vibrazione dove supportata) apre un **menu con tutti gli stati** sopra l'icona (sotto, se in alto non c'è spazio): facendo scorrere il dito sullo stato voluto questo si evidenzia, e **rilasciando lo si imposta** (*Completo* con la solita conferma). Rilasciato fuori dal menu o sullo stato attuale non cambia nulla; rilasciato senza muovere il dito il menu resta aperto e si sceglie con un tocco. Si chiude toccando fuori, con Esc o scorrendo la pagina. Da desktop si apre anche con il tasto destro.
 - Ogni attività mostra **solo** l'icona dello stato (con i colori dello stato), il titolo con i badge e il pulsante **Diario** (`book-open`, con un pallino di notifica se ha voci; apre il modale diario); **toccare un punto qualsiasi della riga** fuori dal pulsante apre il modale dettagli; ogni modifica, stato compreso, si fa nel modale dettagli.
@@ -245,13 +245,28 @@ Lista fissa nel codice (`src/dominio/tag.ts`).
 | `inverno` | `snowflake` | blu | da fare d'inverno |
 | `estate` | `sun` | arancio | da fare d'estate |
 | `cucito` | `scissors` | rosa | lavoro di cucito |
-| `natalizio` | `gift` | verde | per Natale |
+| `natalizio` | `tree-pine` | verde | per Natale |
 | `cucina` | `chef-hat` | pesca | ricette e cose da cucinare |
+| `bug` | `bug` | acqua | un difetto in un programma o in un'app |
+| `scadenza gg/mm/aa` | `calendar-clock` | indaco, **arancio** nei 3 giorni prima, **rosso** il giorno stesso, **allarme** dopo | entro una data |
+| `attesa gg/mm/aa` | `hourglass` | lavanda, **allarme** dopo | si aspetta qualcosa per una data |
+| `acquisto` | `shopping-cart` | lime | cose da comprare per finire il lavoro |
+| `chiamare` | `phone` | cielo | si risolve con una telefonata |
+| `pratica` | `file-text` | ocra | burocrazia, bollettini, rinnovi |
+| `veloce` | `zap` | corallo | meno di 15 minuti |
+| `giardino` | `sprout` | muschio | piante, prato e orto |
+| `auto` | `car` | grafite | per l'auto |
+| `moto` | `motorbike` | bronzo | per la moto |
+| `insieme` | `users` | lampone | da fare in coppia |
+| `regalo` | `gift` | malva | compleanni e regali |
 | `ia` | `sparkles` | viola | *riservato*: lo aggiungerà l'assistente IA (fase 4) |
 
 - Un tag non in elenco appare come badge neutro (`tag`, grigio).
+- **Scadenza** e **attesa** si scrivono con la data dopo il nome, `<scadenza 31/12/26>` o `<attesa 31/12/2026>` (anno a 2 cifre = 2000+). Il badge mostra la data come scritta e, passandoci sopra, "Scade ven 31 ott", "Scaduta ieri", "Atteso per domani" o "Attesa scaduta ieri". Con una data che non esiste (`31/02/26`) il badge è neutro. Scegliendoli dai suggerimenti si inserisce `<SCADENZA >` con il cursore prima del `>`, pronto per la data; mentre la si scrive i suggerimenti tacciono.
+- **Date passate** (scadenze e attese): badge **allarme**, fondo rosso acceso `#D62828`, testo bianco in grassetto, da vedere subito. Niente avvisi a parte.
+- Nella card, a parità di stato, vengono **prima le attività con la scadenza più vicina** (conta la prima, se ce n'è più d'una), poi le altre; dopo, come sempre, priorità e titolo. L'attesa non cambia l'ordine.
 - **Suggerimenti**: in ogni campo del titolo (modale "Nuova attività", modifica inline, modale dettagli), scrivendo `<` compare l'elenco dei tag (badge e uso), filtrato da ciò che segue, prima quelli che iniziano così; mai i riservati. Frecce per scorrere, Invio, Tab o tocco per scegliere, Esc per chiudere l'elenco. Il tag scelto sostituisce quello in corso, in maiuscolo e seguito da uno spazio.
-- Scartati: tag che duplicano uno stato (bloccato, in attesa) o un progetto (casa, giardino, auto), e acquisto, appuntamento, pratiche, pagamento.
+- Scartati: tag che duplicano uno stato (bloccato) o un progetto (casa), e appuntamento, pagamento. Giardino, auto, moto, acquisto e pratica, scartati all'inizio, sono stati ripresi il 2026-10-06.
 
 ## Palette *(colori del tema Tailwind, da rifinire in fase di UI)*
 

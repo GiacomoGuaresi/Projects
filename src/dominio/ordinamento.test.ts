@@ -64,4 +64,19 @@ describe('schedeProgetti', () => {
       'vecchia',
     ])
   })
+
+  it('nello stesso stato prima la scadenza più vicina, poi le altre per priorità', () => {
+    const elenco = [
+      attivita({ titolo: 'senza, 5 stelle', progetto: 'Casa', priorita: 5 }),
+      attivita({ titolo: '<scadenza 20/11/26> tardi', progetto: 'Casa', priorita: 1 }),
+      attivita({ titolo: '<SCADENZA 1/11/2026> presto', progetto: 'Casa', priorita: 1 }),
+      attivita({ titolo: '<attesa 1/10/26> attesa', progetto: 'Casa', priorita: 3 }),
+    ]
+    expect(titoli(schedeProgetti(elenco)[0].attivita)).toEqual([
+      '<SCADENZA 1/11/2026> presto',
+      '<scadenza 20/11/26> tardi',
+      'senza, 5 stelle',
+      '<attesa 1/10/26> attesa',
+    ])
+  })
 })

@@ -1,12 +1,22 @@
 // Ordinamento delle card della Dashboard (doc/08-interfaccia.md, "Dashboard").
 
 import { chiaveProgetto } from './progetto'
-import { titoloSenzaTag } from './tag'
+import { scadenzaDi, titoloSenzaTag } from './tag'
 import type { Attivita, Stato } from './tipi'
 
 const confrontaTesto = (a: string, b: string) => a.localeCompare(b, 'it', { sensitivity: 'base' })
 
-/** Progetto A→Z (senza progetto in fondo), poi priorità decrescente, poi titolo. */
+/** Prima quelle con la scadenza più vicina, poi quelle senza scadenza. */
+function confrontaScadenze(a: Attivita, b: Attivita): number {
+  const sa = scadenzaDi(a.titolo)
+  const sb = scadenzaDi(b.titolo)
+  if (sa === sb) return 0
+  if (sa === null) return 1
+  if (sb === null) return -1
+  return sa.localeCompare(sb)
+}
+
+/** Progetto A→Z (senza progetto in fondo), poi scadenza più vicina, priorità decrescente, titolo. */
 function confrontaAttivita(a: Attivita, b: Attivita): number {
   if (a.progetto !== b.progetto) {
     if (a.progetto === null) return 1
@@ -15,6 +25,7 @@ function confrontaAttivita(a: Attivita, b: Attivita): number {
     if (progetto !== 0) return progetto
   }
   return (
+    confrontaScadenze(a, b) ||
     b.priorita - a.priorita ||
     confrontaTesto(titoloSenzaTag(a.titolo), titoloSenzaTag(b.titolo)) ||
     a.id - b.id
