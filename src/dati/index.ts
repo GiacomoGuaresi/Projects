@@ -7,6 +7,7 @@ import { AccessoSupabase, type Accesso } from './accesso'
 import { AttivitaSupabase } from './attivita'
 import { DiarioSupabase } from './diario'
 import { FaccendeSupabase } from './faccende'
+import { fetchPaziente } from './orologio'
 import { RicorrenzeSupabase } from './ricorrenze'
 import { ValigiaSupabase } from './valigia'
 
@@ -45,6 +46,7 @@ function connetti() {
   }
   const client = createBrowserClient(url, chiave, {
     cookieOptions: { path: '/' },
+    global: { fetch: fetchPaziente() },
     db: { schema: 'projects' },
   }) as unknown as SupabaseClient
   connessione = {
