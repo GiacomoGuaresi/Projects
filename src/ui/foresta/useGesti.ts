@@ -2,8 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Pointer
 
 // I gesti sulla Foresta (doc/08-interfaccia.md, "Foresta"): un dito (o il
 // mouse) trascina il prato, con un po' di inerzia; due dita lo ingrandiscono
-// attorno al punto in mezzo; col trackpad o con Ctrl+rotella si ingrandisce
-// attorno al puntatore. Sulla Foresta il browser non ingrandisce la pagina.
+// attorno al punto in mezzo; con la rotella o il pinch del trackpad si
+// ingrandisce attorno al puntatore. Sulla Foresta il browser non ingrandisce la pagina.
 
 export const ZOOM_MINIMO = 1
 export const ZOOM_MASSIMO = 4
@@ -150,16 +150,19 @@ export function useGesti(zoomIniziale: number) {
     })
   }
 
-  // Rotella con Ctrl e pinch del trackpad: zoom attorno al puntatore. Safari
-  // ingrandisce la pagina coi suoi eventi "gesture": qui non deve.
+  // Rotella e pinch del trackpad (che arriva come rotella con Ctrl): zoom
+  // attorno al puntatore; per spostarsi si trascina. Safari ingrandisce la
+  // pagina coi suoi eventi "gesture": qui non deve.
   useEffect(() => {
     const c = contenitore.current
     if (!c) return
     const rotella = (e: WheelEvent) => {
-      if (!e.ctrlKey) return
       e.preventDefault()
+      // Il pinch manda passi piccoli e fitti, la rotella scatti da ~100 px (o in righe).
+      const px = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 16 : e.deltaY
+      const sensibilita = e.ctrlKey ? 0.01 : 0.0015
       const riquadro = c.getBoundingClientRect()
-      zoomA(zoomAttuale.current * Math.exp(-e.deltaY * 0.01), e.clientX - riquadro.left, e.clientY - riquadro.top)
+      zoomA(zoomAttuale.current * Math.exp(-px * sensibilita), e.clientX - riquadro.left, e.clientY - riquadro.top)
     }
     const blocca = (e: Event) => e.preventDefault()
     c.addEventListener('wheel', rotella, { passive: false })

@@ -89,6 +89,9 @@
   --animate-batti: batti 0.35s ease-in-out infinite alternate;
   /* Le stelle brillano, ognuna col suo ritmo. */
   --animate-brilla: brilla 3s ease-in-out infinite alternate;
+  /* Le piante cambiate oggi: un alone che pulsa e scintille che brillano a turno. */
+  --animate-alone: alone 1.8s ease-in-out infinite alternate;
+  --animate-scintilla: scintilla 2.4s ease-in-out infinite;
 
   @keyframes entra {
     from {
@@ -142,6 +145,29 @@
       filter: brightness(0.6);
     }
   }
+  @keyframes alone {
+    from {
+      opacity: 0.35;
+      scale: 0.92;
+    }
+    to {
+      opacity: 0.85;
+      scale: 1.05;
+    }
+  }
+  @keyframes scintilla {
+    0%,
+    100% {
+      opacity: 0;
+      scale: 0;
+      rotate: 0deg;
+    }
+    50% {
+      opacity: 1;
+      scale: 1;
+      rotate: 45deg;
+    }
+  }
   @keyframes cresci {
     from {
       transform: scale(0);
@@ -186,7 +212,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-attraversa,
   .animate-brilla,
-  .animate-ondeggia {
+  .animate-ondeggia,
+  .animate-alone,
+  .animate-scintilla {
     animation: none !important;
   }
   /* Uccelli e farfalle fermi non hanno senso: spariscono. */
@@ -201,6 +229,11 @@ body {
 .animate-ondeggia {
   transform-box: fill-box;
   transform-origin: 50% 100%;
+}
+.animate-alone,
+.animate-scintilla {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
 }
 
 /* I campi di testo restano a 16px: sotto, iOS zooma da solo al tocco. */

@@ -1,6 +1,7 @@
 import { memo, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { GRADINO, inProfondita, LATO, proietta, verdeZolla, type Foresta } from '../../dominio/foresta'
 import type { Stagione } from '../../dominio/ambiente'
+import type { Stato } from '../../dominio/tipi'
 import { LIVELLI, sorteggio, type CasellaTerreno } from '../../dominio/terreno'
 import { Albero, Arbusto, Roccia } from './Albero'
 
@@ -108,6 +109,47 @@ function Vento({ seed, children }: { seed: number; children: ReactNode }) {
   )
 }
 
+/** Quanto è grande, a occhio, la pianta di ogni stato: alone e scintille la seguono. */
+const TAGLIA: Record<Stato, number> = { da_fare: 0.45, in_corso: 0.7, completo: 1, bloccato: 0.8 }
+
+/** Dietro una pianta cambiata oggi: un alone chiaro che pulsa piano. */
+function Alone({ taglia }: { taglia: number }) {
+  return (
+    <g transform={`scale(${taglia})`} className="pointer-events-none">
+      <ellipse cx={0} cy={-15} rx={16} ry={20} fill="url(#alone-oggi)" className="animate-alone" />
+    </g>
+  )
+}
+
+/** Le posizioni delle scintille attorno alla chioma, per un albero completo. */
+const POSTI_SCINTILLE: [number, number][] = [
+  [-11, -27],
+  [11, -21],
+  [-9, -9],
+  [6, -35],
+]
+
+/** Sopra una pianta cambiata oggi: stelline dorate che brillano a turno. */
+function Scintille({ seed, taglia }: { seed: number; taglia: number }) {
+  const partenza = sorteggio(seed, 0, 47) * 2.4
+  return (
+    <g transform={`scale(${taglia})`} className="pointer-events-none">
+      {POSTI_SCINTILLE.map(([x, y], i) => (
+        <g key={i} transform={`translate(${x} ${y})`}>
+          <path
+            d="M0,-3.2 L0.7,-0.7 L3.2,0 L0.7,0.7 L0,3.2 L-0.7,0.7 L-3.2,0 L-0.7,-0.7 Z"
+            fill="#ffe27a"
+            stroke="#fff8d6"
+            strokeWidth={0.5}
+            className="animate-scintilla"
+            style={{ animationDelay: `${-partenza - i * 0.6}s` }}
+          />
+        </g>
+      ))}
+    </g>
+  )
+}
+
 const COLORI_FARFALLE = ['#f6d04d', '#f29ac0', '#ffffff', '#9fc3f5', '#f5a35c']
 
 /** Una farfalla che gira lungo un anello battendo le ali (animazioni SVG, nascoste con meno movimento). */
@@ -131,7 +173,7 @@ interface Props {
   bosco: string | null
   /** Le piante già viste (`id:stato`): le altre crescono. */
   visti: Set<string> | null
-  /** Le piante create o cambiate oggi (id): bordate di bianco. */
+  /** Le piante create o cambiate oggi (id): alone e scintille. */
   diOggi: Set<number> | null
   onScegli: (chiave: string | null) => void
   stagione: Stagione
@@ -242,6 +284,7 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
         )
       }
       const nuovo = !visti?.has(`${e.albero.id}:${e.albero.stato}`)
+      const oggi = diOggi?.has(e.albero.id) ?? false
       return (
         <g
           key={`t${e.albero.id}`}
@@ -251,16 +294,16 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
           onClick={scegli(e.chiave)}
           data-bosco={e.chiave}
         >
+          {oggi && <Alone taglia={TAGLIA[e.albero.stato]} />}
           <g
             className={nuovo ? 'animate-cresci' : undefined}
             style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
           >
             <Vento seed={e.albero.id}>
-              <g filter={diOggi?.has(e.albero.id) ? 'url(#bordo-oggi)' : undefined}>
-                <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} frutti={e.albero.priorita >= 4} />
-              </g>
+              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} frutti={e.albero.priorita >= 4} />
             </Vento>
           </g>
+          {oggi && <Scintille seed={e.albero.id} taglia={TAGLIA[e.albero.stato]} />}
         </g>
       )
     }
@@ -289,21 +332,13 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
       onPointerLeave={() => setSopra(null)}
     >
       <defs>
+        <radialGradient id="alone-oggi">
+          <stop offset="0%" stopColor="#fffbe6" stopOpacity={0.95} />
+          <stop offset="55%" stopColor="#fff3c4" stopOpacity={0.5} />
+          <stop offset="100%" stopColor="#fff3c4" stopOpacity={0} />
+        </radialGradient>
         <filter id="sfuma-ombra" x="-50%" y="-200%" width="200%" height="500%">
           <feGaussianBlur stdDeviation={10} />
-        </filter>
-        {/* Il bordo bianco delle piante di oggi: la sagoma piena (non l'ombra, che è trasparente) allargata. */}
-        <filter id="bordo-oggi" x="-40%" y="-40%" width="180%" height="180%">
-          <feComponentTransfer in="SourceAlpha" result="sagoma">
-            <feFuncA type="discrete" tableValues="0 1" />
-          </feComponentTransfer>
-          <feMorphology in="sagoma" operator="dilate" radius={1.1} result="larga" />
-          <feFlood floodColor="#fff" />
-          <feComposite in2="larga" operator="in" result="bordo" />
-          <feMerge>
-            <feMergeNode in="bordo" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
         </filter>
       </defs>
 

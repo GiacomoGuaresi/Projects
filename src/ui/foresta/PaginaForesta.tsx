@@ -82,7 +82,7 @@ const plurale = (n: number, uno: string, tanti: string) => `${n} ${n === 1 ? uno
  * boschi su una zolla del loro colore, le faccende fatte sono arbusti sparsi.
  * Toccando un albero (o la sua zolla) si illumina il bosco e sotto compaiono
  * i suoi numeri; si trascina col dito o col mouse, si ingrandisce con due dita
- * (o Ctrl+rotella, o + e −).
+ * (o rotella, o + e −).
  */
 export function PaginaForesta({ attivita, sfondo: opzioniSfondo }: Props) {
   const sfondo = opzioniSfondo !== undefined
@@ -138,7 +138,7 @@ export function PaginaForesta({ attivita, sfondo: opzioniSfondo }: Props) {
     if (!sfondo) salvaVisti([...tutte])
   }, [tutte, sfondo])
 
-  // Le piante create o cambiate oggi hanno il bordo bianco; non nello sfondo.
+  // Le piante create o cambiate oggi hanno alone e scintille; non nello sfondo.
   const diOggi = useMemo(() => {
     if (sfondo) return null
     const oggi = new Date().toDateString()
