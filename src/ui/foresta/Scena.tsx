@@ -32,7 +32,7 @@ function Faccia({ punti, colore, ...resto }: { punti: string; colore: string } &
 const ERBA: Record<Stagione, [number, number, number]> = {
   primavera: [104, 46, 72],
   estate: [97, 37, 74],
-  autunno: [22, 34, 52],
+  autunno: [72, 26, 58],
   inverno: [205, 30, 95],
 }
 
@@ -44,10 +44,10 @@ function colorePiano(c: CasellaTerreno, bosco: string | null, stagione: Stagione
     case 'zolla': {
       const { h, s, l } = verdeZolla(c.chiave ?? '')
       // D'inverno la zolla è innevata, con appena il colore del boschetto.
-      // D'autunno, dal rosso all'oro: i boschetti restano diversi, ma senza verde.
+      // D'autunno, dall'arancio all'oro: i boschetti restano diversi, ma senza verde acceso.
       const autunno = stagione === 'autunno'
-      const [sa, lu] = inverno ? [Math.round(s * 0.35), 86] : autunno ? [s + 8, l - 2] : [s, l]
-      const tinta = autunno ? 6 + (h - 75) * 0.45 : h
+      const [sa, lu] = inverno ? [Math.round(s * 0.35), 86] : autunno ? [s, l - 2] : [s, l]
+      const tinta = autunno ? 30 + (h - 75) * 0.4 : h
       if (bosco === null) return `hsl(${tinta}, ${sa}%, ${lu}%)`
       return bosco === c.chiave ? `hsl(${tinta}, ${sa + 5}%, ${lu + (inverno ? 4 : 8)}%)` : `hsl(${tinta}, ${Math.round(sa * 0.45)}%, ${Math.min(lu + 14, 94)}%)`
     }
@@ -69,7 +69,7 @@ function colorePiano(c: CasellaTerreno, bosco: string | null, stagione: Stagione
 const PARETI: Record<Stagione, [string, string]> = {
   primavera: ['#8db878', '#78a365'],
   estate: ['#93b07f', '#7e9a6b'],
-  autunno: ['#9c6446', '#85533a'],
+  autunno: ['#93845a', '#7c6f4a'],
   inverno: ['#c7d3de', '#b2c0cd'],
 }
 
@@ -77,8 +77,8 @@ const PARETI: Record<Stagione, [string, string]> = {
 function Decoro({ c, stagione, x, y }: { c: CasellaTerreno; stagione: Stagione; x: number; y: number }) {
   if (c.tipo !== 'prato' || (stagione !== 'primavera' && stagione !== 'autunno')) return null
   const n = sorteggio(c.col, c.riga, 77)
-  if (n > (stagione === 'autunno' ? 0.4 : 0.17)) return null
-  const colori = stagione === 'primavera' ? ['#ffffff', '#f6c6d8', '#fff0a6'] : ['#e07b2e', '#a8321e', '#e3a33a']
+  if (n > (stagione === 'autunno' ? 0.28 : 0.17)) return null
+  const colori = stagione === 'primavera' ? ['#ffffff', '#f6c6d8', '#fff0a6'] : ['#d9822b', '#c4532f', '#e6b33c']
   const punti: [number, number][] = [
     [-5, -1],
     [3, -2.5],
