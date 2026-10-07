@@ -7,7 +7,7 @@ import { CampoAvanzamento, CampoProgetto, CampoTitolo } from './CampiInline'
 import { AiutoTag } from './InputTitolo'
 import { Modale } from './Modale'
 import { dataOra } from './ModaleDiario'
-import { SceltaPriorita, SceltaStato } from './Scelte'
+import { SceltaStato } from './Scelte'
 
 /** Cosa si può fare su un'attività dalla Dashboard e dai dettagli. */
 export interface AzioniAttivita {
@@ -61,18 +61,13 @@ export function ModaleDettagli({ attivita: a, progetti, azioni, onChiudi }: Prop
           <AiutoTag />
         </Campo>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo nome="Progetto">
-            <CampoProgetto
-              progetto={a.progetto}
-              progetti={progetti}
-              onSalva={(testo) => azioni.cambiaProgetto(a, testo)}
-            />
-          </Campo>
-          <Campo nome="Priorità">
-            <SceltaPriorita valore={a.priorita} onScegli={(priorita) => azioni.modifica(a, { priorita })} />
-          </Campo>
-        </div>
+        <Campo nome="Progetto">
+          <CampoProgetto
+            progetto={a.progetto}
+            progetti={progetti}
+            onSalva={(testo) => azioni.cambiaProgetto(a, testo)}
+          />
+        </Campo>
 
         <Campo nome="Stato">
           <SceltaStato valore={a.stato} onScegli={(stato) => azioni.modifica(a, { stato })} />

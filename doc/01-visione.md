@@ -4,7 +4,6 @@
 
 **Projects** è la lista delle cose da fare in casa: lavori, manutenzioni, acquisti, pratiche. Ogni attività ha:
 - uno stato;
-- una priorità;
 - una percentuale di avanzamento;
 - un diario che ricorda cosa è stato fatto e quando.
 
@@ -41,7 +40,7 @@ La Dashboard mostra tutto, raggruppato per progetto.
 Il vecchio codice è in `OLD/`, solo come riferimento locale.
 - Dashboard con una card per progetto
 - Tabella su desktop e card su mobile, con modifica inline dei campi
-- Stelle di priorità e barra di avanzamento
+- Barra di avanzamento
 - Modale per il diario
 - Tag nel titolo (`<urgente>`) mostrati come badge
 - Icona del progetto con iniziali e colore ricavato dal nome

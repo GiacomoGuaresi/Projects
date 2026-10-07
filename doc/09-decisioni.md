@@ -20,7 +20,7 @@
 | 2026-09-13 | **Niente entità "progetto"**: il progetto è un campo di testo libero e facoltativo sull'attività, con suggerimenti | deciso |
 | 2026-09-13 | Icona del progetto generata dal nome: iniziali + colore da hash, niente immagini | deciso |
 | 2026-09-13 | Stati dell'attività: **da fare, in corso, bloccato, completo**. Niente backlog; un'attività annullata si elimina | deciso |
-| 2026-09-13 | Priorità **1–5 stelle** | deciso |
+| 2026-09-13 | Priorità **1–5 stelle** (tolta il 2026-10-07) | deciso |
 | 2026-09-13 | Avanzamento % **manuale**, portato a 100 automaticamente quando l'attività è completa | deciso |
 | 2026-09-13 | Niente scadenze, ricorrenze, kanban, calendario, pagina di dettaglio | deciso |
 | 2026-09-13 | Voci di diario **modificabili**; **nessun autore** (account condiviso) | deciso |
@@ -64,3 +64,4 @@
 | 2026-10-06 | Nuovi tag: **bug** e **scadenza** con la data (`<scadenza 31/12/26>`, anno a 2 o 4 cifre), arancio nei 3 giorni prima e rosso dal giorno stesso. La scadenza resta **solo un tag** nel titolo: niente colonna nel database, ordinamento o avvisi | deciso |
 | 2026-10-06 | Altri tag: **acquisto, chiamare, pratica, veloce, giardino, auto, moto, insieme, regalo** e **attesa** con la data; *natalizio* passa all'icona `tree-pine` e `gift` va a *regalo*. Scadenze e attese **passate** in rosso acceso con testo bianco (niente avvisi); nelle card, a parità di stato, prima la **scadenza più vicina** | deciso |
 | 2026-10-07 | Foresta: i progetti con lo stesso nome prima dello `/` ("Software / Projects", "Software / Grocery") sono una **famiglia** di boschetti **attaccati** sullo stesso pianoro, con verdi vicini, invece di un'unica zolla: così sembrano un bosco solo ma ogni progetto tiene la sua zolla, il suo nome e i suoi numeri. Famiglia ricavata dal nome, **niente nel database**; i progetti senza `/` restano dove erano | deciso |
+| 2026-10-07 | **Via la priorità** delle attività: non si usava, nella card contano stato, scadenza e titolo. Colonna tolta con `007_senza_priorita.sql`; i frutti della Foresta, che venivano dalle 4–5 stelle, ora li sceglie l'id | deciso |

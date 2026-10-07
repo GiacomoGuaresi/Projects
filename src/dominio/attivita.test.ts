@@ -15,9 +15,9 @@ describe('statoSuccessivo', () => {
 
 describe('applicaModifica', () => {
   it('cambia i campi richiesti e segna la modifica', () => {
-    const prima = attivita({ titolo: 'Vetri', priorita: 2 })
-    const dopo = applicaModifica(prima, { priorita: 5 }, adesso)
-    expect(dopo).toMatchObject({ titolo: 'Vetri', priorita: 5, modificata_il: adesso.toISOString() })
+    const prima = attivita({ titolo: 'Vetri', avanzamento: 20 })
+    const dopo = applicaModifica(prima, { avanzamento: 50 }, adesso)
+    expect(dopo).toMatchObject({ titolo: 'Vetri', avanzamento: 50, modificata_il: adesso.toISOString() })
   })
 
   it('completa ⇒ avanzamento 100 e data di completamento', () => {

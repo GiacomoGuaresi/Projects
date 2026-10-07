@@ -4,7 +4,7 @@ import type { Attivita, NuovaAttivita, Stato } from '../dominio/tipi'
 import { InputProgetto } from './InputProgetto'
 import { AiutoTag, InputTitolo } from './InputTitolo'
 import { Modale } from './Modale'
-import { SceltaPriorita, SceltaStato } from './Scelte'
+import { SceltaStato } from './Scelte'
 
 interface Props {
   progetti: readonly ProgettoInUso[]
@@ -17,14 +17,13 @@ const campo =
 
 /**
  * Il modale "Nuova attività" (doc/08-interfaccia.md): titolo obbligatorio con
- * i suggerimenti dei tag, progetto facoltativo con i progetti già usati, stato e
- * priorità. Invio nel titolo crea. A schermo intero su mobile.
+ * i suggerimenti dei tag, progetto facoltativo con i progetti già usati e
+ * stato. Invio nel titolo crea. A schermo intero su mobile.
  */
 export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
   const [titolo, setTitolo] = useState('')
   const [progetto, setProgetto] = useState('')
   const [stato, setStato] = useState<Stato>('da_fare')
-  const [priorita, setPriorita] = useState(3)
   const [inCorso, setInCorso] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
   const id = useId()
@@ -39,7 +38,6 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
         titolo: titolo.trim(),
         progetto: normalizzaProgetto(progetto, progetti),
         stato,
-        priorita,
       })
       onChiudi()
     } catch (e) {
@@ -98,11 +96,6 @@ export function ModaleNuova({ progetti, onCrea, onChiudi }: Props) {
         <div className="flex flex-col gap-1.5">
           <span className="text-xs text-testo-tenue">Stato</span>
           <SceltaStato valore={stato} onScegli={setStato} />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs text-testo-tenue">Priorità</span>
-          <SceltaPriorita valore={priorita} onScegli={setPriorita} />
         </div>
 
         {errore && (

@@ -33,7 +33,6 @@ erDiagram
     text titolo
     text progetto
     text stato
-    smallint priorita
     smallint avanzamento
     timestamptz creata_il
     timestamptz modificata_il
@@ -56,7 +55,6 @@ erDiagram
 | titolo | text | NOT NULL, non vuoto | può contenere tag `<tag>` |
 | progetto | text | NULL ammesso | etichetta libera; `trim`, stringa vuota → NULL (trigger) |
 | stato | text | NOT NULL, default `'da_fare'`, check in (`da_fare`, `in_corso`, `bloccato`, `completo`) | |
-| priorita | smallint | NOT NULL, default `3`, check 1–5 | stelle |
 | avanzamento | smallint | NOT NULL, default `0`, check 0–100 | percentuale |
 | creata_il | timestamptz | default `now()` | |
 | modificata_il | timestamptz | default `now()`, trigger | |

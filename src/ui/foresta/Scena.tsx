@@ -300,7 +300,7 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
             style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
           >
             <Vento seed={e.albero.id}>
-              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} frutti={e.albero.priorita >= 4} />
+              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} />
             </Vento>
           </g>
           {oggi && <Scintille seed={e.albero.id} taglia={TAGLIA[e.albero.stato]} />}

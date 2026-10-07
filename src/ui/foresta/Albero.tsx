@@ -25,16 +25,15 @@ interface PropsAlbero {
   seed: number
   stato: Stato
   stagione: Stagione
-  frutti?: boolean
 }
 
 /**
  * La pianta di un'attività, che cresce col suo stato: germoglio da fare,
- * alberello in corso, albero completo (con qualche frutto se `frutti`),
+ * alberello in corso, albero completo (circa uno su tre con qualche frutto),
  * albero secco bloccato. Specie e colori vengono dal seed (l'id
  * dell'attività), quindi l'alberello diventa proprio quell'albero.
  */
-export function Albero({ seed, stato, stagione, frutti = false }: PropsAlbero) {
+export function Albero({ seed, stato, stagione }: PropsAlbero) {
   if (stato === 'da_fare') return <Germoglio seed={seed} stagione={stagione} />
   if (stato === 'bloccato') return <AlberoSecco seed={seed} />
   return (
@@ -42,7 +41,7 @@ export function Albero({ seed, stato, stagione, frutti = false }: PropsAlbero) {
       seed={seed}
       stagione={stagione}
       crescita={stato === 'completo' ? 1 : 0.55}
-      frutti={stato === 'completo' && frutti && (stagione === 'estate' || stagione === 'autunno')}
+      frutti={stato === 'completo' && generatore(seed + 202)() < 0.35 && (stagione === 'estate' || stagione === 'autunno')}
     />
   )
 }

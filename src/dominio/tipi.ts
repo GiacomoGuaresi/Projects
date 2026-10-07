@@ -11,8 +11,6 @@ export interface Attivita {
   /** Etichetta libera; mai stringa vuota (il trigger la porta a NULL). */
   progetto: string | null
   stato: Stato
-  /** Da 1 a 5 stelle. */
-  priorita: number
   /** Da 0 a 100; 100 quando l'attività è completa. */
   avanzamento: number
   creata_il: string
@@ -23,10 +21,10 @@ export interface Attivita {
 
 /** I campi che l'interfaccia cambia; il resto lo gestisce il database. */
 export type Modifica = Partial<
-  Pick<Attivita, 'titolo' | 'progetto' | 'stato' | 'priorita' | 'avanzamento'>
+  Pick<Attivita, 'titolo' | 'progetto' | 'stato' | 'avanzamento'>
 >
 
-export type NuovaAttivita = Pick<Attivita, 'titolo' | 'progetto' | 'stato' | 'priorita'>
+export type NuovaAttivita = Pick<Attivita, 'titolo' | 'progetto' | 'stato'>
 
 /**
  * Un'attività veloce e ripetitiva (tabella `faccende`): solo il titolo e se è

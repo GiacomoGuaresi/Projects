@@ -68,7 +68,7 @@ La pagina iniziale (`#/`).
 - **Card collassabili**: toccando il **nome del progetto** nell'intestazione (con un chevron `chevron-down`, ruotato a destra quando chiusa) la card si chiude scorrendo (~200ms, niente animazione con "riduci movimento") lasciando solo l'intestazione, con il conto e la stellina; ritoccandolo si riapre. Di default sono aperte; le chiuse sono ricordate per progetto nel cookie `projects_chiusi` (percorso `/Projects/`, durata un anno), quindi solo su quel dispositivo. Restano chiuse anche con gli interruttori attivi.
 - **Stellina** a destra nell'intestazione della card: piena (`star`, colore stella) se preferito, vuota se normale, `star-off` se accantonato. **Toccarla** mette o toglie il progetto dai preferiti (un accantonato diventa preferito). **Tenerla premuta** (~400ms) apre un menu *Preferito* / *Normale* / *Accantonato* che si usa come quello dello stato. La scelta è per progetto (senza distinguere maiuscole e minuscole) e ricordata nel cookie `projects_rilievi` (percorso `/Projects/`, durata un anno), quindi vale solo su quel dispositivo. Da PC (almeno 1024px) **due colonne sfalsate**, come il disegno di `layout-dashboard`: ogni card è alta quanto il suo contenuto e quella sotto le sta subito sotto, senza allinearsi alle righe dell'altra colonna. Sotto, una colonna sola.
 - Intestazione della card: icona e nome del progetto, attività **completate sul totale** del progetto (es. `4/10`).
-- Dentro la card: prima *In corso*, poi *Da fare*, poi *Bloccate*; a parità di stato la scadenza più vicina (quelle senza dopo), poi priorità decrescente, poi titolo.
+- Dentro la card: prima *In corso*, poi *Da fare*, poi *Bloccate*; a parità di stato la scadenza più vicina (quelle senza dopo), poi titolo.
 - **Toccare l'icona dello stato** a inizio riga lo fa avanzare: *Da fare* → *In corso* → *Completo* (con la solita conferma); *Completo* e *Bloccato* → *In corso*.
 - **Tenere premuta l'icona dello stato** (~400ms, con una breve vibrazione dove supportata) apre un **menu con tutti gli stati** sopra l'icona (sotto, se in alto non c'è spazio): facendo scorrere il dito sullo stato voluto questo si evidenzia, e **rilasciando lo si imposta** (*Completo* con la solita conferma). Rilasciato fuori dal menu o sullo stato attuale non cambia nulla; rilasciato senza muovere il dito il menu resta aperto e si sceglie con un tocco. Si chiude toccando fuori, con Esc o scorrendo la pagina. Da desktop si apre anche con il tasto destro.
 - Ogni attività mostra **solo** l'icona dello stato (con i colori dello stato), il titolo con i badge e il pulsante **Diario** (`book-open`, con un pallino di notifica se ha voci; apre il modale diario); **toccare un punto qualsiasi della riga** fuori dal pulsante apre il modale dettagli; ogni modifica, stato compreso, si fa nel modale dettagli.
@@ -79,7 +79,7 @@ La pagina iniziale (`#/`).
 
 ## Faccende
 
-Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"): **solo il titolo** e **da fare / fatta**. Niente progetto, priorità, avanzamento, diario o tag.
+Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"): **solo il titolo** e **da fare / fatta**. Niente progetto, avanzamento, diario o tag.
 
 - Una **card "Faccende"** (`broom`) nella **Dashboard**: è la **prima card delle colonne**, larga come quelle dei progetti (mezza pagina da PC). La stessa card, da sola, nella pagina **Faccende** (`#/faccende`).
 - Colore **post-it giallo**: fondo `#FFFBE3` (molto chiaro), bordi e divisori `#EFE4B0`, così si distingue dalle card bianche dei progetti.
@@ -134,7 +134,7 @@ Una piccola gamification (`#/foresta`), ispirata a Forest e Treedom: un'**isola 
 
 - Ogni **attività** è una pianta che cresce col suo stato: **da fare** un germoglio, **in corso** un alberello, **completa** un albero, **bloccata** un albero secco. Le attività dello stesso progetto formano un **boschetto** su una zolla di un **verde suo** (dall'oliva al verde acqua, ricavato dal nome con `verdeZolla()`, sempre lo stesso per lo stesso progetto); il **nome** del boschetto non si vede sempre, compare sotto la zolla solo passandoci sopra col mouse o toccandolo. Quelle senza progetto stanno nel boschetto **Sparsi**. I progetti con lo stesso nome prima dello `/` ("Software / Projects", "Software / Grocery", e anche "Software" da solo) sono una **famiglia**: ognuno resta un boschetto con la sua zolla e i suoi numeri, ma stanno **attaccati** (una casella di prato tra l'uno e l'altro) sullo **stesso pianoro**, con verdi vicini alla tonalità della famiglia, così sembrano un bosco solo. La famiglia si ricava dal nome con `famigliaProgetto()`, niente nel database. La foresta si legge sempre da `attivita`: se un'attività si riapre, il suo albero torna alberello; se si elimina, la pianta sparisce. Le piante stanno in ordine di creazione, quindi crescendo restano al loro posto.
 - Ogni **faccenda fatta** è un **arbusto** sparso sul prato, dal conto `contatori.faccende_fatte` ([04](04-modello-dati.md)).
-- Gli alberi sono **SVG disegnati nel codice** (`src/ui/foresta/Albero.tsx`): quattro specie (abete, chioma tonda, betulla, cipresso), altezza e verde scelti dall'id dell'attività, quindi l'alberello diventa proprio quell'albero. Le attività completate con priorità 4–5 portano qualche frutto. Nel pannello del titolo, sotto i numeri, quante piante sono in crescita e quante secche.
+- Gli alberi sono **SVG disegnati nel codice** (`src/ui/foresta/Albero.tsx`): quattro specie (abete, chioma tonda, betulla, cipresso), altezza e verde scelti dall'id dell'attività, quindi l'alberello diventa proprio quell'albero. Circa un albero completo su tre, scelto dall'id, porta qualche frutto (d'estate e d'autunno). Nel pannello del titolo, sotto i numeri, quante piante sono in crescita e quante secche.
 - La disposizione è nella logica pura (`src/dominio/foresta.ts`): gli alberi di un boschetto riempiono una spirale dal centro, in ordine di creazione, così un albero nuovo non sposta gli altri; i boschetti di una famiglia si compongono prima tra loro, poi la famiglia va sulla spirale grande come un disco solo; i boschetti più vecchi stanno al centro; gli arbusti finiscono sempre negli stessi posti liberi.
 - **Terreno** (`src/dominio/terreno.ts`): colline a gradini (4 livelli) da un rumore con seed fisso sulle coordinate, quindi allargandosi la foresta non cambia le colline che c'erano; **laghetti** nelle conche, **sentieri** di terra battuta da ogni famiglia di boschetti alla più vicina, qualche **roccia** in alto. Ogni boschetto sta su un **pianoro** alla quota del suo centro (quella del primo, per una famiglia), raccordato al resto di un livello al massimo, senza acqua attorno; tra i boschetti di una famiglia il prato è piano e senza rocce. Caselle e oggetti si disegnano in un solo ordine di profondità (`src/ui/foresta/Scena.tsx`), così una collina davanti copre la base di un albero dietro.
 - Toccando un albero (o la sua zolla) si **illumina il suo boschetto**, il resto si spegne, e in basso compare un pannello col nome del progetto, la barra delle completate e le attività per stato (completate, in corso, da fare, bloccate), con la data del primo e dell'ultimo albero. Toccando il prato vuoto o ✕ si torna a tutta la foresta.
@@ -168,7 +168,7 @@ L'ambiente (`src/dominio/ambiente.ts`, `src/ui/foresta/useAmbiente.ts`) segue il
 ## Modale dettagli
 
 Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
-- Campi modificabili con le regole descritte in "Campi di un'attività": **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Priorità**, **Stato** (conferma per *Completo*), **Avanzamento**.
+- Campi modificabili con le regole descritte in "Campi di un'attività": **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Stato** (conferma per *Completo*), **Avanzamento**.
 - Date di creazione, modifica e completamento; pulsante **Diario** (con un pallino di notifica se ha voci) che apre il modale diario sopra.
 - In fondo, pulsante **Elimina** (`trash-2`, rosso) con conferma; eliminata l'attività, il modale si chiude.
 
@@ -179,7 +179,6 @@ Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
 | Progetto | icona (iniziali e colore) + nome | clic → campo con suggerimenti; vedi "Cambio del progetto" |
 | Titolo | testo con tag come badge | clic → campo di testo, Invio salva, Esc annulla |
 | Stato | gruppo di pulsanti con icona e colore | clic sul pulsante; passare a *Completo* chiede conferma |
-| Priorità | 5 stelle (`star`) | clic sulla stella |
 | Avanzamento | barra + % | clic → slider / numero |
 | Azioni | `book-open` diario · `trash-2` elimina (nel modale dettagli) | pallino di notifica sul diario se ha voci |
 
@@ -203,7 +202,7 @@ Nel modale "Nuova attività" non c'è nessun dialogo.
 
 ## Modale "Nuova attività"
 
-Campi: **Titolo** (obbligatorio, con i suggerimenti dei tag e sotto la sola scritta "Scrivi < per aggiungere un tag"), **Progetto** (facoltativo, con suggerimenti), **Stato** (default *Da fare*), **Priorità** (default 3 stelle). Invio nel titolo crea l'attività. A schermo intero su mobile.
+Campi: **Titolo** (obbligatorio, con i suggerimenti dei tag e sotto la sola scritta "Scrivi < per aggiungere un tag"), **Progetto** (facoltativo, con suggerimenti), **Stato** (default *Da fare*). Invio nel titolo crea l'attività. A schermo intero su mobile.
 
 ## Modale diario
 
@@ -265,7 +264,7 @@ Lista fissa nel codice (`src/dominio/tag.ts`).
 - Un tag non in elenco appare come badge neutro (`tag`, grigio).
 - **Scadenza** e **attesa** si scrivono con la data dopo il nome, `<scadenza 31/12/26>` o `<attesa 31/12/2026>` (anno a 2 cifre = 2000+). Il badge mostra la data come scritta e, passandoci sopra, "Scade ven 31 ott", "Scaduta ieri", "Atteso per domani" o "Attesa scaduta ieri". Con una data che non esiste (`31/02/26`) il badge è neutro. Scegliendoli dai suggerimenti si inserisce `<SCADENZA >` con il cursore prima del `>`, pronto per la data; mentre la si scrive i suggerimenti tacciono.
 - **Date passate** (scadenze e attese): badge **allarme**, fondo rosso acceso `#D62828`, testo bianco in grassetto, da vedere subito. Niente avvisi a parte.
-- Nella card, a parità di stato, vengono **prima le attività con la scadenza più vicina** (conta la prima, se ce n'è più d'una), poi le altre; dopo, come sempre, priorità e titolo. L'attesa non cambia l'ordine.
+- Nella card, a parità di stato, vengono **prima le attività con la scadenza più vicina** (conta la prima, se ce n'è più d'una), poi le altre; dopo, come sempre, il titolo. L'attesa non cambia l'ordine.
 - **Suggerimenti**: in ogni campo del titolo (modale "Nuova attività", modifica inline, modale dettagli), scrivendo `<` compare l'elenco dei tag (badge e uso), filtrato da ciò che segue, prima quelli che iniziano così; mai i riservati. Frecce per scorrere, Invio, Tab o tocco per scegliere, Esc per chiudere l'elenco. Il tag scelto sostituisce quello in corso, in maiuscolo e seguito da uno spazio.
 - Scartati: tag che duplicano uno stato (bloccato) o un progetto (casa), e appuntamento, pagamento. Giardino, auto, moto, acquisto e pratica, scartati all'inizio, sono stati ripresi il 2026-10-06.
 

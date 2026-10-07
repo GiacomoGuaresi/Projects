@@ -21,7 +21,6 @@ function attivita(progetto: string | null, completata_il: string | null, stato: 
     titolo: `Attività ${prossimoId}`,
     progetto,
     stato,
-    priorita: 3,
     avanzamento: stato === 'completo' ? 100 : 0,
     creata_il: '2026-01-01T00:00:00Z',
     modificata_il: '2026-01-01T00:00:00Z',

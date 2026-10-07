@@ -1,4 +1,3 @@
-import { Star } from 'lucide-react'
 import { STATI, type Stato } from '../dominio/tipi'
 import { infoStati } from './stati'
 
@@ -46,38 +45,6 @@ export function SceltaStato({ valore, onScegli, compatta = false }: SceltaStatoP
           </button>
         )
       })}
-    </div>
-  )
-}
-
-interface SceltaPrioritaProps {
-  valore: number
-  onScegli: (priorita: number) => void
-  compatta?: boolean
-}
-
-/** La priorità da 1 a 5: si tocca la stella. */
-export function SceltaPriorita({ valore, onScegli, compatta = false }: SceltaPrioritaProps) {
-  return (
-    <div className="inline-flex" role="radiogroup" aria-label="Priorità">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          role="radio"
-          aria-checked={n === valore}
-          aria-label={n === 1 ? '1 stella' : `${n} stelle`}
-          onClick={() => {
-            if (n !== valore) onScegli(n)
-          }}
-          className={`grid place-items-center rounded-lg hover:bg-fondo ${compatta ? 'size-7' : 'size-10'}`}
-        >
-          <Star
-            className={`${compatta ? 'size-4' : 'size-6'} ${n <= valore ? 'fill-stella text-stella' : 'text-stella-vuota'}`}
-            aria-hidden="true"
-          />
-        </button>
-      ))}
     </div>
   )
 }

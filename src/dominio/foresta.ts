@@ -10,7 +10,7 @@ import { chiaveProgetto, famigliaProgetto, tonalita } from './progetto'
 import { sorteggio, terreno, type CasellaTerreno } from './terreno'
 import type { Attivita, Stato } from './tipi'
 
-export type AlberoForesta = Pick<Attivita, 'id' | 'titolo' | 'progetto' | 'stato' | 'priorita' | 'creata_il' | 'modificata_il'>
+export type AlberoForesta = Pick<Attivita, 'id' | 'titolo' | 'progetto' | 'stato' | 'creata_il' | 'modificata_il'>
 
 /** Le piante di un progetto, dalla prima attività creata all'ultima. */
 export interface Boschetto {
@@ -40,8 +40,8 @@ export function boschetti(attivita: readonly Attivita[]): Boschetto[] {
     const chiave = nome ? chiaveProgetto(nome) : ''
     const gruppo: Gruppo = gruppi.get(chiave) ?? { grafie: new Map(), alberi: [] }
     if (nome) gruppo.grafie.set(nome, (gruppo.grafie.get(nome) ?? 0) + 1)
-    const { id, titolo, progetto, stato, priorita, creata_il, modificata_il } = a
-    gruppo.alberi.push({ id, titolo, progetto, stato, priorita, creata_il, modificata_il })
+    const { id, titolo, progetto, stato, creata_il, modificata_il } = a
+    gruppo.alberi.push({ id, titolo, progetto, stato, creata_il, modificata_il })
     gruppi.set(chiave, gruppo)
   }
 

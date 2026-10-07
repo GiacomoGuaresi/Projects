@@ -16,7 +16,7 @@ function confrontaScadenze(a: Attivita, b: Attivita): number {
   return sa.localeCompare(sb)
 }
 
-/** Progetto A→Z (senza progetto in fondo), poi scadenza più vicina, priorità decrescente, titolo. */
+/** Progetto A→Z (senza progetto in fondo), poi scadenza più vicina, titolo. */
 function confrontaAttivita(a: Attivita, b: Attivita): number {
   if (a.progetto !== b.progetto) {
     if (a.progetto === null) return 1
@@ -26,7 +26,6 @@ function confrontaAttivita(a: Attivita, b: Attivita): number {
   }
   return (
     confrontaScadenze(a, b) ||
-    b.priorita - a.priorita ||
     confrontaTesto(titoloSenzaTag(a.titolo), titoloSenzaTag(b.titolo)) ||
     a.id - b.id
   )

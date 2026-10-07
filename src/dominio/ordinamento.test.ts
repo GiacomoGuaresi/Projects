@@ -46,37 +46,37 @@ describe('schedeProgetti', () => {
     ])
   })
 
-  it('nella card: in corso, da fare, bloccate, poi priorità; completate in fondo dalla più recente', () => {
+  it('nella card: in corso, da fare, bloccate, poi titolo; completate in fondo dalla più recente', () => {
     const elenco = [
-      attivita({ titolo: 'vecchia', stato: 'completo', priorita: 5, completata_il: '2026-01-01T00:00:00Z' }),
-      attivita({ titolo: 'ferma', stato: 'bloccato', priorita: 5 }),
-      attivita({ titolo: 'da fare bassa', priorita: 1 }),
-      attivita({ titolo: 'recente', stato: 'completo', priorita: 1, completata_il: '2026-09-01T00:00:00Z' }),
-      attivita({ titolo: 'in corso', stato: 'in_corso', priorita: 1 }),
-      attivita({ titolo: 'da fare alta', priorita: 4 }),
+      attivita({ titolo: 'vecchia', stato: 'completo', completata_il: '2026-01-01T00:00:00Z' }),
+      attivita({ titolo: 'ferma', stato: 'bloccato' }),
+      attivita({ titolo: 'da fare b' }),
+      attivita({ titolo: 'recente', stato: 'completo', completata_il: '2026-09-01T00:00:00Z' }),
+      attivita({ titolo: 'in corso', stato: 'in_corso' }),
+      attivita({ titolo: 'da fare a' }),
     ]
     expect(titoli(schedeProgetti(elenco)[0].attivita)).toEqual([
       'in corso',
-      'da fare alta',
-      'da fare bassa',
+      'da fare a',
+      'da fare b',
       'ferma',
       'recente',
       'vecchia',
     ])
   })
 
-  it('nello stesso stato prima la scadenza più vicina, poi le altre per priorità', () => {
+  it('nello stesso stato prima la scadenza più vicina, poi le altre per titolo', () => {
     const elenco = [
-      attivita({ titolo: 'senza, 5 stelle', progetto: 'Casa', priorita: 5 }),
-      attivita({ titolo: '<scadenza 20/11/26> tardi', progetto: 'Casa', priorita: 1 }),
-      attivita({ titolo: '<SCADENZA 1/11/2026> presto', progetto: 'Casa', priorita: 1 }),
-      attivita({ titolo: '<attesa 1/10/26> attesa', progetto: 'Casa', priorita: 3 }),
+      attivita({ titolo: 'senza', progetto: 'Casa' }),
+      attivita({ titolo: '<scadenza 20/11/26> tardi', progetto: 'Casa' }),
+      attivita({ titolo: '<SCADENZA 1/11/2026> presto', progetto: 'Casa' }),
+      attivita({ titolo: '<attesa 1/10/26> attesa', progetto: 'Casa' }),
     ]
     expect(titoli(schedeProgetti(elenco)[0].attivita)).toEqual([
       '<SCADENZA 1/11/2026> presto',
       '<scadenza 20/11/26> tardi',
-      'senza, 5 stelle',
       '<attesa 1/10/26> attesa',
+      'senza',
     ])
   })
 })

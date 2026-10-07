@@ -158,7 +158,6 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
                             titolo,
                             progetto: scheda.progetto,
                             stato: soloInCorso ? 'in_corso' : 'da_fare',
-                            priorita: 3,
                           })
                         }
                       />
