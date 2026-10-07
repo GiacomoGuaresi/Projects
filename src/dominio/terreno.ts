@@ -29,7 +29,7 @@ export interface Pianoro {
 
 export const LIVELLI = 4
 /** Sotto questa quota c'è acqua. */
-const ACQUA = 0.27
+const ACQUA = 0.2
 /** Le soglie tra un livello e il successivo. */
 const SOGLIE = [0.42, 0.56, 0.68]
 /** Fin dove arriva il sottobosco piano attorno alle zolle di una famiglia. */

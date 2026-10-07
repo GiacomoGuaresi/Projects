@@ -102,7 +102,7 @@ function primeCaselle(n: number): Scostamento[] {
 // Disposizione ---------------------------------------------------------------------
 
 /** Lo spazio libero tra due boschetti, in caselle: il sentiero e l'etichetta. */
-const SENTIERO = 3
+const SENTIERO = 2
 /** Lo spazio tra due boschetti della stessa famiglia: un filo di prato, così sembrano un bosco solo. */
 const SENTIERO_FAMIGLIA = 1
 /** Seed fisso degli arbusti: lo stesso conto dà sempre gli stessi posti. */

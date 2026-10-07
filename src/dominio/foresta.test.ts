@@ -168,13 +168,13 @@ describe('disponi', () => {
       for (const a of software) {
         const vicino = Math.min(...software.filter((b) => b !== a).map((b) => distacco(a, b)))
         expect(vicino).toBeGreaterThanOrEqual(1)
-        expect(vicino).toBeLessThan(3)
+        expect(vicino).toBeLessThan(2)
       }
     })
 
     it('tra famiglie diverse resta il sentiero', () => {
       for (const a of software) {
-        for (const b of [lotto('casa'), lotto('auto')]) expect(distacco(a, b)).toBeGreaterThanOrEqual(3)
+        for (const b of [lotto('casa'), lotto('auto')]) expect(distacco(a, b)).toBeGreaterThanOrEqual(2)
       }
     })
 
