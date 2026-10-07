@@ -9,6 +9,7 @@ import {
   statisticheBosco,
   verdeZolla,
   type Elemento,
+  type Lotto,
 } from './foresta'
 import type { Attivita, Stato } from './tipi'
 
@@ -148,6 +149,43 @@ describe('disponi', () => {
     }
   })
 
+  describe('famiglie', () => {
+    const elenco = [
+      ...Array.from({ length: 14 }, () => attivita('Software / Projects', giorno(1))),
+      ...Array.from({ length: 9 }, () => attivita('Casa', giorno(2))),
+      ...Array.from({ length: 6 }, () => attivita('Software / Grocery', giorno(3))),
+      ...Array.from({ length: 4 }, () => attivita('Software', giorno(4))),
+      ...Array.from({ length: 5 }, () => attivita('Auto', giorno(5))),
+    ]
+    const foresta = disponi(boschetti(elenco), 10)
+    const lotto = (chiave: string) => foresta.lotti.find((l) => l.chiave === chiave)!
+    const distacco = (a: Lotto, b: Lotto) => Math.hypot(a.col - b.col, a.riga - b.riga) - a.raggio - b.raggio
+    const software = ['software / projects', 'software / grocery', 'software'].map(lotto)
+
+    it('i boschetti della stessa famiglia stanno quasi attaccati, alla stessa quota', () => {
+      expect(new Set(software.map((l) => l.famiglia))).toEqual(new Set(['software']))
+      expect(new Set(software.map((l) => l.altezza)).size).toBe(1)
+      for (const a of software) {
+        const vicino = Math.min(...software.filter((b) => b !== a).map((b) => distacco(a, b)))
+        expect(vicino).toBeGreaterThanOrEqual(1)
+        expect(vicino).toBeLessThan(3)
+      }
+    })
+
+    it('tra famiglie diverse resta il sentiero', () => {
+      for (const a of software) {
+        for (const b of [lotto('casa'), lotto('auto')]) expect(distacco(a, b)).toBeGreaterThanOrEqual(3)
+      }
+    })
+
+    it('ogni albero sta sulla zolla del suo boschetto', () => {
+      const zolle = new Map(foresta.caselle.map((c) => [posto(c as Elemento), c.chiave]))
+      for (const a of alberi(foresta.elementi)) {
+        if (a.tipo === 'albero') expect(zolle.get(posto(a))).toBe(a.chiave)
+      }
+    })
+  })
+
   it('il prato contiene tutto', () => {
     const elenco = Array.from({ length: 15 }, () => attivita('Casa', giorno(1)))
     const { elementi, limiti } = disponi(boschetti(elenco), 30)
@@ -212,6 +250,16 @@ describe('verdeZolla', () => {
 
   it('cambia da progetto a progetto', () => {
     expect(verdeZolla('casa')).not.toEqual(verdeZolla('auto'))
+  })
+
+  it('i boschetti di una famiglia hanno verdi vicini, ma diversi', () => {
+    const famiglia = verdeZolla('software')
+    const figli = ['software / projects', 'software / grocery', 'software / lavoro'].map(verdeZolla)
+    for (const f of figli) {
+      expect(Math.abs(f.h - famiglia.h)).toBeLessThanOrEqual(10)
+      expect(f).not.toEqual(famiglia)
+    }
+    expect(new Set(figli.map((f) => JSON.stringify(f))).size).toBe(figli.length)
   })
 })
 

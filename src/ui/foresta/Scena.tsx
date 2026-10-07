@@ -355,22 +355,25 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
 
       {disegno}
 
-      {/* Le farfalle girano attorno ai boschetti. */}
+      {/* Le farfalle girano attorno ai boschetti: una per famiglia, attorno al primo. */}
       {farfalle &&
-        foresta.lotti.slice(0, 6).map((l, i) => {
-          const { x, y } = proietta(l.col, l.riga, l.altezza)
-          const rx = 10 + l.raggio * 8
-          const ry = 5 + l.raggio * 4
-          const n = sorteggio(l.col, l.riga, 53)
-          return (
-            <Farfalla
-              key={l.chiave}
-              percorso={`M${x - rx},${y - 22} a${rx},${ry} 0 1,0 ${rx * 2},0 a${rx},${ry} 0 1,0 ${-rx * 2},0`}
-              colore={COLORI_FARFALLE[i % COLORI_FARFALLE.length]}
-              durata={9 + n * 6}
-            />
-          )
-        })}
+        foresta.lotti
+          .filter((l, i, lotti) => lotti.findIndex((m) => m.famiglia === l.famiglia) === i)
+          .slice(0, 6)
+          .map((l, i) => {
+            const { x, y } = proietta(l.col, l.riga, l.altezza)
+            const rx = 10 + l.raggio * 8
+            const ry = 5 + l.raggio * 4
+            const n = sorteggio(l.col, l.riga, 53)
+            return (
+              <Farfalla
+                key={l.chiave}
+                percorso={`M${x - rx},${y - 22} a${rx},${ry} 0 1,0 ${rx * 2},0 a${rx},${ry} 0 1,0 ${-rx * 2},0`}
+                colore={COLORI_FARFALLE[i % COLORI_FARFALLE.length]}
+                durata={9 + n * 6}
+              />
+            )
+          })}
 
       {/* Il nome del boschetto scelto o sotto il mouse, sopra tutto. */}
       {foresta.lotti.filter((l) => l.chiave === bosco || l.chiave === sopra).map((l) => {

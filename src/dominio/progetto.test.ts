@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   cambioProgetto,
   coloreProgetto,
+  famigliaProgetto,
   iniziali,
   normalizzaProgetto,
   progettiInUso,
@@ -52,6 +53,19 @@ describe('tonalita', () => {
 describe('coloreProgetto', () => {
   it('usa la tonalità del progetto', () => {
     expect(coloreProgetto('Casa')).toBe(`hsl(${tonalita('Casa')} 45% 82%)`)
+  })
+})
+
+describe('famigliaProgetto', () => {
+  it('prende quello che sta prima del primo "/"', () => {
+    expect(famigliaProgetto('software / projects')).toBe('software')
+    expect(famigliaProgetto('software/grocery/lista')).toBe('software')
+  })
+
+  it('senza "/", o con niente prima, il progetto è una famiglia da solo', () => {
+    expect(famigliaProgetto('casa')).toBe('casa')
+    expect(famigliaProgetto('/foo')).toBe('/foo')
+    expect(famigliaProgetto('')).toBe('')
   })
 })
 

@@ -20,6 +20,8 @@ export interface CasellaTerreno {
 /** Un boschetto, come serve al terreno: il centro e il raggio della zolla. */
 export interface Pianoro {
   chiave: string
+  /** I pianori della stessa famiglia stanno alla stessa quota, uniti dal sottobosco. */
+  famiglia: string
   col: number
   riga: number
   raggio: number
@@ -30,6 +32,8 @@ export const LIVELLI = 4
 const ACQUA = 0.27
 /** Le soglie tra un livello e il successivo. */
 const SOGLIE = [0.42, 0.56, 0.68]
+/** Fin dove arriva il sottobosco piano attorno alle zolle di una famiglia. */
+const SOTTOBOSCO = 1.5
 /** Le rocce, sulle caselle alte: una su tante. */
 const ROCCE = 0.05
 const SEED_TERRENO = 7331
@@ -89,9 +93,11 @@ export function linea(da: { col: number; riga: number }, a: { col: number; riga:
 
 /**
  * Il terreno dentro i limiti. I boschetti stanno su un pianoro alla quota del
- * loro centro, raccordato al resto da un anello che scende o sale di un
- * livello al massimo; dentro e attorno ai boschetti niente acqua. Ogni
- * boschetto è unito da un sentiero al più vicino di quelli messi prima.
+ * loro centro (del primo, per una famiglia), raccordato al resto da un anello
+ * che scende o sale di un livello al massimo; dentro e attorno ai boschetti
+ * niente acqua. Tra i boschetti di una famiglia il prato è piano e senza
+ * rocce, così sembrano un bosco solo. Ogni famiglia è unita da un sentiero
+ * alla più vicina di quelle messe prima.
  */
 export function terreno(
   limiti: { minCol: number; maxCol: number; minRiga: number; maxRiga: number },
@@ -105,8 +111,17 @@ export function terreno(
     }
   }
 
+  const quote = new Map<string, number>()
+  const membri = new Map<string, number>()
   for (const p of pianori) {
-    const alto = livello(quota(p.col, p.riga))
+    if (!quote.has(p.famiglia)) quote.set(p.famiglia, livello(quota(p.col, p.riga)))
+    membri.set(p.famiglia, (membri.get(p.famiglia) ?? 0) + 1)
+  }
+  const sottobosco = new Set<string>()
+
+  for (const p of pianori) {
+    const alto = quote.get(p.famiglia)!
+    const famiglia = membri.get(p.famiglia)! > 1
     const r = Math.ceil(p.raggio) + 2
     for (let dc = -r; dc <= r; dc++) {
       for (let dr = -r; dr <= r; dr++) {
@@ -115,6 +130,9 @@ export function terreno(
         const d = Math.hypot(dc, dr)
         if (d <= p.raggio) {
           Object.assign(c, { altezza: alto, tipo: 'zolla', chiave: p.chiave })
+        } else if (famiglia && d <= p.raggio + SOTTOBOSCO) {
+          Object.assign(c, { altezza: alto, tipo: 'prato' })
+          sottobosco.add(chiave(c.col, c.riga))
         } else if (d <= p.raggio + 2) {
           c.altezza = Math.min(Math.max(c.altezza, alto - 1), alto + 1)
           if (c.tipo === 'acqua') c.tipo = 'prato'
@@ -127,10 +145,11 @@ export function terreno(
   for (const c of caselle.values()) if (c.tipo === 'acqua') c.altezza = 0
 
   pianori.forEach((p, i) => {
-    if (i === 0) return
-    const vicino = pianori
-      .slice(0, i)
-      .reduce((a, b) => (Math.hypot(a.col - p.col, a.riga - p.riga) <= Math.hypot(b.col - p.col, b.riga - p.riga) ? a : b))
+    const prima = pianori.slice(0, i)
+    if (prima.length === 0 || prima.some((q) => q.famiglia === p.famiglia)) return
+    const vicino = prima.reduce((a, b) =>
+      Math.hypot(a.col - p.col, a.riga - p.riga) <= Math.hypot(b.col - p.col, b.riga - p.riga) ? a : b,
+    )
     for (const { col, riga } of linea(p, vicino)) {
       const c = caselle.get(chiave(col, riga))
       if (c && c.tipo !== 'zolla') c.tipo = 'sentiero'
@@ -138,6 +157,7 @@ export function terreno(
   })
 
   for (const c of caselle.values()) {
+    if (sottobosco.has(chiave(c.col, c.riga))) continue
     if (c.tipo === 'prato' && c.altezza >= 2 && sorteggio(c.col, c.riga, SEED_ROCCE) < ROCCE) c.tipo = 'roccia'
   }
 

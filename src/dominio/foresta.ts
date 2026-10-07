@@ -1,10 +1,12 @@
 // La foresta (doc/08-interfaccia.md, "Foresta"): ogni attività è una pianta
 // che cresce col suo stato (germoglio da fare, alberello in corso, albero
 // completo, albero secco bloccato), le piante dello stesso progetto formano un
-// boschetto, le faccende fatte sono arbusti sparsi. Qui solo la disposizione su una griglia di
-// caselle e la proiezione isometrica; il disegno sta in src/ui/foresta.
+// boschetto, le faccende fatte sono arbusti sparsi. I boschetti della stessa
+// famiglia ("Software / Projects", "Software / Grocery") stanno attaccati, come
+// un bosco solo. Qui solo la disposizione su una griglia di caselle e la
+// proiezione isometrica; il disegno sta in src/ui/foresta.
 
-import { chiaveProgetto, tonalita } from './progetto'
+import { chiaveProgetto, famigliaProgetto, tonalita } from './progetto'
 import { sorteggio, terreno, type CasellaTerreno } from './terreno'
 import type { Attivita, Stato } from './tipi'
 
@@ -101,11 +103,15 @@ function primeCaselle(n: number): Scostamento[] {
 
 /** Lo spazio libero tra due boschetti, in caselle: il sentiero e l'etichetta. */
 const SENTIERO = 3
+/** Lo spazio tra due boschetti della stessa famiglia: un filo di prato, così sembrano un bosco solo. */
+const SENTIERO_FAMIGLIA = 1
 /** Seed fisso degli arbusti: lo stesso conto dà sempre gli stessi posti. */
 const SEED_ARBUSTI = 20261002
 
 export interface Lotto {
   chiave: string
+  /** `famigliaProgetto(chiave)`: i lotti della stessa famiglia stanno vicini. */
+  famiglia: string
   nome: string
   /** Il centro del boschetto. */
   col: number
@@ -137,23 +143,45 @@ const chiaveCasella = (col: number, riga: number) => `${col},${riga}`
 
 /**
  * Mette i boschetti su una griglia a partire dal centro: ciascuno occupa un
- * disco di caselle (la zolla) con gli alberi a spirale, e va nella prima
- * posizione della spirale grande che non tocca i boschetti già messi. Attorno
- * il terreno (colline, acqua, sentieri, rocce); gli arbusti finiscono sul
- * prato libero, sempre nello stesso ordine.
+ * disco di caselle (la zolla) con gli alberi a spirale. I boschetti della
+ * stessa famiglia si compongono prima tra loro, quasi attaccati; poi la
+ * famiglia, come un disco solo, va nella prima posizione della spirale grande
+ * che non tocca le famiglie già messe. Attorno il terreno (colline, acqua,
+ * sentieri, rocce); gli arbusti finiscono sul prato libero, sempre nello
+ * stesso ordine.
  */
 export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta {
   const lotti: Omit<Lotto, 'altezza'>[] = []
   const piante: { chiave: string; albero: AlberoForesta; col: number; riga: number }[] = []
 
+  // Le famiglie, nell'ordine del loro boschetto più vecchio.
+  const famiglie = new Map<string, Boschetto[]>()
   for (const gruppo of gruppi) {
-    const posti = primeCaselle(gruppo.alberi.length)
-    const raggio = Math.sqrt(posti[posti.length - 1].d2)
-    const centro = trovaPosto(lotti, raggio)
-    lotti.push({ chiave: gruppo.chiave, nome: gruppo.nome, ...centro, raggio, alberi: gruppo.alberi.length })
-    gruppo.alberi.forEach((albero, i) =>
-      piante.push({ chiave: gruppo.chiave, albero, col: centro.col + posti[i].col, riga: centro.riga + posti[i].riga }),
-    )
+    const famiglia = famigliaProgetto(gruppo.chiave)
+    famiglie.set(famiglia, [...(famiglie.get(famiglia) ?? []), gruppo])
+  }
+
+  const messe: Pick<Lotto, 'col' | 'riga' | 'raggio'>[] = []
+  for (const [famiglia, membri] of famiglie) {
+    // I boschetti della famiglia attorno al primo, a un passo l'uno dall'altro.
+    const locali: (Pick<Lotto, 'col' | 'riga' | 'raggio'> & { gruppo: Boschetto; posti: Scostamento[] })[] = []
+    for (const gruppo of membri) {
+      const posti = primeCaselle(gruppo.alberi.length)
+      const raggio = Math.sqrt(posti[posti.length - 1].d2)
+      locali.push({ gruppo, posti, raggio, ...trovaPosto(locali, raggio, SENTIERO_FAMIGLIA) })
+    }
+    const ingombro = Math.max(...locali.map((l) => Math.hypot(l.col, l.riga) + l.raggio))
+    const centro = trovaPosto(messe, ingombro, SENTIERO)
+    messe.push({ ...centro, raggio: ingombro })
+
+    for (const { gruppo, posti, raggio, ...locale } of locali) {
+      const col = centro.col + locale.col
+      const riga = centro.riga + locale.riga
+      lotti.push({ chiave: gruppo.chiave, famiglia, nome: gruppo.nome, col, riga, raggio, alberi: gruppo.alberi.length })
+      gruppo.alberi.forEach((albero, i) =>
+        piante.push({ chiave: gruppo.chiave, albero, col: col + posti[i].col, riga: riga + posti[i].riga }),
+      )
+    }
   }
 
   // Il prato: i boschetti più un bordo, allargato finché gli arbusti stanno
@@ -211,12 +239,16 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
   }
 }
 
-/** Il primo centro, lungo la spirale, lontano abbastanza da tutti i lotti. */
-function trovaPosto(lotti: readonly Pick<Lotto, 'col' | 'riga' | 'raggio'>[], raggio: number): Casella {
+/** Il primo centro, lungo la spirale, lontano almeno `distacco` caselle da tutti i dischi. */
+function trovaPosto(
+  dischi: readonly Pick<Lotto, 'col' | 'riga' | 'raggio'>[],
+  raggio: number,
+  distacco: number,
+): Casella {
   for (let r = 8; ; r *= 2) {
     for (const c of caselleFino(r)) {
-      const libero = lotti.every(
-        (l) => Math.hypot(l.col - c.col, l.riga - c.riga) >= l.raggio + raggio + SENTIERO,
+      const libero = dischi.every(
+        (l) => Math.hypot(l.col - c.col, l.riga - c.riga) >= l.raggio + raggio + distacco,
       )
       if (libero) return { col: c.col, riga: c.riga }
     }
@@ -234,13 +266,17 @@ export function inProfondita(a: Casella, b: Casella): number {
  * Il verde della zolla di un boschetto: sempre un verde (dall'oliva al verde
  * acqua), diverso da progetto a progetto e sempre lo stesso per lo stesso
  * progetto. Tonalità, saturazione e luminosità variano insieme, così anche
- * due tonalità vicine si distinguono. Le attività senza progetto hanno un
- * verde oliva spento.
+ * due tonalità vicine si distinguono. I boschetti di una famiglia partono
+ * dalla tonalità della famiglia e se ne scostano di poco: si vede che sono
+ * parenti. Le attività senza progetto hanno un verde oliva spento.
  */
 export function verdeZolla(chiave: string): { h: number; s: number; l: number } {
   if (!chiave) return { h: 70, s: 22, l: 60 }
   const t = tonalita(chiave)
-  return { h: 75 + (t % 90), s: 30 + ((t * 7) % 21), l: 50 + ((t * 13) % 13) }
+  const famiglia = famigliaProgetto(chiave)
+  const base = 75 + (tonalita(famiglia) % 90)
+  const h = famiglia === chiave ? base : Math.min(165, Math.max(75, base + (t % 21) - 10))
+  return { h, s: 30 + ((t * 7) % 21), l: 50 + ((t * 13) % 13) }
 }
 
 // Proiezione -------------------------------------------------------------------------

@@ -48,8 +48,8 @@ describe('linea', () => {
 
 describe('terreno', () => {
   const pianori = [
-    { chiave: 'casa', col: 0, riga: 0, raggio: 2 },
-    { chiave: 'auto', col: 9, riga: -4, raggio: 1.5 },
+    { chiave: 'casa', famiglia: 'casa', col: 0, riga: 0, raggio: 2 },
+    { chiave: 'auto', famiglia: 'auto', col: 9, riga: -4, raggio: 1.5 },
   ]
   const mappa = terreno(limiti, pianori)
   const caselle = [...mappa.values()]
@@ -85,5 +85,34 @@ describe('terreno', () => {
 
   it('le rocce stanno solo in alto', () => {
     for (const c of caselle) if (c.tipo === 'roccia') expect(c.altezza).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('terreno di una famiglia', () => {
+  const fratelli = [
+    { chiave: 'software / projects', famiglia: 'software', col: 0, riga: 0, raggio: 3 },
+    { chiave: 'software / grocery', famiglia: 'software', col: 6, riga: 0, raggio: 2 },
+  ]
+  const lontano = { chiave: 'casa', famiglia: 'casa', col: -6, riga: 12, raggio: 2 }
+  const mappa = terreno(limiti, [...fratelli, lontano])
+  const caselle = [...mappa.values()]
+  const vicino = (c: { col: number; riga: number }, p: (typeof fratelli)[number]) =>
+    Math.hypot(c.col - p.col, c.riga - p.riga) <= p.raggio + 1.5
+
+  it('le zolle dei fratelli e il prato in mezzo stanno alla stessa quota, senza acqua né rocce', () => {
+    const insieme = caselle.filter((c) => fratelli.some((p) => vicino(c, p)))
+    expect(new Set(insieme.map((c) => c.altezza)).size).toBe(1)
+    for (const c of insieme) expect(['zolla', 'prato', 'sentiero']).toContain(c.tipo)
+  })
+
+  it('tra i fratelli non passa nessun sentiero, solo quello che arriva da fuori', () => {
+    const arrivo = new Set(linea(lontano, fratelli[0]).map(({ col, riga }) => `${col},${riga}`))
+    for (const c of caselle) if (c.tipo === 'sentiero') expect(arrivo.has(`${c.col},${c.riga}`)).toBe(true)
+  })
+
+  it('un sentiero unisce la famiglia al resto', () => {
+    for (const { col, riga } of linea(lontano, fratelli[0])) {
+      expect(['zolla', 'sentiero']).toContain(mappa.get(`${col},${riga}`)!.tipo)
+    }
   })
 })

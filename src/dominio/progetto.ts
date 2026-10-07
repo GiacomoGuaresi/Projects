@@ -48,6 +48,16 @@ export function chiaveProgetto(progetto: string): string {
 }
 
 /**
+ * La famiglia di un progetto, dalla sua chiave: quello che sta prima del primo
+ * "/" ("software / projects" → "software"). Senza "/" (o con niente prima)
+ * il progetto è una famiglia da solo. Nella Foresta i boschetti di una famiglia
+ * stanno vicini, come un bosco solo.
+ */
+export function famigliaProgetto(chiave: string): string {
+  return chiave.split('/')[0].trim() || chiave
+}
+
+/**
  * I progetti delle attività, come la vista `progetti`: raggruppati senza
  * distinguere maiuscole e minuscole, ciascuno con la grafia più usata (a
  * parità, la prima in ordine). L'app li ricava dall'elenco che ha già caricato,
