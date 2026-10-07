@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react'
-import { CircleCheck, Play, type LucideIcon } from 'lucide-react'
+import { useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, CircleCheck, Play, type LucideIcon } from 'lucide-react'
 import { schedeProgetti } from '../dominio/ordinamento'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
 import { CardFaccende } from './CardFaccende'
-import { useInterruttore, useRilievi } from './preferenze'
+import { useChiusi, useInterruttore, useRilievi } from './preferenze'
 import { usePressioneLunga } from './pressioneLunga'
 import { ProgettoConIcona } from './ProgettoConIcona'
 import { PulsanteDiario } from './PulsanteDiario'
@@ -37,6 +37,7 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
   const [soloInCorso, setSoloInCorso] = useInterruttore('projects_in_corso', false)
   const [mostraCompleti, setMostraCompleti] = useInterruttore('projects_completi', true)
   const [rilievi, cambiaRilievo] = useRilievi()
+  const [chiusi, alternaChiuso] = useChiusi()
   // "In corso" vince sugli altri interruttori; e mostra solo le card che ne hanno.
   // I progetti con tutte le attività completate compaiono solo con "Completi" acceso.
   const mostrate = schedeProgetti(attivita, rilievi)
@@ -90,65 +91,114 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
         // Da PC due colonne sfalsate (come l'icona `layout-dashboard`): ogni card è alta quanto il suo contenuto.
         <div className="gap-3 lg:columns-2">
           {cardFaccende}
-          {mostrate.map((scheda) => (
-            <section
-              key={scheda.chiave}
-              className="animate-entra mb-3 break-inside-avoid rounded-[11px] border border-bordo bg-white"
-            >
-              <h3 className="flex items-center gap-2 border-b border-bordo py-1 pr-1.5 pl-3 font-semibold">
-                <span className="min-w-0 flex-1">
-                  {scheda.progetto === null ? (
-                    <span className="text-testo-tenue">Senza progetto</span>
-                  ) : (
-                    <ProgettoConIcona progetto={scheda.progetto} />
-                  )}
-                </span>
-                <span
-                  className="text-sm font-normal text-testo-tenue"
-                  title="Attività completate sul totale del progetto"
-                >
-                  {scheda.completate}/{scheda.attivita.length}
-                </span>
-                {/* Tocco: preferito sì/no; pressione lunga: anche "Accantonato", in fondo alla pagina. */}
-                <PulsanteStella
-                  rilievo={scheda.rilievo}
-                  nome={scheda.progetto ?? 'Senza progetto'}
-                  onScegli={(rilievo) => cambiaRilievo(scheda.chiave, rilievo)}
-                />
-              </h3>
-              <ul className="divide-y divide-bordo">
-                {/* Il conto resta sul totale anche con gli interruttori che nascondono attività. */}
-                {scheda.visibili.map((a) => (
-                  <RigaAttivita
-                    key={a.id}
-                    attivita={a}
-                    onDettagli={onDettagli}
-                    onDiario={onDiario}
-                    onModifica={onModifica}
+          {mostrate.map((scheda) => {
+            const chiusa = chiusi.has(scheda.chiave)
+            const idLista = `lista-${encodeURIComponent(scheda.chiave) || 'senza-progetto'}`
+            return (
+              <section
+                key={scheda.chiave}
+                className="animate-entra mb-3 break-inside-avoid rounded-[11px] border border-bordo bg-white"
+              >
+                <h3 className="flex items-center gap-2 py-1 pr-1.5 pl-1.5 font-semibold">
+                  {/* Tocco sul nome: chiude o apre la lista, ricordato nel cookie `projects_chiusi`. */}
+                  <button
+                    type="button"
+                    aria-expanded={!chiusa}
+                    aria-controls={idLista}
+                    title={chiusa ? 'Apri' : 'Chiudi'}
+                    className="flex min-w-0 flex-1 items-center gap-1 self-stretch rounded-lg px-1 text-left hover:bg-fondo"
+                    onClick={() => alternaChiuso(scheda.chiave)}
+                  >
+                    <ChevronDown
+                      className={`size-4 shrink-0 text-testo-tenue transition-transform duration-200 motion-reduce:transition-none ${chiusa ? '-rotate-90' : ''}`}
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1">
+                      {scheda.progetto === null ? (
+                        <span className="text-testo-tenue">Senza progetto</span>
+                      ) : (
+                        <ProgettoConIcona progetto={scheda.progetto} />
+                      )}
+                    </span>
+                  </button>
+                  <span
+                    className="text-sm font-normal text-testo-tenue"
+                    title="Attività completate sul totale del progetto"
+                  >
+                    {scheda.completate}/{scheda.attivita.length}
+                  </span>
+                  {/* Tocco: preferito sì/no; pressione lunga: anche "Accantonato", in fondo alla pagina. */}
+                  <PulsanteStella
+                    rilievo={scheda.rilievo}
+                    nome={scheda.progetto ?? 'Senza progetto'}
+                    onScegli={(rilievo) => cambiaRilievo(scheda.chiave, rilievo)}
                   />
-                ))}
-                <li>
-                  {/* Con "In corso" acceso la nuova attività nasce in corso, così resta visibile. */}
-                  <AggiuntaRapida
-                    placeholder={soloInCorso ? 'Aggiungi attività in corso' : 'Aggiungi attività'}
-                    etichetta={
-                      scheda.progetto === null ? 'Nuova attività senza progetto' : `Nuova attività in ${scheda.progetto}`
-                    }
-                    onCrea={(titolo) =>
-                      onCrea({
-                        titolo,
-                        progetto: scheda.progetto,
-                        stato: soloInCorso ? 'in_corso' : 'da_fare',
-                        priorita: 3,
-                      })
-                    }
-                  />
-                </li>
-              </ul>
-            </section>
-          ))}
+                </h3>
+                <Richiudibile chiusa={chiusa}>
+                  <ul id={idLista} className="divide-y divide-bordo border-t border-bordo">
+                    {/* Il conto resta sul totale anche con gli interruttori che nascondono attività. */}
+                    {scheda.visibili.map((a) => (
+                      <RigaAttivita
+                        key={a.id}
+                        attivita={a}
+                        onDettagli={onDettagli}
+                        onDiario={onDiario}
+                        onModifica={onModifica}
+                      />
+                    ))}
+                    <li>
+                      {/* Con "In corso" acceso la nuova attività nasce in corso, così resta visibile. */}
+                      <AggiuntaRapida
+                        placeholder={soloInCorso ? 'Aggiungi attività in corso' : 'Aggiungi attività'}
+                        etichetta={
+                          scheda.progetto === null ? 'Nuova attività senza progetto' : `Nuova attività in ${scheda.progetto}`
+                        }
+                        onCrea={(titolo) =>
+                          onCrea({
+                            titolo,
+                            progetto: scheda.progetto,
+                            stato: soloInCorso ? 'in_corso' : 'da_fare',
+                            priorita: 3,
+                          })
+                        }
+                      />
+                    </li>
+                  </ul>
+                </Richiudibile>
+              </section>
+            )
+          })}
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * Il contenuto di una card che si chiude e si apre scorrendo: resta montato e la
+ * riga della griglia va da 1fr a 0fr. Taglia ciò che sborda solo da chiuso o in
+ * movimento, così aperto lascia uscire l'etichetta dell'avanzamento sopra la prima riga.
+ */
+function Richiudibile({ chiusa, children }: { chiusa: boolean; children: ReactNode }) {
+  const [inMovimento, setInMovimento] = useState(false)
+  const [precedente, setPrecedente] = useState(chiusa)
+  if (precedente !== chiusa) {
+    setPrecedente(chiusa)
+    // Senza animazioni non arriva la fine della transizione: niente movimento da aspettare.
+    setInMovimento(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }
+
+  return (
+    <div
+      className={`grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ${
+        chiusa ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+      }`}
+      inert={chiusa}
+      onTransitionEnd={(e) => {
+        if (e.target === e.currentTarget) setInMovimento(false)
+      }}
+    >
+      <div className={`min-h-0 ${chiusa || inMovimento ? 'overflow-hidden' : ''}`}>{children}</div>
     </div>
   )
 }

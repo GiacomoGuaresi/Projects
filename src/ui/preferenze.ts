@@ -65,3 +65,33 @@ export function useRilievi(): [Record<string, Rilievo>, (chiave: string, rilievo
 
   return [rilievi, cambia]
 }
+
+const COOKIE_CHIUSI = 'projects_chiusi'
+
+/** Le chiavi delle card chiuse salvate nel cookie (JSON array di stringhe); un valore rovinato vale vuoto. */
+export function leggiChiusi(testo: string): Set<string> {
+  const salvato = leggiCookie(testo, COOKIE_CHIUSI)
+  if (salvato === null) return new Set()
+  try {
+    const dati: unknown = JSON.parse(salvato)
+    if (!Array.isArray(dati)) return new Set()
+    return new Set(dati.filter((c): c is string => typeof c === 'string'))
+  } catch {
+    return new Set()
+  }
+}
+
+/** Le card della Dashboard chiuse, per chiave del progetto, salvate nel cookie `projects_chiusi`. */
+export function useChiusi(): [Set<string>, (chiave: string) => void] {
+  const [chiusi, setChiusi] = useState(() => leggiChiusi(document.cookie))
+
+  const alterna = (chiave: string) => {
+    const nuovi = leggiChiusi(document.cookie)
+    if (nuovi.has(chiave)) nuovi.delete(chiave)
+    else nuovi.add(chiave)
+    setChiusi(nuovi)
+    document.cookie = `${COOKIE_CHIUSI}=${encodeURIComponent(JSON.stringify([...nuovi]))}; path=${import.meta.env.BASE_URL}; max-age=${DURATA}; SameSite=Lax`
+  }
+
+  return [chiusi, alterna]
+}
