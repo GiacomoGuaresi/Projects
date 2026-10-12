@@ -36,7 +36,7 @@ export function Accesso({ onEntra }: Props) {
   return (
     <main className="grid min-h-dvh place-items-center bg-fondo p-3">
       <form className="flex w-full max-w-[300px] flex-col gap-2" onSubmit={invia}>
-        <ListChecks className="size-11 self-center text-salvia" aria-hidden="true" />
+        <ListChecks className="size-11 self-center text-girasole-scuro" aria-hidden="true" />
         <h1 className="mb-3 text-center text-lg font-semibold">Projects</h1>
         <label className="text-xs text-testo-tenue" htmlFor="passphrase">
           Passphrase

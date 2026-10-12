@@ -6,6 +6,9 @@
   --color-salvia: #587654;
   --color-salvia-scura: #445d41;
   --color-salvia-chiara: #7e9f7a;
+  /* Accento: il chiaro sta sulla salvia, lo scuro sui fondi chiari. */
+  --color-girasole: #f0c869;
+  --color-girasole-scuro: #8f6a10;
   --color-pastello: #d6e8cf;
   --color-fondo: #f3f8f0;
   --color-panna: #fffbf6;

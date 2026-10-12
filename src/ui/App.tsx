@@ -94,7 +94,7 @@ export function App() {
         >
           <Menu className="size-[22px]" aria-hidden="true" />
         </button>
-        <ListChecks className="size-[22px] shrink-0" aria-hidden="true" />
+        <ListChecks className="size-[22px] shrink-0 text-girasole" aria-hidden="true" />
         <h1 className="ml-1 text-lg font-semibold tracking-[0.01em]">Projects</h1>
         {/* Sulla Foresta ci si è già: il pulsante sparisce. */}
         {rotta !== 'foresta' && (

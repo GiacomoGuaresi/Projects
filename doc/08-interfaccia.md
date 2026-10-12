@@ -225,8 +225,8 @@ Campi: **Titolo** (obbligatorio, con i suggerimenti dei tag e sotto la sola scri
 Stesso sistema di Grocery, colori diversi:
 - `public/icona.svg` 512×512, rettangolo con angoli arrotondati (`rx="112"`) pieno;
 - disegno Lucide a tratto al centro, color panna `#fffbf6`, spessore 1.8, stessa trasformazione di Grocery;
-- **sfondo salvia `#587654`**, disegno **`list-checks`** (lista con spunte);
-- stesso disegno, in piccolo, nell'intestazione accanto al titolo;
+- **sfondo salvia `#587654`**, disegno **`list-checks`** (lista con spunte), con le due spunte color girasole `#f0c869`;
+- stesso disegno, in piccolo e tutto color girasole, nell'intestazione accanto al titolo;
 - icone PWA generate con `@vite-pwa/assets-generator` (`npm run icone`), sfondo salvia per le versioni maskable e Apple.
 
 ## Tag
@@ -275,7 +275,9 @@ Lista fissa nel codice (`src/dominio/tag.ts`).
 |---|---|---|
 | Salvia (intestazione, pulsanti principali, icona dell'app) | `#587654` | testo panna/bianco con contrasto ≥ 4.5:1 |
 | Salvia scura (hover, testo attivo nel menu) | `#445D41` | |
-| Salvia chiara (accenti, stati selezionati) | `#7E9F7A` | |
+| Salvia chiara (stati selezionati) | `#7E9F7A` | |
+| Girasole (accento sulla salvia: icona dell'intestazione, spunte dell'icona dell'app) | `#F0C869` | l'oro delle altre app di casa |
+| Girasole scuro (accento sui fondi chiari: barretta della voce corrente nel menu, icona dell'accesso) | `#8F6A10` | |
 | Verde pastello (evidenziazioni, badge) | `#D6E8CF` | |
 | Fondo (verde pastello chiarissimo) | `#F3F8F0` | |
 | Superficie (card, tabelle, menu) | `#FFFFFF` | |
