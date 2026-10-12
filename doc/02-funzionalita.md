@@ -73,6 +73,7 @@ Legenda: ✅ confermata · 🔜 fase successiva · ❌ esclusa
 | Funzione | Stato |
 |---|---|
 | **Dashboard**: una card per progetto, dettagli in un modale | ✅ |
+| **Ricerca** nella Dashboard: filtra progetti e attività mentre si scrive | ✅ |
 | Pagine **Per stato** e **Attività** (elenco con filtri e paginazione) | ❌ (tolte il 2026-09-27, non si usavano) |
 | Selettore delle colonne visibili | ❌ (eventualmente in futuro) |
 | Kanban, calendario | ❌ |

@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, CircleCheck, Play, type LucideIcon } from 'lucide-react'
+import { ChevronDown, CircleCheck, Play, Search, X, type LucideIcon } from 'lucide-react'
 import { schedeProgetti } from '../dominio/ordinamento'
+import { contieneParole, paroleRicerca } from '../dominio/ricerca'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
 import { CardFaccende } from './CardFaccende'
@@ -31,29 +32,43 @@ interface Props {
  * attività, le completate in fondo grigie e barrate. Ogni attività mostra solo
  * stato, titolo e il pulsante del diario; toccando la riga si aprono i
  * dettagli, dove si modifica tutto. In fondo alla card l'aggiunta rapida.
- * Sopra i progetti, la card delle faccende.
+ * Sopra i progetti, la card delle faccende. Il campo di ricerca in alto filtra
+ * progetti e attività.
  */
 export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica, onCrea }: Props) {
   const [soloInCorso, setSoloInCorso] = useInterruttore('projects_in_corso', false)
   const [mostraCompleti, setMostraCompleti] = useInterruttore('projects_completi', true)
   const [rilievi, cambiaRilievo] = useRilievi()
   const [chiusi, alternaChiuso] = useChiusi()
+  // La ricerca non si ricorda: a ogni apertura la Dashboard è intera.
+  const [ricerca, setRicerca] = useState('')
+  const parole = paroleRicerca(ricerca)
+  const cercando = parole.length > 0
   // "In corso" vince sugli altri interruttori; e mostra solo le card che ne hanno.
   // I progetti con tutte le attività completate compaiono solo con "Completi" acceso.
   const mostrate = schedeProgetti(attivita, rilievi)
     .filter((scheda) => mostraCompleti || scheda.completate < scheda.attivita.length)
-    .map((scheda) => ({
-      ...scheda,
-      visibili: soloInCorso
+    .map((scheda) => {
+      const nome = scheda.progetto ?? ''
+      // Se il nome del progetto basta alla ricerca la card resta intera; altrimenti
+      // restano le attività che hanno le parole cercate tra nome e titolo.
+      const intera = contieneParole(nome, parole)
+      const filtrate = soloInCorso
         ? scheda.attivita.filter((a) => a.stato === 'in_corso')
         : mostraCompleti
           ? scheda.attivita
-          : scheda.attivita.filter((a) => a.stato !== 'completo'),
-    }))
-    .filter((scheda) => !soloInCorso || scheda.visibili.length > 0)
+          : scheda.attivita.filter((a) => a.stato !== 'completo')
+      return {
+        ...scheda,
+        intera,
+        visibili: intera ? filtrate : filtrate.filter((a) => contieneParole(`${nome} ${a.titolo}`, parole)),
+      }
+    })
+    .filter((scheda) => !(soloInCorso || cercando) || scheda.visibili.length > 0)
   // La prima card delle colonne, larga come le altre. Gli interruttori valgono
   // anche qui: "In corso" acceso o "Completi" spento nascondono le fatte.
-  const cardFaccende = (
+  // Mentre si cerca non c'è: la ricerca riguarda progetti e attività.
+  const cardFaccende = cercando ? null : (
     <CardFaccende
       className="mb-3 break-inside-avoid"
       faccende={faccende}
@@ -78,13 +93,47 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
             ignorato={soloInCorso}
           />
         </div>
+        {/* Da telefono una riga tutta sua, da PC a destra degli interruttori. */}
+        <label className="flex min-h-9 basis-full items-center gap-1.5 rounded-full border border-bordo bg-white pr-1 pl-3 text-testo-tenue focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-salvia sm:ml-auto sm:basis-64">
+          <Search className="size-4 shrink-0" aria-hidden="true" />
+          <input
+            aria-label="Cerca progetti e attività"
+            placeholder="Cerca"
+            enterKeyHint="search"
+            autoComplete="off"
+            className="min-w-0 flex-1 bg-transparent text-base text-testo outline-none placeholder:text-testo-tenue"
+            value={ricerca}
+            onChange={(e) => setRicerca(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                setRicerca('')
+              }
+            }}
+          />
+          {ricerca && (
+            <button
+              type="button"
+              aria-label="Azzera la ricerca"
+              title="Azzera"
+              className="grid size-7 shrink-0 place-items-center rounded-full hover:bg-fondo"
+              onClick={() => setRicerca('')}
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          )}
+        </label>
       </div>
 
       {mostrate.length === 0 ? (
         <>
           <div className="gap-3 lg:columns-2">{cardFaccende}</div>
           <p className="px-2 py-3 text-testo-tenue">
-            {soloInCorso ? 'Nessuna attività in corso.' : 'Nessuna attività: aggiungine una con il +.'}
+            {cercando
+              ? `Nessun risultato per "${ricerca.trim()}".`
+              : soloInCorso
+                ? 'Nessuna attività in corso.'
+                : 'Nessuna attività: aggiungine una con il +.'}
           </p>
         </>
       ) : (
@@ -92,7 +141,8 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
         <div className="gap-3 lg:columns-2">
           {cardFaccende}
           {mostrate.map((scheda) => {
-            const chiusa = chiusi.has(scheda.chiave)
+            // Mentre si cerca le card sono tutte aperte, o i risultati resterebbero nascosti.
+            const chiusa = !cercando && chiusi.has(scheda.chiave)
             const idLista = `lista-${encodeURIComponent(scheda.chiave) || 'senza-progetto'}`
             return (
               <section
@@ -105,8 +155,9 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
                     type="button"
                     aria-expanded={!chiusa}
                     aria-controls={idLista}
-                    title={chiusa ? 'Apri' : 'Chiudi'}
-                    className="flex min-w-0 flex-1 items-center gap-1 self-stretch rounded-lg px-1 text-left hover:bg-fondo"
+                    title={cercando ? undefined : chiusa ? 'Apri' : 'Chiudi'}
+                    disabled={cercando}
+                    className="flex min-w-0 flex-1 items-center gap-1 self-stretch rounded-lg px-1 text-left enabled:hover:bg-fondo"
                     onClick={() => alternaChiuso(scheda.chiave)}
                   >
                     <ChevronDown
@@ -146,22 +197,25 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
                         onModifica={onModifica}
                       />
                     ))}
-                    <li>
-                      {/* Con "In corso" acceso la nuova attività nasce in corso, così resta visibile. */}
-                      <AggiuntaRapida
-                        placeholder={soloInCorso ? 'Aggiungi attività in corso' : 'Aggiungi attività'}
-                        etichetta={
-                          scheda.progetto === null ? 'Nuova attività senza progetto' : `Nuova attività in ${scheda.progetto}`
-                        }
-                        onCrea={(titolo) =>
-                          onCrea({
-                            titolo,
-                            progetto: scheda.progetto,
-                            stato: soloInCorso ? 'in_corso' : 'da_fare',
-                          })
-                        }
-                      />
-                    </li>
+                    {/* Se la ricerca ha tenuto solo alcune attività, una nuova sparirebbe subito: niente aggiunta. */}
+                    {scheda.intera && (
+                      <li>
+                        {/* Con "In corso" acceso la nuova attività nasce in corso, così resta visibile. */}
+                        <AggiuntaRapida
+                          placeholder={soloInCorso ? 'Aggiungi attività in corso' : 'Aggiungi attività'}
+                          etichetta={
+                            scheda.progetto === null ? 'Nuova attività senza progetto' : `Nuova attività in ${scheda.progetto}`
+                          }
+                          onCrea={(titolo) =>
+                            onCrea({
+                              titolo,
+                              progetto: scheda.progetto,
+                              stato: soloInCorso ? 'in_corso' : 'da_fare',
+                            })
+                          }
+                        />
+                      </li>
+                    )}
                   </ul>
                 </Richiudibile>
               </section>
