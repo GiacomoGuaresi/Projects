@@ -49,7 +49,7 @@ export function useFaccende(onAvviso: (messaggio: string) => void) {
     async (id: number, completa: boolean) => {
       aggiorna((elenco) => elenco.map((f) => (f.id === id ? segnaCompleta(f, completa) : f)))
       try {
-        const riga = await faccende().segna(id, completa)
+        const riga = await faccende().segna(id, completa, oggi())
         aggiorna((elenco) => elenco.map((f) => (f.id === id ? riga : f)))
       } catch (errore) {
         onAvviso((errore as Error).message)

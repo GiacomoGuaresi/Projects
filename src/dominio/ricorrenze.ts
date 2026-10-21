@@ -112,6 +112,15 @@ export function daCreare(ricorrenza: Ricorrenza, g: Giorno): boolean {
 }
 
 /**
+ * Una regola "dal completamento" fatta il giorno `fatta` riparte da lì: le
+ * settimanali tengono i loro giorni, le mensili e annuali prendono quel giorno
+ * del mese. Fatta in ritardo, le prossime si spostano avanti.
+ */
+export function dopoCompletamento(regola: Regola, fatta: Giorno): Pick<Ricorrenza, 'inizio' | 'prossima'> {
+  return { inizio: fatta, prossima: occorrenzaDopo({ ...regola, inizio: fatta }, fatta) }
+}
+
+/**
  * La `prossima` di una regola appena creata o cambiata: da oggi in poi, ma mai
  * un giorno per cui ha già creato la faccenda.
  */

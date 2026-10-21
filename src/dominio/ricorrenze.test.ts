@@ -3,6 +3,7 @@ import {
   daCreare,
   daSalvare,
   descrivi,
+  dopoCompletamento,
   formattaGiorno,
   giornoSettimanaDi,
   inizioDa,
@@ -105,6 +106,7 @@ describe('daCreare', () => {
     prossima: '2026-09-25',
     ultima: null,
     attiva: true,
+    dal_completamento: false,
     creata_il: '2026-09-20T10:00:00Z',
     ...campi,
   })
@@ -114,6 +116,25 @@ describe('daCreare', () => {
     expect(daCreare(ricorrenza({}), '2026-09-30')).toBe(true)
     expect(daCreare(ricorrenza({}), '2026-09-24')).toBe(false)
     expect(daCreare(ricorrenza({ attiva: false }), '2026-09-30')).toBe(false)
+  })
+})
+
+describe('dopoCompletamento', () => {
+  it('ogni 2 settimane, fatta con una settimana di ritardo: salta la settimana dopo', () => {
+    // Doveva farsi lunedì 5 ottobre, fatta mercoledì 14: niente il 19, la prossima il 26.
+    const piante = regola({ unita: 'settimana', ogni: 2, giorni: [1], inizio: '2026-10-05' })
+    expect(dopoCompletamento(piante, '2026-10-14')).toEqual({ inizio: '2026-10-14', prossima: '2026-10-26' })
+  })
+
+  it('fatta nel suo giorno, va avanti come a calendario', () => {
+    const piante = regola({ unita: 'settimana', ogni: 2, giorni: [1], inizio: '2026-10-05' })
+    expect(dopoCompletamento(piante, '2026-10-05').prossima).toBe(occorrenzaDopo(piante, '2026-10-05'))
+  })
+
+  it('a giorni e a mesi conta dal giorno in cui è fatta', () => {
+    expect(dopoCompletamento(regola({ ogni: 3 }), '2026-10-10').prossima).toBe('2026-10-13')
+    expect(dopoCompletamento(regola({ unita: 'mese' }), '2026-10-12').prossima).toBe('2026-11-12')
+    expect(dopoCompletamento(regola({ unita: 'mese' }), '2027-01-31').prossima).toBe('2027-02-28')
   })
 })
 
@@ -129,13 +150,29 @@ describe('prossimaDopoModifica', () => {
 describe('daSalvare', () => {
   it('pulisce il titolo, tiene i giorni solo per le settimanali e calcola la prossima', () => {
     const settimanale = daSalvare(
-      { titolo: '  Lenzuola ', unita: 'settimana', ogni: 1, giorni: [6, 6, 3], inizio: '2026-09-25', attiva: true },
+      {
+        titolo: '  Lenzuola ',
+        unita: 'settimana',
+        ogni: 1,
+        giorni: [6, 6, 3],
+        inizio: '2026-09-25',
+        attiva: true,
+        dal_completamento: false,
+      },
       '2026-09-25',
     )
     expect(settimanale).toMatchObject({ titolo: 'Lenzuola', giorni: [3, 6], prossima: '2026-09-26' })
 
     const mensile = daSalvare(
-      { titolo: 'Filtri', unita: 'mese', ogni: 1, giorni: [1], inizio: '2026-09-25', attiva: true },
+      {
+        titolo: 'Filtri',
+        unita: 'mese',
+        ogni: 1,
+        giorni: [1],
+        inizio: '2026-09-25',
+        attiva: true,
+        dal_completamento: false,
+      },
       '2026-09-25',
     )
     expect(mensile).toMatchObject({ giorni: null, prossima: '2026-09-25' })
@@ -143,7 +180,15 @@ describe('daSalvare', () => {
 
   it('una settimanale senza giorni prende quello dell’inizio', () => {
     const r = daSalvare(
-      { titolo: 'Vetri', unita: 'settimana', ogni: 2, giorni: [], inizio: '2026-09-25', attiva: true },
+      {
+        titolo: 'Vetri',
+        unita: 'settimana',
+        ogni: 2,
+        giorni: [],
+        inizio: '2026-09-25',
+        attiva: true,
+        dal_completamento: false,
+      },
       '2026-09-25',
     )
     expect(r.giorni).toEqual([5])
@@ -241,6 +286,7 @@ describe('scelte del modale', () => {
       prossima: '2026-10-05',
       ultima: '2026-09-21',
       attiva: true,
+      dal_completamento: false,
       creata_il: '2026-09-01T10:00:00Z',
     }
     const s = scelteDa(ricorrenza, oggi)

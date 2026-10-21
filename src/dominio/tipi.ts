@@ -68,6 +68,11 @@ export interface Ricorrenza {
   ultima: Giorno | null
   /** In pausa non crea niente. */
   attiva: boolean
+  /**
+   * Conta da quando la si fa: spuntata la faccenda, la regola riparte da quel
+   * giorno. Fatta in ritardo, le prossime si spostano avanti.
+   */
+  dal_completamento: boolean
   creata_il: string
 }
 
@@ -75,7 +80,10 @@ export interface Ricorrenza {
 export type Regola = Pick<Ricorrenza, 'unita' | 'ogni' | 'giorni' | 'inizio'>
 
 /** Quello che si sceglie nel modale; `prossima` e `ultima` le calcola l'app. */
-export type DatiRicorrenza = Pick<Ricorrenza, 'titolo' | 'unita' | 'ogni' | 'giorni' | 'inizio' | 'attiva'>
+export type DatiRicorrenza = Pick<
+  Ricorrenza,
+  'titolo' | 'unita' | 'ogni' | 'giorni' | 'inizio' | 'attiva' | 'dal_completamento'
+>
 
 export interface VoceDiario {
   id: number

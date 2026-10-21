@@ -88,7 +88,8 @@ function RigaRicorrenza({ ricorrenza: r, oggi, onApri }: { ricorrenza: Ricorrenz
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="break-words">{r.titolo}</span>
         <span className="text-sm text-testo-tenue">
-          {descrivi(r)} ·{' '}
+          {descrivi(r)}
+          {r.dal_completamento && ', da quando la fai'} ·{' '}
           {r.attiva ? (
             // Una già creata oggi ha `prossima` nel futuro; una arretrata si crea alla prossima lettura.
             `prossima ${formattaGiorno(r.prossima < oggi ? oggi : r.prossima, oggi)}`

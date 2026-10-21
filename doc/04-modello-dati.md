@@ -97,7 +97,7 @@ Indice univoco parziale **`faccende_una_aperta_per_ricorrenza`** su `ricorrenza_
 
 ## `projects.ricorrenze`
 
-Le regole delle faccende ricorrenti ([08](08-interfaccia.md), "Faccende ricorrenti"). Script `supabase/sql/003_ricorrenze.sql`.
+Le regole delle faccende ricorrenti ([08](08-interfaccia.md), "Faccende ricorrenti"). Script `supabase/sql/003_ricorrenze.sql`, più `009_dal_completamento.sql`.
 
 | Campo | Tipo | Vincoli / default | Note |
 |---|---|---|---|
@@ -110,6 +110,7 @@ Le regole delle faccende ricorrenti ([08](08-interfaccia.md), "Faccende ricorren
 | prossima | date | NOT NULL | il giorno in cui creerà la prossima faccenda; la calcola l'app |
 | ultima | date | | l'ultimo giorno in cui ha creato una faccenda |
 | attiva | boolean | NOT NULL, default `true` | `false` = in pausa |
+| dal_completamento | boolean | NOT NULL, default `false` | conta da quando la si fa: vedi sotto |
 | creata_il | timestamptz | default `now()` | |
 
 **Occorrenze** (`src/dominio/ricorrenze.ts`): *giorno* ogni N giorni dall'inizio; *settimana* nei giorni scelti, una settimana (da lunedì) ogni N a partire da quella dell'inizio; *mese* e *anno* lo stesso giorno dell'inizio ogni N mesi o anni, o l'ultimo del mese se è più corto (31 → 30 aprile, 29 febbraio → 28).
@@ -119,6 +120,8 @@ Le regole delle faccende ricorrenti ([08](08-interfaccia.md), "Faccende ricorren
 2. inserisce la faccenda con `ricorrenza_id`; se ce n'è già una da fare l'indice univoco la rifiuta, e va bene così.
 
 Le occorrenze saltate (app non aperta per giorni) non si recuperano: si crea una sola faccenda. Salvare una regola ricalcola `prossima` da oggi, senza ripetere il giorno di `ultima`.
+
+**Dal completamento**: quando si spunta una faccenda di una ricorrenza con `dal_completamento`, l'app (e Nightstand) sposta `inizio` al giorno in cui è fatta e ricalcola `prossima` come prima occorrenza dopo quel giorno (`dopoCompletamento`). Le settimanali tengono i giorni scelti, le mensili e annuali prendono il giorno del completamento. Ogni 2 settimane il lunedì, fatta il mercoledì della settimana dopo: la prossima è il lunedì di 2 settimane dopo, non quello successivo. Togliere la spunta non la riporta indietro.
 
 ## `projects.valigia` e `projects.valigia_spunte`
 

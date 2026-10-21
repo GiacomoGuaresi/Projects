@@ -100,15 +100,15 @@ Attività veloci e ripetitive che si spiegano da sole ("Passare l'aspirapolvere"
 
 Pulizie e attività periodiche che si aggiungono da sole alle faccende ([04](04-modello-dati.md), `ricorrenze`).
 
-- Nella pagina **Faccende**, sotto la card, una card bianca **"Ricorrenti"** (`repeat`): una riga per regola con titolo, frequenza a parole ("Ogni 2 settimane, lunedì e giovedì", "Ogni mese il 15", "Ogni anno l'8 dicembre") e **prossima** data ("oggi", "domani", "ven 3 ott"); quelle in pausa grigie con `pause`. Ultima riga **"Nuova ricorrente"**.
+- Nella pagina **Faccende**, sotto la card, una card bianca **"Ricorrenti"** (`repeat`): una riga per regola con titolo, frequenza a parole ("Ogni 2 settimane, lunedì e giovedì", "Ogni mese il 15", "Ogni anno l'8 dicembre"; "…, da quando la fai" per quelle dal completamento) e **prossima** data ("oggi", "domani", "ven 3 ott"); quelle in pausa grigie con `pause`. Ultima riga **"Nuova ricorrente"**.
 - **"Nuova ricorrente"** apre un **wizard** (a schermo intero su mobile), una domanda per passo, con la barra di avanzamento e *Indietro* / *Avanti*:
   1. **Cosa c'è da fare?** il titolo (Invio passa avanti);
   2. **Ogni quanto?** righe grandi *Ogni giorno · Ogni settimana · Ogni 2 settimane · Ogni mese · Ogni anno*, che al tocco passano avanti da sole; *Personalizzata* apre "Ogni [− N +]" con *giorni / settimane / mesi / anni*;
   3. **Quando?** i giorni della settimana (L M M G V S D, con *Lun–ven*, *Weekend*, *Tutti*), il giorno del mese (1–30 o *L'ultimo del mese*) o mese e giorno dell'anno; con "ogni N" anche **la prima volta**, tra le prossime N date. Si salta per *Ogni giorno*;
-  4. **Tutto giusto?** titolo, regola a parole, prima volta e le due dopo; *Crea*.
-- Toccare una riga apre lo stesso modale **in modifica**, con tutte le sezioni insieme (le frequenze come chip), **In pausa**, il riepilogo con le prossime date ed **Elimina** (rosso, con conferma): la faccenda già in elenco resta.
+  4. **Tutto giusto?** titolo, regola a parole, prima volta e le due dopo, la casella **Conta da quando la fai** (se la fai in ritardo, sposta avanti le prossime); *Crea*.
+- Toccare una riga apre lo stesso modale **in modifica**, con tutte le sezioni insieme (le frequenze come chip), **Conta da quando la fai**, **In pausa**, il riepilogo con le prossime date ed **Elimina** (rosso, con conferma): la faccenda già in elenco resta.
 - Non si sceglie una data di inizio: la ricava l'app dalle scelte, e in modifica ritrova quella che dà le stesse date.
-- Arrivato il giorno, la faccenda compare nella card (all'apertura dell'app o al ritorno in primo piano). Se quella precedente è ancora da fare **non se ne aggiunge un'altra**.
+- Arrivato il giorno, la faccenda compare nella card (all'apertura dell'app o al ritorno in primo piano). Se quella precedente è ancora da fare **non se ne aggiunge un'altra**. Con **Conta da quando la fai**, spuntarla fa ripartire le date da quel giorno: fatta in ritardo, salta la volta successiva.
 
 ## Valigia
 

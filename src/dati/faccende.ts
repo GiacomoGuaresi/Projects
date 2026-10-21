@@ -2,7 +2,7 @@
 // La data di completamento la segna il database.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { daCreare, occorrenzaDopo } from '../dominio/ricorrenze'
+import { daCreare, dopoCompletamento, occorrenzaDopo } from '../dominio/ricorrenze'
 import type { Faccenda, Giorno, Ricorrenza } from '../dominio/tipi'
 import { fallita } from './errore'
 
@@ -68,10 +68,25 @@ export class FaccendeSupabase {
     return data as Faccenda
   }
 
-  async segna(id: number, completa: boolean): Promise<Faccenda> {
+  /**
+   * Se è fatta e viene da una ricorrenza "dal completamento", la ricorrenza
+   * riparte da `oggi`. Togliere la spunta non la riporta indietro.
+   */
+  async segna(id: number, completa: boolean, oggi: Giorno): Promise<Faccenda> {
     const { data, error } = await this.client.from('faccende').update({ completa }).eq('id', id).select().single()
     if (error) throw fallita('Faccenda non salvata', error)
-    return data as Faccenda
+    const faccenda = data as Faccenda
+    if (completa && faccenda.ricorrenza_id !== null) await this.riparte(faccenda.ricorrenza_id, oggi)
+    return faccenda
+  }
+
+  private async riparte(ricorrenzaId: number, oggi: Giorno): Promise<void> {
+    const letta = await this.client.from('ricorrenze').select('*').eq('id', ricorrenzaId).maybeSingle()
+    if (letta.error) throw fallita('Ricorrenza non letta', letta.error)
+    const r = letta.data as Ricorrenza | null
+    if (!r?.dal_completamento) return
+    const { error } = await this.client.from('ricorrenze').update(dopoCompletamento(r, oggi)).eq('id', r.id)
+    if (error) throw fallita('Ricorrenza non aggiornata', error)
   }
 
   async rinomina(id: number, titolo: string): Promise<Faccenda> {

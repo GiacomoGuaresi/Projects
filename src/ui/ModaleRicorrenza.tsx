@@ -81,6 +81,7 @@ export function ModaleRicorrenza({ ricorrenza, onSalva, onElimina, onChiudi }: P
   const [ogniTesto, setOgniTesto] = useState(String(scelte.ogni))
   const [personalizzata, setPersonalizzata] = useState(ricorrenza !== undefined && !rapidaDi(scelte))
   const [attiva, setAttiva] = useState(ricorrenza?.attiva ?? true)
+  const [dalCompletamento, setDalCompletamento] = useState(ricorrenza?.dal_completamento ?? false)
   const [passo, setPasso] = useState(0)
   const [inCorso, setInCorso] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
@@ -97,7 +98,7 @@ export function ModaleRicorrenza({ ricorrenza, onSalva, onElimina, onChiudi }: P
   const passoValido = attuale === 'cosa' ? titolo.trim() !== '' : attuale === 'frequenza' ? ogniValido : valido
 
   const regola = regolaDa(scelte, giorno)
-  const dati: DatiRicorrenza = { titolo, ...regola, attiva }
+  const dati: DatiRicorrenza = { titolo, ...regola, attiva, dal_completamento: dalCompletamento }
   const anteprima = daSalvare(dati, giorno, ricorrenza?.ultima ?? null)
   const prossime = prossimeOccorrenze(anteprima, anteprima.prossima, 3)
 
@@ -420,6 +421,21 @@ export function ModaleRicorrenza({ ricorrenza, onSalva, onElimina, onChiudi }: P
     </div>
   )
 
+  const sceltaDalCompletamento = (
+    <label className="flex min-h-11 items-center gap-3">
+      <input
+        type="checkbox"
+        className="size-5 accent-salvia"
+        checked={dalCompletamento}
+        onChange={(e) => setDalCompletamento(e.target.checked)}
+      />
+      <span>
+        Conta da quando la fai{' '}
+        <span className="text-sm text-testo-tenue">(se la fai in ritardo, sposta avanti le prossime)</span>
+      </span>
+    </label>
+  )
+
   const riepilogo = (
     <div className="flex flex-col gap-1 rounded-[11px] bg-fondo px-3 py-2.5" aria-live="polite">
       {wizard && <p className="text-lg font-semibold break-words">{titolo.trim()}</p>}
@@ -438,6 +454,9 @@ export function ModaleRicorrenza({ ricorrenza, onSalva, onElimina, onChiudi }: P
           'In pausa: non aggiunge faccende.'
         )}
       </p>
+      {dalCompletamento && (
+        <p className="text-sm text-testo-tenue">Le date ripartono dal giorno in cui la spunti.</p>
+      )}
     </div>
   )
 
@@ -460,7 +479,12 @@ export function ModaleRicorrenza({ ricorrenza, onSalva, onElimina, onChiudi }: P
     riepilogo: {
       titolo: 'Tutto giusto?',
       aiuto: 'Arrivato il giorno, la faccenda compare da sola nell’elenco.',
-      contenuto: riepilogo,
+      contenuto: (
+        <>
+          {riepilogo}
+          {sceltaDalCompletamento}
+        </>
+      ),
     },
   }
 
@@ -542,6 +566,7 @@ export function ModaleRicorrenza({ ricorrenza, onSalva, onElimina, onChiudi }: P
               <Sezione titolo={<label htmlFor={`${id}-titolo`}>Titolo</label>}>{sezioneCosa}</Sezione>
               <Sezione titolo="Ogni quanto">{sezioneFrequenza}</Sezione>
               {serveQuando && <Sezione titolo={domande.quando.titolo}>{sezioneQuando}</Sezione>}
+              {sceltaDalCompletamento}
               <label className="flex min-h-11 items-center gap-3">
                 <input
                   type="checkbox"

@@ -14,11 +14,16 @@ interface Props {
  */
 export function PaginaFaccende({ faccende, onAvviso }: Props) {
   const ricorrenze = useRicorrenze(faccende.ricarica, onAvviso)
+  // Spuntarne una "dal completamento" sposta la sua prossima: si rilegge.
+  const conRicorrenze = {
+    ...faccende,
+    segna: (id: number, completa: boolean) => faccende.segna(id, completa).then(ricorrenze.ricarica),
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[720px] flex-col gap-3">
       <h2 className="px-1 text-lg font-semibold">Faccende</h2>
-      <CardFaccende faccende={faccende} />
+      <CardFaccende faccende={conRicorrenze} />
       <p className="px-2 text-sm text-testo-tenue">
         Tocca l'icona per segnarla fatta, il titolo per modificarla, il cestino per eliminarla. Le fatte restano barrate fino a
         mezzanotte, poi spariscono.
@@ -27,7 +32,7 @@ export function PaginaFaccende({ faccende, onAvviso }: Props) {
       <CardRicorrenze ricorrenze={ricorrenze} />
       <p className="px-2 text-sm text-testo-tenue">
         Arrivato il giorno, la faccenda si aggiunge da sola all'elenco. Se quella precedente non è ancora fatta, non se ne
-        aggiunge un'altra.
+        aggiunge un'altra. Quelle che contano da quando le fai ripartono dal giorno in cui le spunti.
       </p>
     </div>
   )
