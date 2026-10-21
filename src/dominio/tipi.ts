@@ -16,6 +16,8 @@ export interface Attivita {
   creata_il: string
   modificata_il: string
   completata_il: string | null
+  /** Nel cestino da questo momento; `null` se non è stata eliminata. */
+  eliminata_il: string | null
   ha_diario: boolean
 }
 

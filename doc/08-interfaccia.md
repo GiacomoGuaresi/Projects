@@ -31,6 +31,7 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Sezioni | **Faccende** | `broom` |
 | Sezioni | **Valigia** | `luggage` |
 | Sezioni | **Foresta** | `trees` |
+| Sezioni | **Cestino** | `trash-2` |
 | Azioni (staccate) | **Nuova attività** → apre il modale | `plus` |
 | Piede | **Widget Android**: apre in una nuova scheda l'ultima Release di ProjectsWallpaper, con l'APK del widget della Foresta | `smartphone` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
@@ -171,7 +172,15 @@ L'ambiente (`src/dominio/ambiente.ts`, `src/ui/foresta/useAmbiente.ts`) segue il
 Aperto toccando una riga della Dashboard; titolo del modale = titolo senza tag.
 - Campi modificabili con le regole descritte in "Campi di un'attività": **Titolo** (con sotto la scritta "Scrivi < per aggiungere un tag", come in "Nuova attività"), **Progetto** (con "solo questa / tutte"), **Stato** (conferma per *Completo*), **Avanzamento**.
 - Date di creazione, modifica e completamento; pulsante **Diario** (con un pallino di notifica se ha voci) che apre il modale diario sopra.
-- In fondo, pulsante **Elimina** (`trash-2`, rosso) con conferma; eliminata l'attività, il modale si chiude.
+- In fondo, pulsante **Elimina** (`trash-2`, rosso): senza conferma sposta l'attività nel **Cestino** e chiude il modale, con l'avviso "Spostata nel cestino".
+
+## Cestino
+
+Pagina `#/cestino`, dal menu. Le attività eliminate negli **ultimi 30 giorni**, dalla più recente, ciascuna con titolo senza tag, progetto e i giorni che le restano ("ancora 12 giorni", "sparisce domani"; la data di eliminazione nel tooltip).
+- **Ripristina** (`rotate-ccw`): torna dov'era, con stato, avanzamento e diario.
+- **✕**: elimina per sempre, con conferma, diario compreso. **Svuota** in alto fa lo stesso con tutte.
+- Le cestinate non compaiono altrove: né Dashboard, né Foresta, né suggerimenti del progetto.
+- Dopo 30 giorni l'app le elimina da sola alla lettura delle attività, come le faccende fatte.
 
 ## Campi di un'attività
 

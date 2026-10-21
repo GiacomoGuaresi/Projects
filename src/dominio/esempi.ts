@@ -14,6 +14,7 @@ export function attivita(campi: Partial<Attivita> = {}): Attivita {
     creata_il: '2026-09-01T00:00:00Z',
     modificata_il: '2026-09-01T00:00:00Z',
     completata_il: null,
+    eliminata_il: null,
     ha_diario: false,
     ...campi,
   }

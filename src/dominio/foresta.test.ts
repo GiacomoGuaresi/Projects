@@ -25,6 +25,7 @@ function attivita(progetto: string | null, completata_il: string | null, stato: 
     creata_il: '2026-01-01T00:00:00Z',
     modificata_il: '2026-01-01T00:00:00Z',
     completata_il,
+    eliminata_il: null,
     ha_diario: false,
   }
 }

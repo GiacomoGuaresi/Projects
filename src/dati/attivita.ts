@@ -3,6 +3,7 @@
 // chi modifica riceve indietro la riga come è stata salvata.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { limiteCestino } from '../dominio/cestino'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 import { fallita } from './errore'
 
@@ -12,8 +13,17 @@ export type RigaAttivita = Omit<Attivita, 'ha_diario'>
 export class AttivitaSupabase {
   constructor(private readonly client: SupabaseClient) {}
 
-  /** Tutte le attività, completate comprese: sono al massimo qualche centinaio. */
-  async elenco(): Promise<Attivita[]> {
+  /**
+   * Tutte le attività, completate e cestinate comprese: sono al massimo qualche
+   * centinaio. Prima elimina per sempre quelle nel cestino da più di 30 giorni.
+   */
+  async elenco(adesso = new Date()): Promise<Attivita[]> {
+    const pulizia = await this.client
+      .from('attivita')
+      .delete()
+      .lt('eliminata_il', limiteCestino(adesso).toISOString())
+    if (pulizia.error) throw fallita('Cestino non svuotato', pulizia.error)
+
     const { data, error } = await this.client.from('attivita_elenco').select('*')
     if (error) throw fallita('Attività non caricate', error)
     return data as Attivita[]
@@ -36,9 +46,21 @@ export class AttivitaSupabase {
     return data as RigaAttivita
   }
 
-  /** Elimina anche il diario (ON DELETE CASCADE). */
-  async elimina(id: number): Promise<void> {
-    const { error } = await this.client.from('attivita').delete().eq('id', id)
+  /** Sposta nel cestino (`true`) o la ripristina (`false`); il diario resta. */
+  async cestina(id: number, nelCestino: boolean): Promise<RigaAttivita> {
+    const { data, error } = await this.client
+      .from('attivita')
+      .update({ eliminata_il: nelCestino ? new Date().toISOString() : null })
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw fallita(nelCestino ? 'Attività non spostata nel cestino' : 'Attività non ripristinata', error)
+    return data as RigaAttivita
+  }
+
+  /** Per sempre, solo dal cestino; elimina anche il diario (ON DELETE CASCADE). */
+  async elimina(ids: number[]): Promise<void> {
+    const { error } = await this.client.from('attivita').delete().in('id', ids).not('eliminata_il', 'is', null)
     if (error) throw fallita('Attività non eliminata', error)
   }
 

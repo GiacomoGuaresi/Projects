@@ -14,7 +14,7 @@ export interface AzioniAttivita {
   modifica: (attivita: Attivita, modifica: Modifica) => void
   /** Il testo scritto nel campo progetto. */
   cambiaProgetto: (attivita: Attivita, testo: string) => void
-  /** Chiede conferma prima di eliminare. */
+  /** Sposta nel cestino. */
   elimina: (attivita: Attivita) => void
   apriDiario: (attivita: Attivita) => void
 }
@@ -42,7 +42,7 @@ export function ModaleDettagli({ attivita: a, progetti, azioni, onChiudi }: Prop
       onChiudi={onChiudi}
       larga
       piede={
-        // Chiede conferma; eliminata l'attività il modale si chiude da solo, perché segue l'id.
+        // Nel cestino l'attività esce dall'elenco, e il modale si chiude da solo perché segue l'id.
         <button
           type="button"
           className="mr-auto flex min-h-11 items-center gap-1.5 rounded-[11px] px-4 font-semibold text-pericolo hover:bg-fondo"

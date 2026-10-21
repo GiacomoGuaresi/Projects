@@ -3,16 +3,17 @@ import { useSyncExternalStore } from 'react'
 /**
  * Le pagine, raggiunte con l'hash (doc/03-architettura.md): `#/` è la
  * Dashboard con le card per progetto, `#/faccende` la pagina Faccende,
- * `#/valigia` la lista per fare la valigia, `#/foresta` gli alberi delle attività completate, `#/installa` le istruzioni per installare l'app. Con l'hash GitHub Pages non
+ * `#/valigia` la lista per fare la valigia, `#/foresta` gli alberi delle attività completate, `#/cestino` le attività eliminate, `#/installa` le istruzioni per installare l'app. Con l'hash GitHub Pages non
  * vede mai le rotte, quindi non serve un 404.html.
  */
-export type Rotta = 'dashboard' | 'faccende' | 'valigia' | 'foresta' | 'installa'
+export type Rotta = 'dashboard' | 'faccende' | 'valigia' | 'foresta' | 'cestino' | 'installa'
 
 export const indirizzi: Record<Rotta, string> = {
   dashboard: '#/',
   faccende: '#/faccende',
   valigia: '#/valigia',
   foresta: '#/foresta',
+  cestino: '#/cestino',
   installa: '#/installa',
 }
 
@@ -22,6 +23,7 @@ function leggi(): Rotta {
   if (hash.startsWith(indirizzi.faccende)) return 'faccende'
   if (hash.startsWith(indirizzi.valigia)) return 'valigia'
   if (hash.startsWith(indirizzi.foresta)) return 'foresta'
+  if (hash.startsWith(indirizzi.cestino)) return 'cestino'
   if (hash.startsWith(indirizzi.installa)) return 'installa'
   return 'dashboard'
 }

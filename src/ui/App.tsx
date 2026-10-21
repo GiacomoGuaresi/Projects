@@ -15,6 +15,7 @@ import { MenuLaterale } from './MenuLaterale'
 import { ModaleDettagli, type AzioniAttivita } from './ModaleDettagli'
 import { ModaleDiario } from './ModaleDiario'
 import { ModaleNuova } from './ModaleNuova'
+import { PaginaCestino } from './PaginaCestino'
 import { PaginaFaccende } from './PaginaFaccende'
 import { PaginaValigia } from './PaginaValigia'
 import { indirizzi, opzioniSfondo, useRotta } from './rotta'
@@ -27,7 +28,7 @@ import { useFaccende } from './useFaccende'
  * largo al massimo 1200px. Da 1024px il menu è una colonna fissa e ☰ sparisce.
  *
  * Qui stanno anche i dialoghi che partono dalle righe: conferma di "Completo",
- * "solo questa / tutte" sul progetto, conferma dell'eliminazione.
+ * "solo questa / tutte" sul progetto. Eliminare sposta nel cestino, senza conferma.
  */
 export function App() {
   const rotta = useRotta()
@@ -37,11 +38,22 @@ export function App() {
   const [cambio, setCambio] = useState<{ attivita: Attivita; da: string; a: string | null; quante: number } | null>(
     null,
   )
-  const [daEliminare, setDaEliminare] = useState<Attivita | null>(null)
   const chiudiMenu = useCallback(() => setMenuAperto(false), [])
   const statoInstallazione = useInstallazione()
-  const { stato, ricarica, crea, modifica, rinominaProgetto, elimina, segnaDiario, avviso, mostraAvviso, chiudiAvviso } =
-    useAttivita()
+  const {
+    stato,
+    ricarica,
+    crea,
+    modifica,
+    rinominaProgetto,
+    cestino,
+    cestina,
+    elimina,
+    segnaDiario,
+    avviso,
+    mostraAvviso,
+    chiudiAvviso,
+  } = useAttivita()
   const faccende = useFaccende(mostraAvviso)
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
   // I modali seguono l'attività per id, così mostrano sempre la versione aggiornata.
@@ -67,7 +79,12 @@ export function App() {
       if (esito.tipo === 'salva') void modifica(attivita.id, { progetto: esito.progetto })
       if (esito.tipo === 'chiedi') setCambio({ attivita, da: esito.da, a: esito.a, quante: esito.quante })
     },
-    elimina: setDaEliminare,
+    /** Si recupera dal cestino per 30 giorni (doc/08, "Cestino"). */
+    elimina: (attivita) => {
+      void cestina(attivita.id, true)
+      if (dettagliDi === attivita.id) setDettagliDi(null)
+      mostraAvviso('🗑️ Spostata nel cestino')
+    },
     apriDiario: (attivita) => setDiarioDi(attivita.id),
   }
 
@@ -165,6 +182,20 @@ export function App() {
             {(attivita) => <PaginaForesta attivita={attivita} />}
           </ConAttivita>
         )}
+        {rotta === 'cestino' && (
+          <ConAttivita stato={stato} onRiprova={ricarica}>
+            {() => (
+              <PaginaCestino
+                cestino={cestino}
+                onRipristina={(a) => {
+                  void cestina(a.id, false)
+                  mostraAvviso('Attività ripristinata')
+                }}
+                onElimina={(ids) => void elimina(ids)}
+              />
+            )}
+          </ConAttivita>
+        )}
         {rotta === 'installa' && <Installa stato={statoInstallazione} />}
       </main>
       {nuovaAperta && <ModaleNuova progetti={progetti} onCrea={crea} onChiudi={() => setNuovaAperta(false)} />}
@@ -219,25 +250,6 @@ export function App() {
           onDiarioCambiato={(haVoci) => segnaDiario(diarioAperto.id, haVoci)}
           onChiudi={() => setDiarioDi(null)}
         />
-      )}
-      {daEliminare && (
-        <Conferma
-          titolo="Eliminare l'attività?"
-          conferma="Elimina"
-          pericolo
-          onAnnulla={() => setDaEliminare(null)}
-          onConferma={() => {
-            void elimina(daEliminare.id)
-            // Se l'eliminazione non riesce l'attività torna: i dettagli non devono riaprirsi da soli.
-            if (dettagliDi === daEliminare.id) setDettagliDi(null)
-            setDaEliminare(null)
-          }}
-        >
-          <p>
-            Eliminare <strong>{titoloSenzaTag(daEliminare.titolo) || daEliminare.titolo}</strong>? Si perde anche il
-            diario, e non si può tornare indietro.
-          </p>
-        </Conferma>
       )}
       {avviso && <Avviso messaggio={avviso} onChiudi={chiudiAvviso} />}
     </div>

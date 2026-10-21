@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ArrowLeft, Broom, Download, LayoutDashboard, Luggage, Plus, Smartphone, Trees, X, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Broom, Download, LayoutDashboard, Luggage, Plus, Smartphone, Trash2, Trees, X, type LucideIcon } from 'lucide-react'
 import { indirizzi, type Rotta } from './rotta'
 
 /** L'APK del widget Android con la Foresta, dall'ultima Release di ProjectsWallpaper. */
@@ -16,6 +16,7 @@ const sezioni: { rotta: Rotta; etichetta: string; icona: LucideIcon }[] = [
   { rotta: 'faccende', etichetta: 'Faccende', icona: Broom },
   { rotta: 'valigia', etichetta: 'Valigia', icona: Luggage },
   { rotta: 'foresta', etichetta: 'Foresta', icona: Trees },
+  { rotta: 'cestino', etichetta: 'Cestino', icona: Trash2 },
 ]
 
 interface Props {

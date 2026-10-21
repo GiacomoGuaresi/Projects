@@ -37,6 +37,7 @@ erDiagram
     timestamptz creata_il
     timestamptz modificata_il
     timestamptz completata_il
+    timestamptz eliminata_il
   }
   voci_diario {
     bigint id PK
@@ -59,6 +60,9 @@ erDiagram
 | creata_il | timestamptz | default `now()` | |
 | modificata_il | timestamptz | default `now()`, trigger | |
 | completata_il | timestamptz | trigger | ordina le completate dalla più recente |
+| eliminata_il | timestamptz | NULL ammesso, indice parziale | nel **cestino** da questo momento; `NULL` = non eliminata |
+
+**Cestino** (script `supabase/sql/008_cestino.sql`): eliminare un'attività scrive `eliminata_il`, ripristinarla lo riporta a `NULL`; nessuna delle due cambia `modificata_il`. Eliminare per sempre (dal cestino) cancella la riga e il diario. **Pulizia**: a ogni lettura delle attività l'app elimina quelle con `eliminata_il` di più di 30 giorni fa. Nessun job nel database.
 
 Indici su `stato` e su `lower(progetto)`.
 
@@ -152,8 +156,8 @@ Il conto è **approssimato per scelta**: togliere la spunta lo abbassa, eliminar
 
 ## Viste
 
-- **`projects.attivita_elenco`** (`security_invoker = true`): le colonne di `attivita` più `ha_diario boolean`, usata da tutte le pagine.
-- **`projects.progetti`** (`security_invoker = true`): `progetto` e numero di attività, raggruppati senza distinzione tra maiuscole e minuscole. Alimenta suggerimenti, filtro e domanda "solo questa / tutte".
+- **`projects.attivita_elenco`** (`security_invoker = true`): le colonne di `attivita` più `ha_diario boolean`, usata da tutte le pagine. Comprende le cestinate: le separa l'app.
+- **`projects.progetti`** (`security_invoker = true`): `progetto` e numero di attività, raggruppati senza distinzione tra maiuscole e minuscole, senza le cestinate. Alimenta suggerimenti, filtro e domanda "solo questa / tutte".
 
 ## Funzioni
 
@@ -169,7 +173,7 @@ Il conto è **approssimato per scelta**: togliere la spunta lo abbassa, eliminar
 | insert/update di `attivita` con `stato = 'completo'` | `avanzamento = 100`; `completata_il = now()` se prima non era completa |
 | update di `attivita` da `completo` a un altro stato | `completata_il = NULL`; l'avanzamento resta modificabile a mano |
 | insert/update di `attivita` | `progetto`: spazi rimossi, stringa vuota → NULL |
-| update di `attivita`, `voci_diario` o `valigia` | `modificata_il = now()` |
+| update di `attivita`, `voci_diario` o `valigia` | `modificata_il = now()`; per `attivita` solo se cambia qualcosa oltre a `eliminata_il` |
 | update di `faccende` da non fatta a fatta (o viceversa) | `contatori.faccende_fatte` +1 (o −1, mai sotto zero) |
 
 ## Permessi

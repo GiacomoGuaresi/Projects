@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { attivita } from '../dati'
 import { applicaModifica } from '../dominio/attivita'
+import { nelCestino } from '../dominio/cestino'
 import { chiaveProgetto } from '../dominio/progetto'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 
@@ -13,9 +14,16 @@ export type StatoElenco =
  * Tutte le attività, lette una volta all'apertura: sono poche centinaia, e
  * le pagine le filtrano in memoria. Le modifiche passano da
  * qui, che aggiorna l'elenco con la riga salvata.
+ *
+ * `stato` ha solo quelle fuori dal cestino; le cestinate stanno in `cestino`.
  */
 export function useAttivita() {
-  const [stato, setStato] = useState<StatoElenco>({ fase: 'caricamento' })
+  const [tutte, setStato] = useState<StatoElenco>({ fase: 'caricamento' })
+  const stato = useMemo<StatoElenco>(
+    () => (tutte.fase === 'pronto' ? { ...tutte, attivita: tutte.attivita.filter((a) => a.eliminata_il === null) } : tutte),
+    [tutte],
+  )
+  const cestino = useMemo(() => (tutte.fase === 'pronto' ? nelCestino(tutte.attivita) : []), [tutte])
   /** Una modifica non salvata, da mostrare a chi usa l'app. */
   const [avviso, setAvviso] = useState<string | null>(null)
 
@@ -80,12 +88,31 @@ export function useAttivita() {
     [ricarica],
   )
 
-  /** Toglie subito l'attività dall'elenco; se non riesce avvisa e rilegge tutto. */
-  const elimina = useCallback(
-    async (id: number) => {
-      aggiorna((elenco) => elenco.filter((a) => a.id !== id))
+  /**
+   * Sposta nel cestino (`true`) o ripristina (`false`): si vede subito; se non
+   * riesce avvisa e rilegge tutto.
+   */
+  const cestina = useCallback(
+    async (id: number, dentro: boolean) => {
+      const quando = dentro ? new Date().toISOString() : null
+      aggiorna((elenco) => elenco.map((a) => (a.id === id ? { ...a, eliminata_il: quando } : a)))
       try {
-        await attivita().elimina(id)
+        const riga = await attivita().cestina(id, dentro)
+        aggiorna((elenco) => elenco.map((a) => (a.id === id ? { ...riga, ha_diario: a.ha_diario } : a)))
+      } catch (errore) {
+        setAvviso((errore as Error).message)
+        void ricarica()
+      }
+    },
+    [ricarica],
+  )
+
+  /** Elimina per sempre dal cestino; se non riesce avvisa e rilegge tutto. */
+  const elimina = useCallback(
+    async (ids: number[]) => {
+      aggiorna((elenco) => elenco.filter((a) => !ids.includes(a.id)))
+      try {
+        await attivita().elimina(ids)
       } catch (errore) {
         setAvviso((errore as Error).message)
         void ricarica()
@@ -107,6 +134,8 @@ export function useAttivita() {
     crea,
     modifica,
     rinominaProgetto,
+    cestino,
+    cestina,
     elimina,
     segnaDiario,
     avviso,
