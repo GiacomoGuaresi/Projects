@@ -86,6 +86,12 @@ describe('terreno', () => {
     for (const c of caselle) if (c.tipo === 'acqua') expect(c.altezza).toBe(0)
   })
 
+  it('i sentieri sono di terra battuta, alla quota della foresta, mai sulle zolle', () => {
+    const conSentiero = terreno(limiti, pianori, [{ col: 3, riga: 2 }, { col: 0, riga: 0 }])
+    expect(conSentiero.get('3,2')).toMatchObject({ tipo: 'sentiero', altezza: mappa.get('0,0')!.altezza })
+    expect(conSentiero.get('0,0')!.tipo).toBe('zolla')
+  })
+
   it('le rocce stanno solo in alto', () => {
     for (const c of caselle) if (c.tipo === 'roccia') expect(c.altezza).toBeGreaterThanOrEqual(2)
   })

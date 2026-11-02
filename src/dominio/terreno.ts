@@ -1,11 +1,11 @@
 // Il terreno della Foresta (doc/08-interfaccia.md, "Foresta"): colline,
-// laghetti e rocce. Le altezze vengono da un rumore con seed fisso
+// laghetti, sentieri e rocce. Le altezze vengono da un rumore con seed fisso
 // sulle coordinate assolute, quindi una foresta che si allarga non cambia le
 // colline che c'erano già.
 
 import { generatore } from './caso'
 
-export type TipoCasella = 'prato' | 'zolla' | 'acqua' | 'roccia'
+export type TipoCasella = 'prato' | 'zolla' | 'acqua' | 'sentiero' | 'roccia'
 
 export interface CasellaTerreno {
   col: number
@@ -74,11 +74,13 @@ export function livello(q: number): number {
  * Il terreno dentro i limiti. Tutta la foresta sta su un pianoro solo, alla
  * quota della prima zolla, raccordato al resto da un anello che scende o sale
  * di un livello al massimo; dentro e attorno alla foresta niente acqua, e al
- * margine il sottobosco è piano e senza rocce.
+ * margine il sottobosco è piano e senza rocce. I `sentieri` sono di terra
+ * battuta, alla quota della foresta.
  */
 export function terreno(
   limiti: { minCol: number; maxCol: number; minRiga: number; maxRiga: number },
   pianori: readonly Pianoro[],
+  sentieri: readonly { col: number; riga: number }[] = [],
 ): Map<string, CasellaTerreno> {
   const caselle = new Map<string, CasellaTerreno>()
   for (let col = limiti.minCol; col <= limiti.maxCol; col++) {
@@ -118,6 +120,10 @@ export function terreno(
         c.altezza = Math.min(Math.max(c.altezza, alto - 1), alto + 1)
         if (c.tipo === 'acqua') c.tipo = 'prato'
       }
+    }
+    for (const { col, riga } of sentieri) {
+      const c = caselle.get(chiave(col, riga))
+      if (c && c.tipo !== 'zolla') Object.assign(c, { altezza: alto, tipo: 'sentiero' })
     }
   }
 

@@ -122,6 +122,9 @@ const VICINE = [
   [0, -1],
 ] as const
 
+/** Le otto caselle attorno, angoli compresi. */
+const ATTORNO = [...VICINE, [1, 1], [1, -1], [-1, 1], [-1, -1]] as const
+
 /** La casella più vicina a `verso`; a parità di distanza, in senso orario. */
 function piuVicina(candidate: Iterable<Casella>, verso: { col: number; riga: number }): Casella {
   let migliore: Casella | null = null
@@ -145,10 +148,10 @@ function baricentro(caselle: readonly Casella[]): { col: number; riga: number } 
   return { col, riga }
 }
 
-/** Le caselle libere attaccate per lato a quelle occupate. */
-function contorno(occupate: ReadonlyMap<string, Casella>): Casella[] {
+/** Le caselle libere attaccate per lato a quelle di `caselle`. */
+function contorno(caselle: Iterable<Casella>, occupate: ReadonlyMap<string, Casella>): Casella[] {
   const libere = new Map<string, Casella>()
-  for (const c of occupate.values()) {
+  for (const c of caselle) {
     for (const [dc, dr] of VICINE) {
       const k = chiaveCasella(c.col + dc, c.riga + dr)
       if (!occupate.has(k)) libere.set(k, { col: c.col + dc, riga: c.riga + dr })
@@ -157,13 +160,30 @@ function contorno(occupate: ReadonlyMap<string, Casella>): Casella[] {
   return [...libere.values()]
 }
 
+/** Le caselle libere appena oltre il sentiero che gira attorno alla foresta. */
+function oltreIlSentiero(occupate: ReadonlyMap<string, Casella>): Casella[] {
+  const sentiero = new Map<string, Casella>()
+  for (const c of occupate.values()) {
+    for (const [dc, dr] of ATTORNO) {
+      const k = chiaveCasella(c.col + dc, c.riga + dr)
+      if (!occupate.has(k)) sentiero.set(k, { col: c.col + dc, riga: c.riga + dr })
+    }
+  }
+  return contorno(sentiero.values(), occupate).filter((c) => !sentiero.has(chiaveCasella(c.col, c.riga)))
+}
+
 /**
  * Le `n` caselle di un boschetto: dal seme si allarga sempre sulla casella
- * libera, attaccata a quelle già prese, più vicina al seme. Si incastra così
- * tra i boschetti già messi, senza lasciare prato. L'albero n-esimo va sempre
- * nella casella n-esima, quindi piantarne uno nuovo non sposta gli altri.
+ * libera e `ammessa`, attaccata a quelle già prese, più vicina al seme. Si
+ * incastra così tra i boschetti già messi. L'albero n-esimo va sempre nella
+ * casella n-esima, quindi piantarne uno nuovo non sposta gli altri.
  */
-function cresci(seme: Casella, n: number, occupate: Map<string, Casella>): Casella[] {
+function cresci(
+  seme: Casella,
+  n: number,
+  occupate: Map<string, Casella>,
+  ammessa: (c: Casella) => boolean,
+): Casella[] {
   const prese: Casella[] = []
   const bordo = new Map<string, Casella>([[chiaveCasella(seme.col, seme.riga), seme]])
   while (prese.length < n) {
@@ -173,8 +193,9 @@ function cresci(seme: Casella, n: number, occupate: Map<string, Casella>): Casel
     occupate.set(k, c)
     prese.push(c)
     for (const [dc, dr] of VICINE) {
-      const kv = chiaveCasella(c.col + dc, c.riga + dr)
-      if (!occupate.has(kv)) bordo.set(kv, { col: c.col + dc, riga: c.riga + dr })
+      const v = { col: c.col + dc, riga: c.riga + dr }
+      const kv = chiaveCasella(v.col, v.riga)
+      if (!occupate.has(kv) && ammessa(v)) bordo.set(kv, v)
     }
   }
   return prese
@@ -219,12 +240,15 @@ export interface Foresta {
 }
 
 /**
- * Una foresta sola e fitta: il primo boschetto parte dal centro, ogni altro
- * dalla casella libera sul bordo della foresta più vicina alla sua famiglia
- * (al centro, se è il primo della famiglia), e cresce attaccato a quelli già
- * messi. I boschetti più vecchi stanno quindi al centro, quelli di una
- * famiglia uno accanto all'altro. Attorno il terreno (colline, acqua, rocce);
- * gli arbusti fanno da sottobosco, più fitti al margine della foresta.
+ * Una foresta sola e fitta: il primo boschetto parte dal centro e ognuno
+ * cresce attaccato a quelli già messi. I boschetti di una famiglia si
+ * toccano: il secondo parte dal bordo della famiglia, vicino al suo
+ * baricentro. Tra famiglie diverse resta sempre una casella, il sentiero: un
+ * boschetto non prende caselle che toccano, anche d'angolo, un'altra famiglia,
+ * e una famiglia nuova parte appena oltre il sentiero, il più vicino
+ * possibile al centro. I boschetti più vecchi stanno quindi al centro.
+ * Attorno il terreno (colline, acqua, rocce); gli arbusti fanno da
+ * sottobosco, più fitti al margine della foresta.
  */
 export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta {
   const lotti: Omit<Lotto, 'altezza'>[] = []
@@ -232,6 +256,8 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
   const piante: { chiave: string; albero: AlberoForesta; specie: Specie | null; col: number; riga: number }[] = []
   const specie = specieBoschetti(gruppi)
   const occupate = new Map<string, Casella>()
+  /** La famiglia di ogni casella occupata. */
+  const diChi = new Map<string, string>()
 
   // Le famiglie, nell'ordine del loro boschetto più vecchio.
   const famiglie = new Map<string, Boschetto[]>()
@@ -242,10 +268,19 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
 
   for (const [famiglia, membri] of famiglie) {
     const parenti: Casella[] = []
+    // Ammesse le caselle che non toccano, nemmeno d'angolo, un'altra famiglia.
+    const ammessa = (c: Casella) =>
+      ATTORNO.every(([dc, dr]) => (diChi.get(chiaveCasella(c.col + dc, c.riga + dr)) ?? famiglia) === famiglia)
     for (const gruppo of membri) {
-      const verso = parenti.length ? baricentro(parenti) : { col: 0, riga: 0 }
-      const seme = occupate.size ? piuVicina(contorno(occupate), verso) : { col: 0, riga: 0 }
-      const caselle = cresci(seme, gruppo.alberi.length, occupate)
+      let seme: Casella = { col: 0, riga: 0 }
+      if (occupate.size) {
+        // Attaccato ai fratelli; se sono chiusi tra i sentieri, o è il primo, oltre il sentiero.
+        const vicino = parenti.length ? baricentro(parenti) : { col: 0, riga: 0 }
+        const fratelli = contorno(parenti, occupate).filter(ammessa)
+        seme = piuVicina(fratelli.length ? fratelli : oltreIlSentiero(occupate), vicino)
+      }
+      const caselle = cresci(seme, gruppo.alberi.length, occupate, ammessa)
+      for (const c of caselle) diChi.set(chiaveCasella(c.col, c.riga), famiglia)
       parenti.push(...caselle)
       const centro = piuVicina(caselle, baricentro(caselle))
       lotti.push({
@@ -259,6 +294,22 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
       pianori.push({ chiave: gruppo.chiave, caselle })
       const sua = specie.get(gruppo.chiave) ?? null
       gruppo.alberi.forEach((albero, i) => piante.push({ chiave: gruppo.chiave, albero, specie: sua, ...caselle[i] }))
+    }
+  }
+
+  // Il sentiero: le caselle libere che toccano due famiglie diverse.
+  const sentieri = new Map<string, Casella>()
+  for (const c of occupate.values()) {
+    for (const [dc, dr] of ATTORNO) {
+      const v = { col: c.col + dc, riga: c.riga + dr }
+      const k = chiaveCasella(v.col, v.riga)
+      if (occupate.has(k) || sentieri.has(k)) continue
+      const accanto = new Set<string>()
+      for (const [ec, er] of ATTORNO) {
+        const f = diChi.get(chiaveCasella(v.col + ec, v.riga + er))
+        if (f !== undefined) accanto.add(f)
+      }
+      if (accanto.size >= 2) sentieri.set(k, v)
     }
   }
 
@@ -283,7 +334,7 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
       minRiga: bordo.minRiga - margine,
       maxRiga: bordo.maxRiga + margine,
     }
-    mappa = terreno(limiti, pianori)
+    mappa = terreno(limiti, pianori, [...sentieri.values()])
     libere = [...mappa.values()].filter((c) => c.tipo === 'prato')
     if (libere.length >= arbusti * PRATO_PER_ARBUSTO) break
     margine++

@@ -91,28 +91,50 @@ describe('disponi', () => {
     expect(new Set(piantati.map(posto)).size).toBe(piantati.length)
   })
 
-  it('la foresta è un pezzo solo, senza prato tra i boschetti', () => {
+  describe('sentieri tra le famiglie', () => {
     const elenco = [
       ...Array.from({ length: 20 }, () => attivita('Casa', giorno(1))),
       ...Array.from({ length: 9 }, () => attivita('Auto', giorno(2))),
-      ...Array.from({ length: 3 }, () => attivita('Bagno', giorno(3))),
+      ...Array.from({ length: 6 }, () => attivita('Software / Projects', giorno(3))),
+      ...Array.from({ length: 5 }, () => attivita('Software / Grocery', giorno(4))),
+      ...Array.from({ length: 3 }, () => attivita('Bagno', giorno(5))),
     ]
-    const posti = new Set(alberi(disponi(boschetti(elenco), 0).elementi).map(posto))
-    // Da un albero si arriva a tutti gli altri passando solo da alberi attaccati per lato.
-    const [primo] = posti
-    const raggiunti = new Set([primo])
-    const coda = [primo]
-    while (coda.length) {
-      const [col, riga] = coda.pop()!.split(',').map(Number)
-      for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const k = `${col + dc},${riga + dr}`
-        if (posti.has(k) && !raggiunti.has(k)) {
-          raggiunti.add(k)
-          coda.push(k)
-        }
-      }
+    const foresta = disponi(boschetti(elenco), 0)
+    const famiglia = new Map(
+      alberi(foresta.elementi).map((e) => [posto(e), e.tipo === 'albero' ? e.chiave.split('/')[0].trim() : '']),
+    )
+    const chebyshev = (a: string, b: string) => {
+      const [ac, ar] = a.split(',').map(Number)
+      const [bc, br] = b.split(',').map(Number)
+      return Math.max(Math.abs(ac - bc), Math.abs(ar - br))
     }
-    expect(raggiunti.size).toBe(posti.size)
+    const famiglie = [...new Set(famiglia.values())]
+    const caselleDi = (f: string) => [...famiglia].filter(([, g]) => g === f).map(([k]) => k)
+    const distanza = (f: string, g: string) =>
+      Math.min(...caselleDi(f).flatMap((a) => caselleDi(g).map((b) => chebyshev(a, b))))
+
+    it('tra famiglie diverse resta sempre almeno una casella, anche negli angoli', () => {
+      for (const f of famiglie) for (const g of famiglie) if (f !== g) expect(distanza(f, g)).toBeGreaterThanOrEqual(2)
+    })
+
+    it('ogni famiglia sta a una casella sola da un\'altra: la foresta resta fitta', () => {
+      for (const f of famiglie) expect(Math.min(...famiglie.filter((g) => g !== f).map((g) => distanza(f, g)))).toBe(2)
+    })
+
+    it('i boschetti di una famiglia invece si toccano', () => {
+      const projects = alberi(foresta.elementi).filter((e) => e.tipo === 'albero' && e.chiave === 'software / projects').map(posto)
+      const grocery = alberi(foresta.elementi).filter((e) => e.tipo === 'albero' && e.chiave === 'software / grocery').map(posto)
+      expect(Math.min(...projects.flatMap((a) => grocery.map((b) => chebyshev(a, b))))).toBe(1)
+    })
+
+    it('il sentiero sta tra due famiglie diverse', () => {
+      const sentieri = foresta.caselle.filter((c) => c.tipo === 'sentiero')
+      expect(sentieri.length).toBeGreaterThan(0)
+      for (const c of sentieri) {
+        const accanto = new Set([...famiglia].filter(([k]) => chebyshev(k, `${c.col},${c.riga}`) === 1).map(([, f]) => f))
+        expect(accanto.size).toBeGreaterThanOrEqual(2)
+      }
+    })
   })
 
   it('un albero nuovo non sposta quelli già piantati', () => {

@@ -55,6 +55,9 @@ function colorePiano(c: CasellaTerreno, bosco: string | null, stagione: Stagione
     case 'acqua':
       if (inverno) return pari ? '#d3e8f3' : '#c8e1ef'
       return pari ? '#86bfdc' : '#7db7d6'
+    case 'sentiero':
+      if (inverno) return pari ? '#e4dfd6' : '#ddd7cc'
+      return pari ? '#dcc79d' : '#d5bf93'
     default: {
       // Più in alto, un filo più chiaro: aiuta a leggere le colline.
       const [h, s, l] = ERBA[stagione]
