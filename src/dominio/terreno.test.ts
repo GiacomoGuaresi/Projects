@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LIVELLI, linea, livello, quota, terreno } from './terreno'
+import { LIVELLI, livello, quota, terreno } from './terreno'
 
 const limiti = { minCol: -20, maxCol: 20, minRiga: -20, maxRiga: 20 }
 
@@ -31,28 +31,27 @@ describe('quota e livello', () => {
   })
 })
 
-describe('linea', () => {
-  it('va da un capo all\'altro a passi di una casella per lato', () => {
-    const passi = linea({ col: -3, riga: 2 }, { col: 4, riga: -5 })
-    expect(passi[0]).toEqual({ col: -3, riga: 2 })
-    expect(passi.at(-1)).toEqual({ col: 4, riga: -5 })
-    for (let i = 1; i < passi.length; i++) {
-      expect(Math.abs(passi[i].col - passi[i - 1].col) + Math.abs(passi[i].riga - passi[i - 1].riga)).toBe(1)
-    }
-  })
-
-  it('da una casella a sé stessa è una casella sola', () => {
-    expect(linea({ col: 1, riga: 1 }, { col: 1, riga: 1 })).toEqual([{ col: 1, riga: 1 }])
-  })
-})
+/** Le caselle di un disco: una zolla per i test. */
+function disco(col: number, riga: number, raggio: number) {
+  const caselle: { col: number; riga: number }[] = []
+  const r = Math.floor(raggio)
+  for (let dc = -r; dc <= r; dc++) {
+    for (let dr = -r; dr <= r; dr++) if (Math.hypot(dc, dr) <= raggio) caselle.push({ col: col + dc, riga: riga + dr })
+  }
+  return caselle
+}
 
 describe('terreno', () => {
+  // Due boschetti attaccati: la foresta.
   const pianori = [
-    { chiave: 'casa', famiglia: 'casa', col: 0, riga: 0, raggio: 2 },
-    { chiave: 'auto', famiglia: 'auto', col: 9, riga: -4, raggio: 1.5 },
+    { chiave: 'casa', caselle: disco(0, 0, 2) },
+    { chiave: 'auto', caselle: disco(4, 0, 1.5) },
   ]
   const mappa = terreno(limiti, pianori)
   const caselle = [...mappa.values()]
+  const foresta = pianori.flatMap((p) => p.caselle)
+  const vicino = (c: { col: number; riga: number }, d: number) =>
+    foresta.some((z) => Math.hypot(z.col - c.col, z.riga - c.riga) <= d)
 
   it('copre tutti i limiti', () => {
     expect(caselle).toHaveLength(41 * 41)
@@ -63,12 +62,23 @@ describe('terreno', () => {
     for (const c of caselle) expect(grande.get(`${c.col},${c.riga}`)).toEqual(c)
   })
 
-  it('le zolle sono piane, senza acqua dentro né attorno', () => {
+  it('ogni casella dei pianori è zolla del suo boschetto', () => {
     for (const p of pianori) {
-      const zolle = caselle.filter((c) => c.chiave === p.chiave)
-      expect(new Set(zolle.map((c) => c.altezza)).size).toBe(1)
-      const vicine = caselle.filter((c) => Math.hypot(c.col - p.col, c.riga - p.riga) <= p.raggio + 2)
-      expect(vicine.some((c) => c.tipo === 'acqua')).toBe(false)
+      for (const z of p.caselle) expect(mappa.get(`${z.col},${z.riga}`)).toMatchObject({ tipo: 'zolla', chiave: p.chiave })
+    }
+  })
+
+  it('la foresta e il sottobosco attorno stanno alla stessa quota, senza acqua né rocce', () => {
+    const insieme = caselle.filter((c) => vicino(c, 1.5))
+    expect(new Set(insieme.map((c) => c.altezza)).size).toBe(1)
+    for (const c of insieme) expect(['zolla', 'prato']).toContain(c.tipo)
+  })
+
+  it('attorno alla foresta niente acqua, e si sale o scende di un livello al massimo', () => {
+    const alto = mappa.get('0,0')!.altezza
+    for (const c of caselle.filter((c) => vicino(c, 2))) {
+      expect(c.tipo).not.toBe('acqua')
+      expect(Math.abs(c.altezza - alto)).toBeLessThanOrEqual(1)
     }
   })
 
@@ -76,43 +86,7 @@ describe('terreno', () => {
     for (const c of caselle) if (c.tipo === 'acqua') expect(c.altezza).toBe(0)
   })
 
-  it('un sentiero unisce i boschetti', () => {
-    expect(caselle.some((c) => c.tipo === 'sentiero')).toBe(true)
-    for (const { col, riga } of linea(pianori[1], pianori[0])) {
-      expect(['zolla', 'sentiero']).toContain(mappa.get(`${col},${riga}`)!.tipo)
-    }
-  })
-
   it('le rocce stanno solo in alto', () => {
     for (const c of caselle) if (c.tipo === 'roccia') expect(c.altezza).toBeGreaterThanOrEqual(2)
-  })
-})
-
-describe('terreno di una famiglia', () => {
-  const fratelli = [
-    { chiave: 'software / projects', famiglia: 'software', col: 0, riga: 0, raggio: 3 },
-    { chiave: 'software / grocery', famiglia: 'software', col: 6, riga: 0, raggio: 2 },
-  ]
-  const lontano = { chiave: 'casa', famiglia: 'casa', col: -6, riga: 12, raggio: 2 }
-  const mappa = terreno(limiti, [...fratelli, lontano])
-  const caselle = [...mappa.values()]
-  const vicino = (c: { col: number; riga: number }, p: (typeof fratelli)[number]) =>
-    Math.hypot(c.col - p.col, c.riga - p.riga) <= p.raggio + 1.5
-
-  it('le zolle dei fratelli e il prato in mezzo stanno alla stessa quota, senza acqua né rocce', () => {
-    const insieme = caselle.filter((c) => fratelli.some((p) => vicino(c, p)))
-    expect(new Set(insieme.map((c) => c.altezza)).size).toBe(1)
-    for (const c of insieme) expect(['zolla', 'prato', 'sentiero']).toContain(c.tipo)
-  })
-
-  it('tra i fratelli non passa nessun sentiero, solo quello che arriva da fuori', () => {
-    const arrivo = new Set(linea(lontano, fratelli[0]).map(({ col, riga }) => `${col},${riga}`))
-    for (const c of caselle) if (c.tipo === 'sentiero') expect(arrivo.has(`${c.col},${c.riga}`)).toBe(true)
-  })
-
-  it('un sentiero unisce la famiglia al resto', () => {
-    for (const { col, riga } of linea(lontano, fratelli[0])) {
-      expect(['zolla', 'sentiero']).toContain(mappa.get(`${col},${riga}`)!.tipo)
-    }
   })
 })

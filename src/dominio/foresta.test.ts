@@ -9,7 +9,6 @@ import {
   statisticheBosco,
   verdeZolla,
   type Elemento,
-  type Lotto,
 } from './foresta'
 import type { Attivita, Stato } from './tipi'
 
@@ -90,19 +89,28 @@ describe('disponi', () => {
     expect(new Set(piantati.map(posto)).size).toBe(piantati.length)
   })
 
-  it('i boschetti non si toccano', () => {
+  it('la foresta è un pezzo solo, senza prato tra i boschetti', () => {
     const elenco = [
       ...Array.from({ length: 20 }, () => attivita('Casa', giorno(1))),
       ...Array.from({ length: 9 }, () => attivita('Auto', giorno(2))),
       ...Array.from({ length: 3 }, () => attivita('Bagno', giorno(3))),
     ]
-    const { lotti } = disponi(boschetti(elenco), 0)
-    for (const a of lotti) {
-      for (const b of lotti) {
-        if (a === b) continue
-        expect(Math.hypot(a.col - b.col, a.riga - b.riga)).toBeGreaterThan(a.raggio + b.raggio)
+    const posti = new Set(alberi(disponi(boschetti(elenco), 0).elementi).map(posto))
+    // Da un albero si arriva a tutti gli altri passando solo da alberi attaccati per lato.
+    const [primo] = posti
+    const raggiunti = new Set([primo])
+    const coda = [primo]
+    while (coda.length) {
+      const [col, riga] = coda.pop()!.split(',').map(Number)
+      for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const k = `${col + dc},${riga + dr}`
+        if (posti.has(k) && !raggiunti.has(k)) {
+          raggiunti.add(k)
+          coda.push(k)
+        }
       }
     }
+    expect(raggiunti.size).toBe(posti.size)
   })
 
   it('un albero nuovo non sposta quelli già piantati', () => {
@@ -159,27 +167,22 @@ describe('disponi', () => {
     ]
     const foresta = disponi(boschetti(elenco), 10)
     const lotto = (chiave: string) => foresta.lotti.find((l) => l.chiave === chiave)!
-    const distacco = (a: Lotto, b: Lotto) => Math.hypot(a.col - b.col, a.riga - b.riga) - a.raggio - b.raggio
+    const zolle = new Map(foresta.caselle.map((c) => [posto(c as Elemento), c.chiave]))
+    const caselleDi = (chiave: string) => foresta.caselle.filter((c) => c.chiave === chiave)
+    const attaccate = ({ col, riga }: { col: number; riga: number }) =>
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dc, dr]) => `${col + dc},${riga + dr}`)
     const software = ['software / projects', 'software / grocery', 'software'].map(lotto)
 
-    it('i boschetti della stessa famiglia stanno quasi attaccati, alla stessa quota', () => {
+    it('i boschetti della stessa famiglia si toccano, alla stessa quota', () => {
       expect(new Set(software.map((l) => l.famiglia))).toEqual(new Set(['software']))
       expect(new Set(software.map((l) => l.altezza)).size).toBe(1)
       for (const a of software) {
-        const vicino = Math.min(...software.filter((b) => b !== a).map((b) => distacco(a, b)))
-        expect(vicino).toBeGreaterThanOrEqual(1)
-        expect(vicino).toBeLessThan(2)
-      }
-    })
-
-    it('tra famiglie diverse resta il sentiero', () => {
-      for (const a of software) {
-        for (const b of [lotto('casa'), lotto('auto')]) expect(distacco(a, b)).toBeGreaterThanOrEqual(2)
+        const fratelli = software.filter((b) => b !== a).map((b) => b.chiave)
+        expect(caselleDi(a.chiave).some((c) => attaccate(c).some((v) => fratelli.includes(zolle.get(v) ?? '')))).toBe(true)
       }
     })
 
     it('ogni albero sta sulla zolla del suo boschetto', () => {
-      const zolle = new Map(foresta.caselle.map((c) => [posto(c as Elemento), c.chiave]))
       for (const a of alberi(foresta.elementi)) {
         if (a.tipo === 'albero') expect(zolle.get(posto(a))).toBe(a.chiave)
       }

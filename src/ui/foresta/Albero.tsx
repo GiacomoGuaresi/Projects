@@ -111,7 +111,7 @@ function AlberoVivo({
 }) {
   const caso = generatore(seed)
   const specie = SPECIE[Math.floor(caso() * SPECIE.length)]
-  const scala = cifra((0.85 + caso() * 0.35) * crescita)
+  const scala = cifra((1.1 + caso() * 0.35) * crescita)
   const h = Math.round(95 + caso() * 40)
   const s = Math.round(28 + caso() * 18)
   const l = Math.round(34 + caso() * 12)

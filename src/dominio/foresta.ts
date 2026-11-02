@@ -1,13 +1,14 @@
 // La foresta (doc/08-interfaccia.md, "Foresta"): ogni attività è una pianta
 // che cresce col suo stato (germoglio da fare, alberello in corso, albero
 // completo, albero secco bloccato), le piante dello stesso progetto formano un
-// boschetto, le faccende fatte sono arbusti sparsi. I boschetti della stessa
-// famiglia ("Software / Projects", "Software / Grocery") stanno attaccati, come
-// un bosco solo. Qui solo la disposizione su una griglia di caselle e la
-// proiezione isometrica; il disegno sta in src/ui/foresta.
+// boschetto, le faccende fatte sono arbusti di sottobosco. I boschetti stanno
+// tutti attaccati, una foresta sola; quelli della stessa famiglia ("Software /
+// Projects", "Software / Grocery") uno accanto all'altro. Qui solo la
+// disposizione su una griglia di caselle e la proiezione isometrica; il
+// disegno sta in src/ui/foresta.
 
 import { chiaveProgetto, famigliaProgetto, tonalita } from './progetto'
-import { sorteggio, terreno, type CasellaTerreno } from './terreno'
+import { sorteggio, terreno, type CasellaTerreno, type Pianoro } from './terreno'
 import type { Attivita, Stato } from './tipi'
 
 export type AlberoForesta = Pick<Attivita, 'id' | 'titolo' | 'progetto' | 'stato' | 'creata_il' | 'modificata_il'>
@@ -64,47 +65,77 @@ export interface Casella {
   riga: number
 }
 
-interface Scostamento extends Casella {
-  /** Distanza dal centro, al quadrato. */
-  d2: number
-}
+const chiaveCasella = (col: number, riga: number) => `${col},${riga}`
 
-let spirale: Scostamento[] = []
-let raggioSpirale = 0
+const VICINE = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+] as const
 
-/**
- * Le caselle attorno al centro, dalla più vicina alla più lontana (a parità,
- * in senso orario): l'albero n-esimo di un boschetto va sempre nella casella
- * n-esima, quindi piantarne uno nuovo non sposta gli altri.
- */
-function caselleFino(raggio: number): Scostamento[] {
-  if (raggio <= raggioSpirale) return spirale
-  raggioSpirale = Math.max(raggio, raggioSpirale * 2, 16)
-  const celle: Scostamento[] = []
-  for (let col = -raggioSpirale; col <= raggioSpirale; col++) {
-    for (let riga = -raggioSpirale; riga <= raggioSpirale; riga++) {
-      const d2 = col * col + riga * riga
-      if (d2 <= raggioSpirale * raggioSpirale) celle.push({ col, riga, d2 })
+/** La casella più vicina a `verso`; a parità di distanza, in senso orario. */
+function piuVicina(candidate: Iterable<Casella>, verso: { col: number; riga: number }): Casella {
+  let migliore: Casella | null = null
+  let distanza = Infinity
+  let angolo = Infinity
+  for (const c of candidate) {
+    const d = Math.hypot(c.col - verso.col, c.riga - verso.riga)
+    const a = Math.atan2(c.riga - verso.riga, c.col - verso.col)
+    if (d < distanza - 1e-9 || (Math.abs(d - distanza) <= 1e-9 && a < angolo)) {
+      migliore = c
+      distanza = d
+      angolo = a
     }
   }
-  celle.sort((a, b) => a.d2 - b.d2 || Math.atan2(a.riga, a.col) - Math.atan2(b.riga, b.col))
-  spirale = celle
-  return spirale
+  return migliore!
 }
 
-/** Le prime `n` caselle della spirale, allargandola se serve. */
-function primeCaselle(n: number): Scostamento[] {
-  let raggio = Math.max(1, Math.ceil(Math.sqrt(n / Math.PI)) + 1)
-  while (caselleFino(raggio).length < n) raggio *= 2
-  return caselleFino(raggio).slice(0, n)
+function baricentro(caselle: readonly Casella[]): { col: number; riga: number } {
+  const col = caselle.reduce((s, c) => s + c.col, 0) / caselle.length
+  const riga = caselle.reduce((s, c) => s + c.riga, 0) / caselle.length
+  return { col, riga }
+}
+
+/** Le caselle libere attaccate per lato a quelle occupate. */
+function contorno(occupate: ReadonlyMap<string, Casella>): Casella[] {
+  const libere = new Map<string, Casella>()
+  for (const c of occupate.values()) {
+    for (const [dc, dr] of VICINE) {
+      const k = chiaveCasella(c.col + dc, c.riga + dr)
+      if (!occupate.has(k)) libere.set(k, { col: c.col + dc, riga: c.riga + dr })
+    }
+  }
+  return [...libere.values()]
+}
+
+/**
+ * Le `n` caselle di un boschetto: dal seme si allarga sempre sulla casella
+ * libera, attaccata a quelle già prese, più vicina al seme. Si incastra così
+ * tra i boschetti già messi, senza lasciare prato. L'albero n-esimo va sempre
+ * nella casella n-esima, quindi piantarne uno nuovo non sposta gli altri.
+ */
+function cresci(seme: Casella, n: number, occupate: Map<string, Casella>): Casella[] {
+  const prese: Casella[] = []
+  const bordo = new Map<string, Casella>([[chiaveCasella(seme.col, seme.riga), seme]])
+  while (prese.length < n) {
+    const c = piuVicina(bordo.values(), seme)
+    const k = chiaveCasella(c.col, c.riga)
+    bordo.delete(k)
+    occupate.set(k, c)
+    prese.push(c)
+    for (const [dc, dr] of VICINE) {
+      const kv = chiaveCasella(c.col + dc, c.riga + dr)
+      if (!occupate.has(kv)) bordo.set(kv, { col: c.col + dc, riga: c.riga + dr })
+    }
+  }
+  return prese
 }
 
 // Disposizione ---------------------------------------------------------------------
 
-/** Lo spazio libero tra due boschetti, in caselle: il sentiero e l'etichetta. */
-const SENTIERO = 2
-/** Lo spazio tra due boschetti della stessa famiglia: un filo di prato, così sembrano un bosco solo. */
-const SENTIERO_FAMIGLIA = 1
+/** Le caselle di prato libere per arbusto: poche, così il prato è quasi tutto sottobosco. */
+const PRATO_PER_ARBUSTO = 1.25
 /** Seed fisso degli arbusti: lo stesso conto dà sempre gli stessi posti. */
 const SEED_ARBUSTI = 20261002
 
@@ -113,10 +144,10 @@ export interface Lotto {
   /** `famigliaProgetto(chiave)`: i lotti della stessa famiglia stanno vicini. */
   famiglia: string
   nome: string
-  /** Il centro del boschetto. */
+  /** La casella del boschetto più vicina al suo baricentro: lì il nome e le farfalle. */
   col: number
   riga: number
-  /** Il raggio della zolla, in caselle. */
+  /** Il raggio di un disco con tante caselle quante il boschetto. */
   raggio: number
   /** Il livello del pianoro. */
   altezza: number
@@ -139,20 +170,19 @@ export interface Foresta {
   limiti: { minCol: number; maxCol: number; minRiga: number; maxRiga: number }
 }
 
-const chiaveCasella = (col: number, riga: number) => `${col},${riga}`
-
 /**
- * Mette i boschetti su una griglia a partire dal centro: ciascuno occupa un
- * disco di caselle (la zolla) con gli alberi a spirale. I boschetti della
- * stessa famiglia si compongono prima tra loro, quasi attaccati; poi la
- * famiglia, come un disco solo, va nella prima posizione della spirale grande
- * che non tocca le famiglie già messe. Attorno il terreno (colline, acqua,
- * sentieri, rocce); gli arbusti finiscono sul prato libero, sempre nello
- * stesso ordine.
+ * Una foresta sola e fitta: il primo boschetto parte dal centro, ogni altro
+ * dalla casella libera sul bordo della foresta più vicina alla sua famiglia
+ * (al centro, se è il primo della famiglia), e cresce attaccato a quelli già
+ * messi. I boschetti più vecchi stanno quindi al centro, quelli di una
+ * famiglia uno accanto all'altro. Attorno il terreno (colline, acqua, rocce);
+ * gli arbusti fanno da sottobosco, più fitti al margine della foresta.
  */
 export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta {
   const lotti: Omit<Lotto, 'altezza'>[] = []
+  const pianori: Pianoro[] = []
   const piante: { chiave: string; albero: AlberoForesta; col: number; riga: number }[] = []
+  const occupate = new Map<string, Casella>()
 
   // Le famiglie, nell'ordine del loro boschetto più vecchio.
   const famiglie = new Map<string, Boschetto[]>()
@@ -161,41 +191,38 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
     famiglie.set(famiglia, [...(famiglie.get(famiglia) ?? []), gruppo])
   }
 
-  const messe: Pick<Lotto, 'col' | 'riga' | 'raggio'>[] = []
   for (const [famiglia, membri] of famiglie) {
-    // I boschetti della famiglia attorno al primo, a un passo l'uno dall'altro.
-    const locali: (Pick<Lotto, 'col' | 'riga' | 'raggio'> & { gruppo: Boschetto; posti: Scostamento[] })[] = []
+    const parenti: Casella[] = []
     for (const gruppo of membri) {
-      const posti = primeCaselle(gruppo.alberi.length)
-      const raggio = Math.sqrt(posti[posti.length - 1].d2)
-      locali.push({ gruppo, posti, raggio, ...trovaPosto(locali, raggio, SENTIERO_FAMIGLIA) })
-    }
-    const ingombro = Math.max(...locali.map((l) => Math.hypot(l.col, l.riga) + l.raggio))
-    const centro = trovaPosto(messe, ingombro, SENTIERO)
-    messe.push({ ...centro, raggio: ingombro })
-
-    for (const { gruppo, posti, raggio, ...locale } of locali) {
-      const col = centro.col + locale.col
-      const riga = centro.riga + locale.riga
-      lotti.push({ chiave: gruppo.chiave, famiglia, nome: gruppo.nome, col, riga, raggio, alberi: gruppo.alberi.length })
-      gruppo.alberi.forEach((albero, i) =>
-        piante.push({ chiave: gruppo.chiave, albero, col: col + posti[i].col, riga: riga + posti[i].riga }),
-      )
+      const verso = parenti.length ? baricentro(parenti) : { col: 0, riga: 0 }
+      const seme = occupate.size ? piuVicina(contorno(occupate), verso) : { col: 0, riga: 0 }
+      const caselle = cresci(seme, gruppo.alberi.length, occupate)
+      parenti.push(...caselle)
+      const centro = piuVicina(caselle, baricentro(caselle))
+      lotti.push({
+        chiave: gruppo.chiave,
+        famiglia,
+        nome: gruppo.nome,
+        ...centro,
+        raggio: Math.sqrt(caselle.length / Math.PI),
+        alberi: gruppo.alberi.length,
+      })
+      pianori.push({ chiave: gruppo.chiave, caselle })
+      gruppo.alberi.forEach((albero, i) => piante.push({ chiave: gruppo.chiave, albero, ...caselle[i] }))
     }
   }
 
-  // Il prato: i boschetti più un bordo, allargato finché gli arbusti stanno
-  // radi (al massimo una casella di prato libera su due).
-  const bordo = lotti.reduce(
-    (b, l) => ({
-      minCol: Math.min(b.minCol, Math.floor(l.col - l.raggio)),
-      maxCol: Math.max(b.maxCol, Math.ceil(l.col + l.raggio)),
-      minRiga: Math.min(b.minRiga, Math.floor(l.riga - l.raggio)),
-      maxRiga: Math.max(b.maxRiga, Math.ceil(l.riga + l.raggio)),
+  // Il prato: la foresta più un bordo stretto, allargato finché gli arbusti ci stanno.
+  const bordo = [...occupate.values()].reduce(
+    (b, c) => ({
+      minCol: Math.min(b.minCol, c.col),
+      maxCol: Math.max(b.maxCol, c.col),
+      minRiga: Math.min(b.minRiga, c.riga),
+      maxRiga: Math.max(b.maxRiga, c.riga),
     }),
     { minCol: 0, maxCol: 0, minRiga: 0, maxRiga: 0 },
   )
-  let margine = 2
+  let margine = 1
   let limiti = bordo
   let mappa: Map<string, CasellaTerreno>
   let libere: CasellaTerreno[]
@@ -206,17 +233,21 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
       minRiga: bordo.minRiga - margine,
       maxRiga: bordo.maxRiga + margine,
     }
-    mappa = terreno(limiti, lotti)
+    mappa = terreno(limiti, pianori)
     libere = [...mappa.values()].filter((c) => c.tipo === 'prato')
-    if (libere.length >= arbusti * 2) break
+    if (libere.length >= arbusti * PRATO_PER_ARBUSTO) break
     margine++
   }
 
+  // Gli arbusti prima vicino alla foresta, con un po' di caso perché il margine non sia una riga.
+  const zolle = [...occupate.values()]
+  const lontananza = (c: Casella) =>
+    zolle.reduce((d, z) => Math.min(d, Math.hypot(z.col - c.col, z.riga - c.riga)), Infinity)
   const altezza = (col: number, riga: number) => mappa.get(chiaveCasella(col, riga))?.altezza ?? 0
   const elementi: Elemento[] = [
     ...piante.map((p) => ({ tipo: 'albero' as const, ...p, altezza: altezza(p.col, p.riga) })),
     ...libere
-      .map((c) => ({ c, n: sorteggio(c.col, c.riga, SEED_ARBUSTI) }))
+      .map((c) => ({ c, n: (zolle.length ? lontananza(c) : 0) + 2 * sorteggio(c.col, c.riga, SEED_ARBUSTI) }))
       .sort((a, b) => a.n - b.n)
       .slice(0, arbusti)
       .map(({ c }, seed) => ({ tipo: 'arbusto' as const, seed, col: c.col, riga: c.riga, altezza: c.altezza })),
@@ -236,22 +267,6 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
     caselle: [...mappa.values()].sort(inProfondita),
     elementi: elementi.sort(inProfondita),
     limiti,
-  }
-}
-
-/** Il primo centro, lungo la spirale, lontano almeno `distacco` caselle da tutti i dischi. */
-function trovaPosto(
-  dischi: readonly Pick<Lotto, 'col' | 'riga' | 'raggio'>[],
-  raggio: number,
-  distacco: number,
-): Casella {
-  for (let r = 8; ; r *= 2) {
-    for (const c of caselleFino(r)) {
-      const libero = dischi.every(
-        (l) => Math.hypot(l.col - c.col, l.riga - c.riga) >= l.raggio + raggio + distacco,
-      )
-      if (libero) return { col: c.col, riga: c.riga }
-    }
   }
 }
 

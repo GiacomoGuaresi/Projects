@@ -1,11 +1,11 @@
 // Il terreno della Foresta (doc/08-interfaccia.md, "Foresta"): colline,
-// laghetti, sentieri e rocce. Le altezze vengono da un rumore con seed fisso
+// laghetti e rocce. Le altezze vengono da un rumore con seed fisso
 // sulle coordinate assolute, quindi una foresta che si allarga non cambia le
 // colline che c'erano già.
 
 import { generatore } from './caso'
 
-export type TipoCasella = 'prato' | 'zolla' | 'acqua' | 'sentiero' | 'roccia'
+export type TipoCasella = 'prato' | 'zolla' | 'acqua' | 'roccia'
 
 export interface CasellaTerreno {
   col: number
@@ -17,25 +17,23 @@ export interface CasellaTerreno {
   chiave?: string
 }
 
-/** Un boschetto, come serve al terreno: il centro e il raggio della zolla. */
+/** Un boschetto, come serve al terreno: le caselle della sua zolla. */
 export interface Pianoro {
   chiave: string
-  /** I pianori della stessa famiglia stanno alla stessa quota, uniti dal sottobosco. */
-  famiglia: string
-  col: number
-  riga: number
-  raggio: number
+  caselle: readonly { col: number; riga: number }[]
 }
 
 export const LIVELLI = 4
 /** Sotto questa quota c'è acqua. */
-const ACQUA = 0.2
+const ACQUA = 0.12
 /** Le soglie tra un livello e il successivo. */
 const SOGLIE = [0.42, 0.56, 0.68]
-/** Fin dove arriva il sottobosco piano attorno alle zolle di una famiglia. */
+/** Fin dove arriva il sottobosco piano, senza rocce, attorno alla foresta. */
 const SOTTOBOSCO = 1.5
+/** Fin dove il terreno si raccorda alla foresta, di un livello al massimo. */
+const RACCORDO = 2
 /** Le rocce, sulle caselle alte: una su tante. */
-const ROCCE = 0.05
+const ROCCE = 0.03
 const SEED_TERRENO = 7331
 const SEED_ROCCE = 4049
 
@@ -72,32 +70,11 @@ export function livello(q: number): number {
   return SOGLIE.filter((s) => q >= s).length
 }
 
-/** Le caselle di una linea retta, una attaccata all'altra per lato (niente salti in diagonale). */
-export function linea(da: { col: number; riga: number }, a: { col: number; riga: number }) {
-  const dc = Math.abs(a.col - da.col)
-  const dr = Math.abs(a.riga - da.riga)
-  const caselle = [{ col: da.col, riga: da.riga }]
-  let passiCol = 0
-  let passiRiga = 0
-  // Si avanza sull'asse che, in proporzione, è più indietro.
-  for (let i = 0; i < dc + dr; i++) {
-    if (dr === 0 || (dc !== 0 && (passiCol + 0.5) / dc < (passiRiga + 0.5) / dr)) passiCol++
-    else passiRiga++
-    caselle.push({
-      col: da.col + Math.sign(a.col - da.col) * passiCol,
-      riga: da.riga + Math.sign(a.riga - da.riga) * passiRiga,
-    })
-  }
-  return caselle
-}
-
 /**
- * Il terreno dentro i limiti. I boschetti stanno su un pianoro alla quota del
- * loro centro (del primo, per una famiglia), raccordato al resto da un anello
- * che scende o sale di un livello al massimo; dentro e attorno ai boschetti
- * niente acqua. Tra i boschetti di una famiglia il prato è piano e senza
- * rocce, così sembrano un bosco solo. Ogni famiglia è unita da un sentiero
- * alla più vicina di quelle messe prima.
+ * Il terreno dentro i limiti. Tutta la foresta sta su un pianoro solo, alla
+ * quota della prima zolla, raccordato al resto da un anello che scende o sale
+ * di un livello al massimo; dentro e attorno alla foresta niente acqua, e al
+ * margine il sottobosco è piano e senza rocce.
  */
 export function terreno(
   limiti: { minCol: number; maxCol: number; minRiga: number; maxRiga: number },
@@ -111,50 +88,41 @@ export function terreno(
     }
   }
 
-  const quote = new Map<string, number>()
-  const membri = new Map<string, number>()
-  for (const p of pianori) {
-    if (!quote.has(p.famiglia)) quote.set(p.famiglia, livello(quota(p.col, p.riga)))
-    membri.set(p.famiglia, (membri.get(p.famiglia) ?? 0) + 1)
-  }
+  const zolle = pianori.flatMap((p) => p.caselle.map((c) => ({ ...c, chiave: p.chiave })))
   const sottobosco = new Set<string>()
+  if (zolle.length > 0) {
+    const alto = livello(quota(zolle[0].col, zolle[0].riga))
+    for (const z of zolle) {
+      const c = caselle.get(chiave(z.col, z.riga))
+      if (c) Object.assign(c, { altezza: alto, tipo: 'zolla', chiave: z.chiave })
+    }
 
-  for (const p of pianori) {
-    const alto = quote.get(p.famiglia)!
-    const famiglia = membri.get(p.famiglia)! > 1
-    const r = Math.ceil(p.raggio) + 2
-    for (let dc = -r; dc <= r; dc++) {
-      for (let dr = -r; dr <= r; dr++) {
-        const c = caselle.get(chiave(p.col + dc, p.riga + dr))
-        if (!c || c.tipo === 'zolla') continue
-        const d = Math.hypot(dc, dr)
-        if (d <= p.raggio) {
-          Object.assign(c, { altezza: alto, tipo: 'zolla', chiave: p.chiave })
-        } else if (famiglia && d <= p.raggio + SOTTOBOSCO) {
-          Object.assign(c, { altezza: alto, tipo: 'prato' })
-          sottobosco.add(chiave(c.col, c.riga))
-        } else if (d <= p.raggio + 2) {
-          c.altezza = Math.min(Math.max(c.altezza, alto - 1), alto + 1)
-          if (c.tipo === 'acqua') c.tipo = 'prato'
+    // Quanto dista dalla foresta ogni casella dell'anello attorno.
+    const distanze = new Map<string, number>()
+    for (const z of zolle) {
+      for (let dc = -RACCORDO; dc <= RACCORDO; dc++) {
+        for (let dr = -RACCORDO; dr <= RACCORDO; dr++) {
+          const k = chiave(z.col + dc, z.riga + dr)
+          const d = Math.hypot(dc, dr)
+          if (d <= RACCORDO && d < (distanze.get(k) ?? Infinity)) distanze.set(k, d)
         }
+      }
+    }
+    for (const [k, d] of distanze) {
+      const c = caselle.get(k)
+      if (!c || c.tipo === 'zolla') continue
+      if (d <= SOTTOBOSCO) {
+        Object.assign(c, { altezza: alto, tipo: 'prato' })
+        sottobosco.add(k)
+      } else {
+        c.altezza = Math.min(Math.max(c.altezza, alto - 1), alto + 1)
+        if (c.tipo === 'acqua') c.tipo = 'prato'
       }
     }
   }
 
   // L'acqua sta sempre in basso.
   for (const c of caselle.values()) if (c.tipo === 'acqua') c.altezza = 0
-
-  pianori.forEach((p, i) => {
-    const prima = pianori.slice(0, i)
-    if (prima.length === 0 || prima.some((q) => q.famiglia === p.famiglia)) return
-    const vicino = prima.reduce((a, b) =>
-      Math.hypot(a.col - p.col, a.riga - p.riga) <= Math.hypot(b.col - p.col, b.riga - p.riga) ? a : b,
-    )
-    for (const { col, riga } of linea(p, vicino)) {
-      const c = caselle.get(chiave(col, riga))
-      if (c && c.tipo !== 'zolla') c.tipo = 'sentiero'
-    }
-  })
 
   for (const c of caselle.values()) {
     if (sottobosco.has(chiave(c.col, c.riga))) continue
