@@ -1,7 +1,7 @@
 // La foresta (doc/08-interfaccia.md, "Foresta"): ogni attività è una pianta
 // che cresce col suo stato (germoglio da fare, alberello in corso, albero
-// completo, albero secco bloccato), le piante dello stesso progetto formano un
-// boschetto, le faccende fatte sono arbusti di sottobosco. I boschetti stanno
+// completo, alberello anche bloccato), le piante dello stesso progetto formano
+// un boschetto della stessa specie, le faccende fatte sono arbusti di sottobosco. I boschetti stanno
 // tutti attaccati, una foresta sola; quelli della stessa famiglia ("Software /
 // Projects", "Software / Grocery") uno accanto all'altro. Qui solo la
 // disposizione su una griglia di caselle e la proiezione isometrica; il
@@ -24,7 +24,7 @@ export interface Boschetto {
 
 export const SENZA_PROGETTO = 'Sparsi'
 
-// Per data di creazione, che non cambia: una pianta che cresce o si secca
+// Per data di creazione, che non cambia: una pianta che cresce o si blocca
 // resta al suo posto.
 const prima = (a: AlberoForesta, b: AlberoForesta) => a.creata_il.localeCompare(b.creata_il) || a.id - b.id
 
@@ -56,6 +56,33 @@ export function boschetti(attivita: readonly Attivita[]): Boschetto[] {
       return { chiave, nome, alberi: alberi.sort(prima) }
     })
     .sort((a, b) => prima(a.alberi[0], b.alberi[0]) || a.chiave.localeCompare(b.chiave))
+}
+
+// Specie ---------------------------------------------------------------------------
+
+export const SPECIE = ['conifera', 'tonda', 'betulla', 'cipresso'] as const
+export type Specie = (typeof SPECIE)[number]
+
+/**
+ * La specie degli alberi di ogni boschetto, dal nome del progetto: ognuno la
+ * sua finché bastano, poi si ripetono il meno possibile. Si sceglie dal più
+ * vecchio, quindi un progetto nuovo non cambia la specie degli altri. Gli
+ * Sparsi non ci sono: i loro alberi restano misti, la specie la dà l'id.
+ */
+export function specieBoschetti(gruppi: readonly Boschetto[]): Map<string, Specie> {
+  const specie = new Map<string, Specie>()
+  const usate = SPECIE.map(() => 0)
+  for (const { chiave } of gruppi) {
+    if (!chiave) continue
+    const minimo = Math.min(...usate)
+    const preferita = tonalita(chiave) % SPECIE.length
+    // Dalla preferita in avanti, la prima tra le meno usate.
+    let i = preferita
+    while (usate[i] !== minimo) i = (i + 1) % SPECIE.length
+    usate[i]++
+    specie.set(chiave, SPECIE[i])
+  }
+  return specie
 }
 
 // Griglia ------------------------------------------------------------------------
@@ -156,7 +183,7 @@ export interface Lotto {
 
 /** Quello che sta sopra il terreno, ciascuno sulla sua casella e alla sua altezza. */
 export type Elemento =
-  | ({ tipo: 'albero'; chiave: string; albero: AlberoForesta; altezza: number } & Casella)
+  | ({ tipo: 'albero'; chiave: string; albero: AlberoForesta; specie: Specie | null; altezza: number } & Casella)
   | ({ tipo: 'arbusto'; seed: number; altezza: number } & Casella)
   | ({ tipo: 'roccia'; seed: number; altezza: number } & Casella)
 
@@ -181,7 +208,8 @@ export interface Foresta {
 export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta {
   const lotti: Omit<Lotto, 'altezza'>[] = []
   const pianori: Pianoro[] = []
-  const piante: { chiave: string; albero: AlberoForesta; col: number; riga: number }[] = []
+  const piante: { chiave: string; albero: AlberoForesta; specie: Specie | null; col: number; riga: number }[] = []
+  const specie = specieBoschetti(gruppi)
   const occupate = new Map<string, Casella>()
 
   // Le famiglie, nell'ordine del loro boschetto più vecchio.
@@ -208,7 +236,8 @@ export function disponi(gruppi: readonly Boschetto[], arbusti: number): Foresta 
         alberi: gruppo.alberi.length,
       })
       pianori.push({ chiave: gruppo.chiave, caselle })
-      gruppo.alberi.forEach((albero, i) => piante.push({ chiave: gruppo.chiave, albero, ...caselle[i] }))
+      const sua = specie.get(gruppo.chiave) ?? null
+      gruppo.alberi.forEach((albero, i) => piante.push({ chiave: gruppo.chiave, albero, specie: sua, ...caselle[i] }))
     }
   }
 
@@ -353,7 +382,7 @@ export interface NumeriForesta {
   /** Da fare e in corso. */
   inCrescita: number
   /** Bloccate. */
-  secchi: number
+  bloccati: number
   /** Le completate su tutte le attività, da 0 a 100. */
   percentuale: number
   /** Gli alberi piantati negli ultimi 7 giorni. */
@@ -367,7 +396,7 @@ const SETTIMANA = 7 * 86_400_000
 export function numeriForesta(attivita: readonly Attivita[], arbusti: number | null, adesso = new Date()): NumeriForesta {
   let alberi = 0
   let inCrescita = 0
-  let secchi = 0
+  let bloccati = 0
   let settimana = 0
   let ultimo: string | null = null
   for (const a of attivita) {
@@ -377,7 +406,7 @@ export function numeriForesta(attivita: readonly Attivita[], arbusti: number | n
         if (adesso.getTime() - new Date(a.completata_il).getTime() < SETTIMANA) settimana++
         if (!ultimo || a.completata_il > ultimo) ultimo = a.completata_il
       }
-    } else if (a.stato === 'bloccato') secchi++
+    } else if (a.stato === 'bloccato') bloccati++
     else inCrescita++
   }
   return {
@@ -385,7 +414,7 @@ export function numeriForesta(attivita: readonly Attivita[], arbusti: number | n
     boschetti: boschetti(attivita).length,
     arbusti,
     inCrescita,
-    secchi,
+    bloccati,
     percentuale: attivita.length ? Math.round((alberi / attivita.length) * 100) : 0,
     settimana,
     ultimo,

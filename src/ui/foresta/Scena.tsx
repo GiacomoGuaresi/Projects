@@ -107,7 +107,7 @@ function Vento({ seed, children }: { seed: number; children: ReactNode }) {
 }
 
 /** Quanto è grande, a occhio, la pianta di ogni stato: alone e scintille la seguono. */
-const TAGLIA: Record<Stato, number> = { da_fare: 0.45, in_corso: 0.7, completo: 1, bloccato: 0.8 }
+const TAGLIA: Record<Stato, number> = { da_fare: 0.45, in_corso: 0.7, completo: 1, bloccato: 0.7 }
 
 /** Dietro una pianta cambiata oggi: un alone chiaro che pulsa piano. */
 function Alone({ taglia }: { taglia: number }) {
@@ -297,7 +297,7 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
             style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
           >
             <Vento seed={e.albero.id}>
-              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} />
+              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} specie={e.specie} />
             </Vento>
           </g>
           {oggi && <Scintille seed={e.albero.id} taglia={TAGLIA[e.albero.stato]} />}

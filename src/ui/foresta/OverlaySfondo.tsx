@@ -104,7 +104,7 @@ function Oggi({ ambiente, adesso }: { ambiente: Ambiente; adesso: Date }) {
 function Numeri({ numeri, adesso }: { numeri: NumeriForesta; adesso: Date }) {
   const piante = [
     numeri.inCrescita > 0 && `${numeri.inCrescita} in crescita`,
-    numeri.secchi > 0 && plurale(numeri.secchi, 'secco', 'secchi'),
+    numeri.bloccati > 0 && plurale(numeri.bloccati, 'bloccato', 'bloccati'),
   ].filter(Boolean)
   return (
     <section className="flex flex-col gap-1 border-t border-white/20 pt-3 first:border-0 first:pt-0">

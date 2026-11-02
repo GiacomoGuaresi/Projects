@@ -1,5 +1,6 @@
 import type { Stagione } from '../../dominio/ambiente'
 import { generatore } from '../../dominio/caso'
+import { SPECIE, type Specie } from '../../dominio/foresta'
 import type { Stato } from '../../dominio/tipi'
 
 // Alberi, arbusti e rocce disegnati in SVG (doc/08-interfaccia.md, "Foresta"):
@@ -8,8 +9,6 @@ import type { Stato } from '../../dominio/tipi'
 // latifoglie perdono le foglie). La base è (0, 0), il centro della casella; si
 // cresce verso l'alto (y negative). La luce viene da sinistra: lato destro più
 // scuro.
-
-const SPECIE = ['conifera', 'tonda', 'betulla', 'cipresso'] as const
 
 const hsl = (h: number, s: number, l: number) => `hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)`
 const cifra = (n: number) => Math.round(n * 10) / 10
@@ -25,20 +24,23 @@ interface PropsAlbero {
   seed: number
   stato: Stato
   stagione: Stagione
+  /** La specie del boschetto; `null` (gli Sparsi) la sceglie il seed. */
+  specie: Specie | null
 }
 
 /**
  * La pianta di un'attività, che cresce col suo stato: germoglio da fare,
- * alberello in corso, albero completo (circa uno su tre con qualche frutto),
- * albero secco bloccato. Specie e colori vengono dal seed (l'id
- * dell'attività), quindi l'alberello diventa proprio quell'albero.
+ * alberello in corso o bloccato, albero completo (circa uno su tre con
+ * qualche frutto). La specie è quella del boschetto; forma e colori vengono
+ * dal seed (l'id dell'attività), quindi l'alberello diventa proprio
+ * quell'albero.
  */
-export function Albero({ seed, stato, stagione }: PropsAlbero) {
+export function Albero({ seed, stato, stagione, specie }: PropsAlbero) {
   if (stato === 'da_fare') return <Germoglio seed={seed} stagione={stagione} />
-  if (stato === 'bloccato') return <AlberoSecco seed={seed} />
   return (
     <AlberoVivo
       seed={seed}
+      specie={specie}
       stagione={stagione}
       crescita={stato === 'completo' ? 1 : 0.55}
       frutti={stato === 'completo' && generatore(seed + 202)() < 0.35 && (stagione === 'estate' || stagione === 'autunno')}
@@ -100,17 +102,21 @@ function RamiSpogli({ alto, legno, neve }: { alto: number; legno: string; neve: 
 /** Un albero con le foglie; `crescita` < 1 è un alberello. */
 function AlberoVivo({
   seed,
+  specie: delBoschetto,
   stagione,
   crescita,
   frutti,
 }: {
   seed: number
+  specie: Specie | null
   stagione: Stagione
   crescita: number
   frutti: boolean
 }) {
   const caso = generatore(seed)
-  const specie = SPECIE[Math.floor(caso() * SPECIE.length)]
+  // Il numero si estrae sempre, così altezza e colori dell'albero non cambiano con la specie.
+  const aCaso = SPECIE[Math.floor(caso() * SPECIE.length)]
+  const specie = delBoschetto ?? aCaso
   const scala = cifra((1.1 + caso() * 0.35) * crescita)
   const h = Math.round(95 + caso() * 40)
   const s = Math.round(28 + caso() * 18)
@@ -234,42 +240,6 @@ function Germoglio({ seed, stagione }: { seed: number; stagione: Stagione }) {
       <path d={`M0,0 Q${verso * 0.8},-3 0,-6`} fill="none" stroke={hsl(h, 40, 34)} strokeWidth={1} strokeLinecap="round" />
       <ellipse cx={-2.2} cy={-6.2} rx={2.4} ry={1.2} transform="rotate(-25 -2.2 -6.2)" fill={hsl(h, 45, 44)} />
       <ellipse cx={2.2} cy={-6.6} rx={2.4} ry={1.2} transform="rotate(25 2.2 -6.6)" fill={hsl(h, 45, 52)} />
-    </g>
-  )
-}
-
-/** Un'attività bloccata: un albero secco, rami spogli e qualche foglia secca. Uguale in ogni stagione. */
-function AlberoSecco({ seed }: { seed: number }) {
-  const caso = generatore(seed)
-  const alto = 15 + caso() * 6
-  const rami = [0.45, 0.65, 0.85].map((quota, i) => {
-    const lato = i % 2 ? 1 : -1
-    const lungo = 5 + caso() * 4
-    const y = -alto * quota
-    return { x1: 0, y1: cifra(y), x2: cifra(lato * lungo), y2: cifra(y - 3 - caso() * 4) }
-  })
-  const legno = '#7d6a58'
-  return (
-    <g>
-      <Ombra rx={5} />
-      <path d={`M-1.6,0 L-0.6,${cifra(-alto)} L0.6,${cifra(-alto)} L1.6,0 Z`} fill={legno} />
-      {rami.map((r) => (
-        <line key={r.y1} {...r} stroke={legno} strokeWidth={1.2} strokeLinecap="round" />
-      ))}
-      {rami.map((r) => (
-        <line
-          key={`r${r.y1}`}
-          x1={cifra((r.x1 + r.x2) / 2)}
-          y1={cifra((r.y1 + r.y2) / 2)}
-          x2={cifra(r.x2 * 0.5)}
-          y2={cifra(r.y2 - 3)}
-          stroke={legno}
-          strokeWidth={0.8}
-          strokeLinecap="round"
-        />
-      ))}
-      <ellipse cx={rami[0].x2} cy={rami[0].y2} rx={1.3} ry={0.8} fill="#b4823f" />
-      <ellipse cx={rami[2].x2} cy={rami[2].y2 + 1} rx={1.3} ry={0.8} fill="#a0672e" />
     </g>
   )
 }

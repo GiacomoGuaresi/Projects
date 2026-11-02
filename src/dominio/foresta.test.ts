@@ -6,6 +6,8 @@ import {
   proietta,
   quandoFa,
   SENZA_PROGETTO,
+  SPECIE,
+  specieBoschetti,
   statisticheBosco,
   verdeZolla,
   type Elemento,
@@ -210,6 +212,46 @@ describe('proietta', () => {
   })
 })
 
+describe('specieBoschetti', () => {
+  const progetti = (nomi: string[]) => boschetti(nomi.map((nome, i) => ({ ...attivita(nome, null), creata_il: giorno(i + 1) })))
+
+  it('con quattro progetti o meno, ognuno ha la sua specie', () => {
+    const specie = specieBoschetti(progetti(['Casa', 'Auto', 'Software / Projects', 'Viaggi']))
+    expect(new Set(specie.values()).size).toBe(4)
+  })
+
+  it('lo stesso progetto ha sempre la stessa specie, senza badare alle maiuscole', () => {
+    const una = specieBoschetti(progetti(['Casa', 'Auto']))
+    const due = specieBoschetti(progetti(['casa ', 'AUTO']))
+    expect(due.get('casa')).toBe(una.get('casa'))
+    expect(due.get('auto')).toBe(una.get('auto'))
+  })
+
+  it('un progetto nuovo non cambia la specie di quelli che c\'erano', () => {
+    const prima = specieBoschetti(progetti(['Casa', 'Auto', 'Viaggi']))
+    const dopo = specieBoschetti(progetti(['Casa', 'Auto', 'Viaggi', 'Orto', 'Bici']))
+    for (const [chiave, specie] of prima) expect(dopo.get(chiave)).toBe(specie)
+  })
+
+  it('con più progetti che specie, si ripetono il meno possibile', () => {
+    const specie = specieBoschetti(progetti(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']))
+    for (const s of SPECIE) expect([...specie.values()].filter((v) => v === s)).toHaveLength(2)
+  })
+
+  it('gli Sparsi non hanno una specie', () => {
+    expect(specieBoschetti(progetti(['Casa'])).has('')).toBe(false)
+    expect(specieBoschetti(boschetti([attivita(null, null)])).size).toBe(0)
+  })
+
+  it('ogni albero di un boschetto ha la specie del boschetto', () => {
+    const gruppi = boschetti([attivita('Casa', null), attivita('Casa', null), attivita('Auto', null), attivita(null, null)])
+    const specie = specieBoschetti(gruppi)
+    for (const e of alberi(disponi(gruppi, 0).elementi)) {
+      if (e.tipo === 'albero') expect(e.specie).toBe(specie.get(e.chiave) ?? null)
+    }
+  })
+})
+
 describe('statisticheBosco', () => {
   it('conta tutte le attività del progetto per stato', () => {
     const elenco = [
@@ -282,7 +324,7 @@ describe('numeriForesta', () => {
       boschetti: 3,
       arbusti: 4,
       inCrescita: 2,
-      secchi: 1,
+      bloccati: 1,
       percentuale: 40,
       settimana: 1,
       ultimo: giorno(19),

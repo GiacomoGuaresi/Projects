@@ -53,7 +53,7 @@ export function PaginaForesta({ attivita, arbusti: conto, sfondo: opzioniSfondo 
   const foresta = useMemo(() => disponi(gruppi, arbusti ?? 0), [gruppi, arbusti])
   const piante = gruppi.flatMap((g) => g.alberi)
   const numeri = useMemo(() => numeriForesta(attivita, arbusti), [attivita, arbusti])
-  const { alberi, inCrescita, secchi } = numeri
+  const { alberi, inCrescita, bloccati } = numeri
 
   // In verticale l'isola, larga e bassa, verrebbe piccola: si parte già ingranditi.
   const gesti = useGesti(!sfondo && window.matchMedia(VERTICALE).matches ? 1.5 : 1)
@@ -213,9 +213,9 @@ export function PaginaForesta({ attivita, arbusti: conto, sfondo: opzioniSfondo 
             {plurale(alberi, 'albero', 'alberi')} · {plurale(gruppi.length, 'boschetto', 'boschetti')}
             {arbusti !== null && ` · ${plurale(arbusti, 'arbusto', 'arbusti')}`}
           </p>
-          {(inCrescita > 0 || secchi > 0) && (
+          {(inCrescita > 0 || bloccati > 0) && (
             <p className="text-xs text-testo-tenue">
-              {[inCrescita && `${inCrescita} in crescita`, secchi && plurale(secchi, 'secco', 'secchi')]
+              {[inCrescita && `${inCrescita} in crescita`, bloccati && plurale(bloccati, 'bloccato', 'bloccati')]
                 .filter(Boolean)
                 .join(' · ')}
             </p>
