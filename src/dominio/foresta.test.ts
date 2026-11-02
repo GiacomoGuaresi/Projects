@@ -215,9 +215,9 @@ describe('proietta', () => {
 describe('specieBoschetti', () => {
   const progetti = (nomi: string[]) => boschetti(nomi.map((nome, i) => ({ ...attivita(nome, null), creata_il: giorno(i + 1) })))
 
-  it('con quattro progetti o meno, ognuno ha la sua specie', () => {
-    const specie = specieBoschetti(progetti(['Casa', 'Auto', 'Software / Projects', 'Viaggi']))
-    expect(new Set(specie.values()).size).toBe(4)
+  it('finché bastano, ogni progetto ha la sua specie', () => {
+    const specie = specieBoschetti(progetti(Array.from({ length: SPECIE.length }, (_, i) => `Progetto ${i}`)))
+    expect(new Set(specie.values()).size).toBe(SPECIE.length)
   })
 
   it('lo stesso progetto ha sempre la stessa specie, senza badare alle maiuscole', () => {
@@ -234,8 +234,15 @@ describe('specieBoschetti', () => {
   })
 
   it('con più progetti che specie, si ripetono il meno possibile', () => {
-    const specie = specieBoschetti(progetti(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']))
+    const specie = specieBoschetti(progetti(Array.from({ length: SPECIE.length * 2 }, (_, i) => `Progetto ${i}`)))
     for (const s of SPECIE) expect([...specie.values()].filter((v) => v === s)).toHaveLength(2)
+  })
+
+  it('i boschetti di una famiglia hanno la stessa specie, le altre famiglie no', () => {
+    const specie = specieBoschetti(progetti(['Software / Projects', 'Casa', 'Software / Grocery', 'Software', 'Auto']))
+    expect(specie.get('software / grocery')).toBe(specie.get('software / projects'))
+    expect(specie.get('software')).toBe(specie.get('software / projects'))
+    expect(new Set([specie.get('software'), specie.get('casa'), specie.get('auto')]).size).toBe(3)
   })
 
   it('gli Sparsi non hanno una specie', () => {

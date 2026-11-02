@@ -60,27 +60,48 @@ export function boschetti(attivita: readonly Attivita[]): Boschetto[] {
 
 // Specie ---------------------------------------------------------------------------
 
-export const SPECIE = ['conifera', 'tonda', 'betulla', 'cipresso'] as const
+export const SPECIE = [
+  'conifera',
+  'tonda',
+  'betulla',
+  'cipresso',
+  'quercia',
+  'salice',
+  'pioppo',
+  'pino',
+  'acero',
+  'larice',
+  'ciliegio',
+  'ulivo',
+] as const
 export type Specie = (typeof SPECIE)[number]
 
 /**
- * La specie degli alberi di ogni boschetto, dal nome del progetto: ognuno la
- * sua finché bastano, poi si ripetono il meno possibile. Si sceglie dal più
- * vecchio, quindi un progetto nuovo non cambia la specie degli altri. Gli
- * Sparsi non ci sono: i loro alberi restano misti, la specie la dà l'id.
+ * La specie degli alberi di ogni boschetto, dal nome della sua famiglia: i
+ * boschetti di una famiglia ("Software / Projects", "Software / Grocery",
+ * "Software") hanno tutti la stessa. Ogni famiglia la sua finché bastano, poi
+ * si ripetono il meno possibile. Si sceglie dalla più vecchia, quindi un
+ * progetto nuovo non cambia la specie degli altri. Gli Sparsi non ci sono: i
+ * loro alberi restano misti, la specie la dà l'id.
  */
 export function specieBoschetti(gruppi: readonly Boschetto[]): Map<string, Specie> {
   const specie = new Map<string, Specie>()
+  const famiglie = new Map<string, Specie>()
   const usate = SPECIE.map(() => 0)
   for (const { chiave } of gruppi) {
     if (!chiave) continue
-    const minimo = Math.min(...usate)
-    const preferita = tonalita(chiave) % SPECIE.length
-    // Dalla preferita in avanti, la prima tra le meno usate.
-    let i = preferita
-    while (usate[i] !== minimo) i = (i + 1) % SPECIE.length
-    usate[i]++
-    specie.set(chiave, SPECIE[i])
+    const famiglia = famigliaProgetto(chiave)
+    let sua = famiglie.get(famiglia)
+    if (!sua) {
+      const minimo = Math.min(...usate)
+      // Dalla preferita in avanti, la prima tra le meno usate.
+      let i = tonalita(famiglia) % SPECIE.length
+      while (usate[i] !== minimo) i = (i + 1) % SPECIE.length
+      usate[i]++
+      sua = SPECIE[i]
+      famiglie.set(famiglia, sua)
+    }
+    specie.set(chiave, sua)
   }
   return specie
 }

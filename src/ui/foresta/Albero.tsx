@@ -126,10 +126,11 @@ function AlberoVivo({
   const casoStagione = generatore(seed + 101)
   const inverno = stagione === 'inverno'
   // Le sempreverdi: in primavera un verde più fresco, d'inverno coperte di neve.
-  const sempre = {
-    base: hsl(h, s, l + (stagione === 'primavera' ? 4 : 0)),
-    scuro: hsl(h, s, l - 9),
-  }
+  const sempreverde = (dh: number, ds: number, dl: number) => ({
+    base: hsl(h + dh, s + ds, l + dl + (stagione === 'primavera' ? 4 : 0)),
+    scuro: hsl(h + dh, s + ds, l + dl - 9),
+  })
+  const sempre = sempreverde(0, 0, 0)
   const tronco = '#7a5a3c'
 
   return (
@@ -175,6 +176,14 @@ function AlberoVivo({
             {inverno && <path d="M-3.4,-26 Q0,-33 3.4,-26 Q1.5,-24.5 0,-25.5 Q-1.5,-24.5 -3.4,-26 Z" fill={NEVE} />}
           </>
         )}
+        {specie === 'quercia' && <Quercia chioma={chiomaLatifoglia(stagione, h - 5, s - 4, l - 4, casoStagione)} />}
+        {specie === 'salice' && <Salice chioma={chiomaLatifoglia(stagione, h - 25, s + 8, l + 8, casoStagione)} />}
+        {specie === 'pioppo' && <Pioppo chioma={chiomaLatifoglia(stagione, h - 15, s + 4, l + 5, casoStagione)} />}
+        {specie === 'pino' && <Pino colori={sempreverde(15, -6, -3)} inverno={inverno} />}
+        {specie === 'acero' && <Acero chioma={chiomaAcero(stagione, h, s, l, casoStagione)} />}
+        {specie === 'larice' && <Larice stagione={stagione} h={h} s={s} l={l} />}
+        {specie === 'ciliegio' && <Ciliegio chioma={chiomaCiliegio(stagione, h, s, l, casoStagione)} frutti={frutti} />}
+        {specie === 'ulivo' && <Ulivo inverno={inverno} frutti={frutti} chiaro={l - 34} />}
       </g>
     </g>
   )
@@ -223,6 +232,257 @@ function Betulla({ chioma, frutti, coloreFrutti }: { chioma: Chioma | null; frut
       <ellipse cx={0} cy={-20} rx={7} ry={10} fill={chioma.base} />
       <ellipse cx={-2} cy={-22} rx={4.5} ry={7} fill={chioma.chiaro} />
       {frutti && <Frutti colore={coloreFrutti} punti={[[-3, -16], [3, -21], [0, -26]]} />}
+    </>
+  )
+}
+
+/** L'acero: d'autunno sempre rosso acceso, dal vermiglio al cremisi. */
+function chiomaAcero(stagione: Stagione, h: number, s: number, l: number, caso: () => number): Chioma | null {
+  if (stagione !== 'autunno') return chiomaLatifoglia(stagione, h - 20, s + 6, l, caso)
+  const t = caso() * 12
+  return { base: hsl(t, 74, 48), scuro: hsl(t - 6, 72, 38), chiaro: hsl(t + 10, 82, 60) }
+}
+
+/** Il ciliegio: in primavera sempre in fiore. */
+function chiomaCiliegio(stagione: Stagione, h: number, s: number, l: number, caso: () => number): Chioma | null {
+  if (stagione === 'primavera') return { base: '#f6c1d1', scuro: '#e99ab4', chiaro: '#fde3ea' }
+  return chiomaLatifoglia(stagione, h - 5, s, l + 2, caso)
+}
+
+/** La quercia: tronco grosso e chioma larga e bassa, a nuvole. */
+function Quercia({ chioma }: { chioma: Chioma | null }) {
+  const tronco = '#6f5236'
+  const fusto = <path d="M-2.5,0 L-1.6,-11 L1.6,-11 L2.5,0 Z" fill={tronco} />
+  if (!chioma) {
+    return (
+      <>
+        {fusto}
+        <RamiSpogli alto={19} legno={tronco} neve />
+      </>
+    )
+  }
+  return (
+    <>
+      {fusto}
+      <circle cx={-6} cy={-14} r={6} fill={chioma.scuro} />
+      <circle cx={6.5} cy={-14} r={6} fill={chioma.scuro} />
+      <circle cx={0} cy={-19} r={8.5} fill={chioma.scuro} />
+      <circle cx={-6.5} cy={-15.5} r={4.8} fill={chioma.base} />
+      <circle cx={-1.5} cy={-20.5} r={6.5} fill={chioma.base} />
+      <circle cx={4.5} cy={-16} r={4} fill={chioma.base} />
+      <circle cx={-4} cy={-23} r={3} fill={chioma.chiaro} />
+    </>
+  )
+}
+
+/** Le fronde del salice, da sinistra a destra. */
+const FRONDE = [-7.5, -4.5, -1.5, 1.5, 4.5, 7.5]
+
+/** Il salice piangente: una cupola con le fronde che pendono; d'inverno restano i rametti gialli. */
+function Salice({ chioma }: { chioma: Chioma | null }) {
+  const tronco = '#7a5a3c'
+  const fusto = <path d="M-1.6,0 L-0.8,-15 L1,-15 L1.6,0 Z" fill={tronco} />
+  if (!chioma) {
+    return (
+      <>
+        {fusto}
+        <RamiSpogli alto={20} legno={tronco} neve />
+        {FRONDE.map((x) => (
+          <path key={x} d={`M${cifra(x * 0.6)},-19 Q${x},-17 ${x},-7`} fill="none" stroke="#b8a36a" strokeWidth={0.7} />
+        ))}
+      </>
+    )
+  }
+  return (
+    <>
+      {fusto}
+      <ellipse cx={0} cy={-19} rx={9} ry={6.5} fill={chioma.scuro} />
+      {FRONDE.map((x, i) => (
+        <path
+          key={x}
+          d={`M${x - 1.4},-18 Q${x},-12 ${x - 1},-6 L${x + 1},-6 Q${x + 1.6},-12 ${x + 1.4},-18 Z`}
+          fill={i >= 3 ? chioma.scuro : chioma.base}
+        />
+      ))}
+      <ellipse cx={-1.5} cy={-20.5} rx={6.5} ry={4.5} fill={chioma.base} />
+      <ellipse cx={-3} cy={-22} rx={2.8} ry={1.8} fill={chioma.chiaro} />
+    </>
+  )
+}
+
+/** Il pioppo: alto e stretto a ciuffi, a differenza del cipresso perde le foglie. */
+function Pioppo({ chioma }: { chioma: Chioma | null }) {
+  const tronco = '#8a7a66'
+  const fusto = <rect x={-1} y={-9} width={2} height={9} fill={tronco} />
+  if (!chioma) {
+    const rami: [number, number][] = [
+      [-2.5, -28],
+      [0, -32],
+      [2.5, -27],
+      [-1.8, -21],
+      [1.8, -19],
+    ]
+    return (
+      <>
+        {fusto}
+        {rami.map(([x, y]) => (
+          <line key={`${x},${y}`} x1={0} y1={-8} x2={x} y2={y} stroke={tronco} strokeWidth={0.9} strokeLinecap="round" />
+        ))}
+        {rami.map(([x, y]) => (
+          <circle key={`n${x},${y}`} cx={x} cy={y} r={0.9} fill={NEVE} />
+        ))}
+      </>
+    )
+  }
+  return (
+    <>
+      {fusto}
+      <ellipse cx={0} cy={-13} rx={4.2} ry={5} fill={chioma.scuro} />
+      <ellipse cx={0} cy={-20} rx={4.6} ry={6} fill={chioma.scuro} />
+      <ellipse cx={0} cy={-27} rx={3.4} ry={5} fill={chioma.scuro} />
+      <ellipse cx={-1} cy={-14} rx={2.8} ry={4} fill={chioma.base} />
+      <ellipse cx={-1.2} cy={-21} rx={3.1} ry={5} fill={chioma.base} />
+      <ellipse cx={-0.8} cy={-28} rx={2.2} ry={3.8} fill={chioma.base} />
+      <ellipse cx={-2} cy={-23} rx={1} ry={2.4} fill={chioma.chiaro} />
+    </>
+  )
+}
+
+/** Il pino domestico: fusto alto e un po' storto, chioma a ombrello in cima. Sempreverde. */
+function Pino({ colori, inverno }: { colori: { base: string; scuro: string }; inverno: boolean }) {
+  return (
+    <>
+      <path d="M-1.4,0 Q-0.5,-9 0.6,-19 L2,-19 Q1.4,-9 1.4,0 Z" fill="#8b5b3e" />
+      <ellipse cx={1} cy={-20.5} rx={11} ry={4.6} fill={colori.scuro} />
+      <ellipse cx={-0.2} cy={-22} rx={9} ry={3.6} fill={colori.base} />
+      {inverno && <ellipse cx={-0.5} cy={-24.6} rx={7.5} ry={1.6} fill={NEVE} />}
+    </>
+  )
+}
+
+/** L'acero: chioma piena a lobi, d'autunno rossa. */
+function Acero({ chioma }: { chioma: Chioma | null }) {
+  const tronco = '#6e5440'
+  const fusto = <rect x={-1.6} y={-11} width={3.2} height={11} fill={tronco} />
+  if (!chioma) {
+    return (
+      <>
+        {fusto}
+        <RamiSpogli alto={21} legno={tronco} neve />
+      </>
+    )
+  }
+  return (
+    <>
+      {fusto}
+      <circle cx={0} cy={-18} r={8.5} fill={chioma.scuro} />
+      <circle cx={5.5} cy={-14.5} r={5} fill={chioma.scuro} />
+      <circle cx={-5.5} cy={-14.5} r={5} fill={chioma.scuro} />
+      <circle cx={0} cy={-25} r={5} fill={chioma.scuro} />
+      <circle cx={-1.5} cy={-19.5} r={6.5} fill={chioma.base} />
+      <circle cx={-5.5} cy={-15.5} r={3.8} fill={chioma.base} />
+      <circle cx={-1.5} cy={-25.5} r={3.6} fill={chioma.base} />
+      <circle cx={-4} cy={-22} r={2.4} fill={chioma.chiaro} />
+    </>
+  )
+}
+
+/** Il larice: una conifera che in autunno si fa d'oro e d'inverno perde gli aghi. */
+function Larice({ stagione, h, s, l }: { stagione: Stagione; h: number; s: number; l: number }) {
+  const tronco = '#7d5a40'
+  if (stagione === 'inverno') {
+    const rametti = [0, 1, 2, 3, 4, 5].map((i) => ({ y: -8 - i * 4, mezzo: 6 - i }))
+    return (
+      <>
+        <path d="M-1.2,0 L-0.3,-31 L0.3,-31 L1.2,0 Z" fill={tronco} />
+        {rametti.map(({ y, mezzo }) => (
+          <g key={y}>
+            <line x1={-mezzo} y1={y + 2} x2={0} y2={y} stroke="#9a7a5a" strokeWidth={0.8} strokeLinecap="round" />
+            <line x1={mezzo} y1={y + 2} x2={0} y2={y} stroke="#9a7a5a" strokeWidth={0.8} strokeLinecap="round" />
+            <circle cx={-mezzo} cy={y + 2} r={0.8} fill={NEVE} />
+            <circle cx={mezzo} cy={y + 2} r={0.8} fill={NEVE} />
+          </g>
+        ))}
+      </>
+    )
+  }
+  const [th, ts, tl] =
+    stagione === 'autunno' ? [44, 72, 52] : stagione === 'primavera' ? [95, 55, 52] : [h - 10, s + 5, l + 6]
+  return (
+    <>
+      <rect x={-1} y={-6} width={2} height={6} fill={tronco} />
+      {[0, 1, 2, 3].map((i) => {
+        const larga = 7.5 - i * 1.5
+        const sotto = -5 - i * 6
+        const cima = sotto - 9
+        return (
+          <g key={i}>
+            <polygon points={`${-larga},${sotto} 0,${cima} ${larga},${sotto}`} fill={hsl(th, ts, tl)} />
+            <polygon points={`0,${sotto} 0,${cima} ${larga},${sotto}`} fill={hsl(th, ts, tl - 10)} />
+          </g>
+        )
+      })}
+    </>
+  )
+}
+
+/** Il ciliegio: basso e allargato, fiorito in primavera, con le ciliegie d'estate. */
+function Ciliegio({ chioma, frutti }: { chioma: Chioma | null; frutti: boolean }) {
+  const tronco = '#5e4136'
+  const fusto = (
+    <>
+      <rect x={-1.4} y={-9} width={2.8} height={9} fill={tronco} />
+      <line x1={0} y1={-8} x2={-4} y2={-13} stroke={tronco} strokeWidth={1.6} strokeLinecap="round" />
+      <line x1={0} y1={-8} x2={4} y2={-12.5} stroke={tronco} strokeWidth={1.6} strokeLinecap="round" />
+    </>
+  )
+  if (!chioma) {
+    return (
+      <>
+        {fusto}
+        <RamiSpogli alto={18} legno={tronco} neve />
+      </>
+    )
+  }
+  return (
+    <>
+      {fusto}
+      <circle cx={-6} cy={-15} r={5} fill={chioma.scuro} />
+      <circle cx={5} cy={-15} r={5.5} fill={chioma.scuro} />
+      <circle cx={0} cy={-18} r={6.5} fill={chioma.scuro} />
+      <circle cx={-6.5} cy={-16} r={4} fill={chioma.base} />
+      <circle cx={-1} cy={-19} r={5} fill={chioma.base} />
+      <circle cx={-4} cy={-20} r={2.2} fill={chioma.chiaro} />
+      {frutti && <Frutti colore="#c4243b" punti={[[-6, -12], [3, -13], [-1, -16], [6, -17]]} />}
+    </>
+  )
+}
+
+/** L'ulivo: tronco contorto e chioma grigio-verde a ciuffi, sempreverde, con le olive. */
+function Ulivo({ inverno, frutti, chiaro }: { inverno: boolean; frutti: boolean; chiaro: number }) {
+  // `chiaro` da 0 a 12: ogni ulivo un filo diverso.
+  const l = 40 + chiaro / 2
+  return (
+    <>
+      <path
+        d="M-2.4,0 Q-1,-4 -2,-8 Q-2.5,-11 -4.5,-13 L-3,-13.5 Q-0.8,-11 0,-9 Q1.2,-12 3.5,-13.5 L4.5,-12.5 Q2,-10 1.6,-6 Q1.4,-3 2.6,0 Z"
+        fill="#7b6a55"
+      />
+      <ellipse cx={-5} cy={-16} rx={5.5} ry={3.8} fill={hsl(88, 16, l)} />
+      <ellipse cx={4.5} cy={-16.5} rx={5.5} ry={3.8} fill={hsl(88, 16, l)} />
+      <ellipse cx={0} cy={-20} rx={6.5} ry={4.2} fill={hsl(88, 16, l)} />
+      <ellipse cx={-5.5} cy={-17} rx={4} ry={2.8} fill={hsl(84, 17, l + 12)} />
+      <ellipse cx={-0.8} cy={-21} rx={5} ry={3} fill={hsl(84, 17, l + 12)} />
+      <ellipse cx={-3} cy={-22} rx={2.4} ry={1.4} fill={hsl(80, 16, l + 26)} />
+      <ellipse cx={3} cy={-18} rx={2} ry={1.1} fill={hsl(80, 16, l + 22)} />
+      {inverno && (
+        <>
+          <ellipse cx={0} cy={-23.6} rx={4} ry={1.1} fill={NEVE} />
+          <ellipse cx={-5} cy={-19.8} rx={3} ry={0.9} fill={NEVE} />
+          <ellipse cx={4.5} cy={-19.7} rx={3} ry={0.9} fill={NEVE} />
+        </>
+      )}
+      {frutti && <Frutti colore="#3d3b2a" punti={[[-6, -14.5], [3, -14], [0, -17.5], [5.5, -15.5]]} />}
     </>
   )
 }
