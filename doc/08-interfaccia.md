@@ -36,6 +36,8 @@ Come Grocery: un **menu laterale a scomparsa**, aperto dal pulsante ☰ nell'int
 | Piede | **Widget Android**: apre in una nuova scheda l'ultima Release di ProjectsWallpaper, con l'APK del widget della Foresta | `smartphone` |
 | Piede | **Installa l'app** (sparisce se già installata; apre il prompt del browser o le istruzioni) | `download` |
 
+**Pallino della Foresta**: come Catena e Passaporto in Adventures, finché ci sono piante nuove o cambiate (`id:stato` non ancora visti) o arbusti nuovi (faccende fatte dall'ultima visita), accanto a **Foresta** nel menu c'è un **pallino rosso col numero** di quante ne cresceranno, e sul ☰ dell'intestazione (sul telefono) lo stesso numero; batte piano ogni tanto. Sparisce aprendo la Foresta. Il ricordo di cosa è già stato visto sta in `localStorage` (`src/ui/foresta/visti.ts`), per dispositivo.
+
 **"Vai alla foresta"**: nell'intestazione, subito a sinistra del **+**, un pulsante con l'icona `trees` che apre `#/foresta`; su mobile solo l'icona, da desktop anche l'etichetta. Sulla Foresta non c'è.
 
 **Scorciatoia "Nuova attività"**: un pulsante **+** (`plus`) **a destra nell'intestazione**, sempre visibile, così su mobile non serve aprire il menu. Su mobile mostra solo l'icona, da desktop anche l'etichetta "Nuova attività".

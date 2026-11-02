@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Broom, Download, LayoutDashboard, Luggage, Plus, Smartphone, Trash2, Trees, X, type LucideIcon } from 'lucide-react'
+import { Pallino } from './Pallino'
 import { indirizzi, type Rotta } from './rotta'
 
 /** L'APK del widget Android con la Foresta, dall'ultima Release di ProjectsWallpaper. */
@@ -19,6 +20,8 @@ const sezioni: { rotta: Rotta; etichetta: string; icona: LucideIcon }[] = [
 interface Props {
   aperto: boolean
   corrente: Rotta
+  /** Le novità da vedere per pagina: col pallino rosso accanto alla voce. */
+  avvisi?: Partial<Record<Rotta, number>>
   onChiudi: () => void
   /** L'azione "Nuova attività", staccata dalle sezioni. */
   onNuova: () => void
@@ -33,7 +36,7 @@ interface Props {
  * sotto non scorre, e alla chiusura il fuoco torna dov'era. Da desktop è una
  * colonna fissa, sempre visibile.
  */
-export function MenuLaterale({ aperto, corrente, onChiudi, onNuova, onInstalla }: Props) {
+export function MenuLaterale({ aperto, corrente, avvisi = {}, onChiudi, onNuova, onInstalla }: Props) {
   const pannello = useRef<HTMLElement>(null)
 
   // Se la finestra si allarga col menu aperto lo si chiude, così la pagina
@@ -99,6 +102,7 @@ export function MenuLaterale({ aperto, corrente, onChiudi, onNuova, onInstalla }
             <li key={rotta}>
               <a
                 href={indirizzi[rotta]}
+                aria-label={avvisi[rotta] ? `${etichetta}: ${avvisi[rotta]} piante nuove` : undefined}
                 aria-current={rotta === corrente ? 'page' : undefined}
                 onClick={onChiudi}
                 className="group flex min-h-11 items-center gap-3 rounded-lg px-3 hover:bg-fondo active:bg-bordo aria-[current=page]:bg-pastello aria-[current=page]:font-semibold aria-[current=page]:shadow-[inset_3px_0_0_var(--color-girasole-scuro)]"
@@ -108,6 +112,7 @@ export function MenuLaterale({ aperto, corrente, onChiudi, onNuova, onInstalla }
                   aria-hidden="true"
                 />
                 {etichetta}
+                {!!avvisi[rotta] && <Pallino numero={avvisi[rotta]} su="bianco" className="ml-auto" />}
               </a>
             </li>
           ))}

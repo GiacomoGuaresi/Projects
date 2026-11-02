@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Minus, Plus, Sprout, X } from 'lucide-react'
-import { faccende } from '../../dati'
-import { boschetti, disponi, numeriForesta, statisticheBosco, type AlberoForesta } from '../../dominio/foresta'
+import { boschetti, disponi, numeriForesta, statisticheBosco } from '../../dominio/foresta'
 import { coloreProgetto, iniziali } from '../../dominio/progetto'
 import type { Attivita, Stato } from '../../dominio/tipi'
 import type { OpzioniSfondo } from '../rotta'
@@ -15,9 +14,12 @@ import { Scena } from './Scena'
 import { nomiAmbiente, SelettoreAmbiente } from './SelettoreAmbiente'
 import { useGesti, ZOOM_MASSIMO, ZOOM_MINIMO } from './useGesti'
 import { comandiConsole, useAmbiente, type ComandiForesta } from './useAmbiente'
+import { leggiPiante, pianta, salvaArbusti, salvaPiante } from './visti'
 
 interface Props {
   attivita: readonly Attivita[]
+  /** Le faccende fatte (`useArbusti`), lette in App per il pallino del menu. */
+  arbusti: { quanti: number | null; arrivato: boolean }
   /**
    * Solo la scena, ferma e senza interfaccia: è la foto che diventa lo sfondo
    * dei dispositivi (`#/foresta?sfondo`, repo ProjectsWallpaper). Quando è
@@ -27,49 +29,9 @@ interface Props {
   sfondo?: OpzioniSfondo
 }
 
-/** Le piante già viste (`id:stato`), per far crescere solo le nuove e quelle cambiate. */
-const VISTI = 'projects_foresta_visti'
 /** Le caselle del bosco scelto: prima quello che è fatto. */
 const ORDINE_STATI: Stato[] = ['completo', 'in_corso', 'da_fare', 'bloccato']
 const VERTICALE = '(orientation: portrait) and (max-width: 767px)'
-
-const pianta = (a: AlberoForesta) => `${a.id}:${a.stato}`
-
-function leggiVisti(): Set<string> | null {
-  try {
-    const salvati = window.localStorage.getItem(VISTI)
-    return salvati ? new Set((JSON.parse(salvati) as unknown[]).map(String)) : null
-  } catch {
-    return null
-  }
-}
-
-function salvaVisti(piante: string[]) {
-  try {
-    window.localStorage.setItem(VISTI, JSON.stringify(piante))
-  } catch {
-    // Senza memoria del browser crescono tutti a ogni visita: va bene lo stesso.
-  }
-}
-
-/**
- * Il conto delle faccende fatte; `null` finché non arriva o se non si riesce a
- * leggerlo. `arrivato` diventa vero alla risposta, anche se è un errore.
- */
-function useArbusti(): { quanti: number | null; arrivato: boolean } {
-  const [stato, setStato] = useState<{ quanti: number | null; arrivato: boolean }>({ quanti: null, arrivato: false })
-  useEffect(() => {
-    let attivo = true
-    faccende()
-      .fatte()
-      .then((n) => attivo && setStato({ quanti: n, arrivato: true }))
-      .catch(() => attivo && setStato({ quanti: null, arrivato: true }))
-    return () => {
-      attivo = false
-    }
-  }, [])
-  return stato
-}
 
 const data = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }) : null
@@ -84,9 +46,9 @@ const plurale = (n: number, uno: string, tanti: string) => `${n} ${n === 1 ? uno
  * i suoi numeri; si trascina col dito o col mouse, si ingrandisce con due dita
  * (o rotella, o + e −).
  */
-export function PaginaForesta({ attivita, sfondo: opzioniSfondo }: Props) {
+export function PaginaForesta({ attivita, arbusti: conto, sfondo: opzioniSfondo }: Props) {
   const sfondo = opzioniSfondo !== undefined
-  const { quanti: arbusti, arrivato: arbustiArrivati } = useArbusti()
+  const { quanti: arbusti, arrivato: arbustiArrivati } = conto
   const gruppi = useMemo(() => boschetti(attivita), [attivita])
   const foresta = useMemo(() => disponi(gruppi, arbusti ?? 0), [gruppi, arbusti])
   const piante = gruppi.flatMap((g) => g.alberi)
@@ -131,12 +93,16 @@ export function PaginaForesta({ attivita, sfondo: opzioniSfondo }: Props) {
 
   // Le piante nuove o cambiate dall'ultima visita crescono; poi diventano "viste".
   // Nello sfondo sono tutte già viste: la foto le vuole cresciute.
-  const [vistiPrima] = useState(leggiVisti)
+  // Così anche il pallino del menu sparisce.
+  const [vistiPrima] = useState(leggiPiante)
   const tutte = useMemo(() => new Set(gruppi.flatMap((g) => g.alberi.map(pianta))), [gruppi])
   const visti = sfondo ? tutte : vistiPrima
   useEffect(() => {
-    if (!sfondo) salvaVisti([...tutte])
+    if (!sfondo) salvaPiante([...tutte])
   }, [tutte, sfondo])
+  useEffect(() => {
+    if (!sfondo && arbusti !== null) salvaArbusti(arbusti)
+  }, [arbusti, sfondo])
 
   // Le piante create o cambiate oggi hanno alone e scintille; non nello sfondo.
   const diOggi = useMemo(() => {

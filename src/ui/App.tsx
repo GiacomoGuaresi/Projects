@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { ListChecks, Menu, Plus, Trees } from 'lucide-react'
 import { SENZA_PROGETTO } from '../dominio/foresta'
 import { cambioProgetto, progettiInUso } from '../dominio/progetto'
@@ -11,6 +11,7 @@ import { Installa } from './Installa'
 import { installa, useInstallazione } from './installazione'
 import { DialogoProgetto } from './DialogoProgetto'
 import { PaginaForesta } from './foresta/PaginaForesta'
+import { pianta, useArbusti, useDaVedere } from './foresta/visti'
 import { MenuLaterale } from './MenuLaterale'
 import { ModaleDettagli, type AzioniAttivita } from './ModaleDettagli'
 import { ModaleDiario } from './ModaleDiario'
@@ -18,6 +19,7 @@ import { ModaleNuova } from './ModaleNuova'
 import { PaginaCestino } from './PaginaCestino'
 import { PaginaFaccende } from './PaginaFaccende'
 import { PaginaValigia } from './PaginaValigia'
+import { Pallino } from './Pallino'
 import { indirizzi, opzioniSfondo, useRotta } from './rotta'
 import { useAttivita, type StatoElenco } from './useAttivita'
 import { useFaccende } from './useFaccende'
@@ -56,6 +58,13 @@ export function App() {
   } = useAttivita()
   const faccende = useFaccende(mostraAvviso)
   const progetti = stato.fase === 'pronto' ? progettiInUso(stato.attivita) : []
+  const arbusti = useArbusti(faccende.stato)
+  /**
+   * Le piante e gli arbusti che cresceranno alla prossima visita della Foresta:
+   * il pallino rosso nel menu e sul ☰ (doc/08, "Navigazione"), finché non la si apre.
+   */
+  const piante = useMemo(() => (stato.fase === 'pronto' ? stato.attivita.map(pianta) : []), [stato])
+  const daVedere = useDaVedere(piante, arbusti.quanti)
   // I modali seguono l'attività per id, così mostrano sempre la versione aggiornata.
   const [diarioDi, setDiarioDi] = useState<number | null>(null)
   const [dettagliDi, setDettagliDi] = useState<number | null>(null)
@@ -93,7 +102,7 @@ export function App() {
   if (sfondo) {
     return (
       <ConAttivita stato={stato} onRiprova={ricarica}>
-        {(attivita) => <PaginaForesta attivita={attivita} sfondo={sfondo} />}
+        {(attivita) => <PaginaForesta attivita={attivita} arbusti={arbusti} sfondo={sfondo} />}
       </ConAttivita>
     )
   }
@@ -102,14 +111,15 @@ export function App() {
     <div className="sfondo-casa flex min-h-dvh flex-col lg:grid lg:grid-cols-[256px_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
       <header className="sticky top-0 z-1 flex items-center gap-1 border-b border-salvia-scura bg-salvia pt-[env(safe-area-inset-top)] pr-2 pl-1 text-white lg:col-span-full lg:min-h-11 lg:pl-3">
         <button
-          className="grid size-11 place-items-center rounded-[11px] active:bg-salvia-scura lg:hidden"
+          className="relative grid size-11 place-items-center rounded-[11px] active:bg-salvia-scura lg:hidden"
           type="button"
-          aria-label="Apri il menu"
+          aria-label={daVedere > 0 ? `Apri il menu: ${daVedere} piante nuove nella foresta` : 'Apri il menu'}
           aria-expanded={menuAperto}
           aria-controls="menu"
           onClick={() => setMenuAperto(true)}
         >
           <Menu className="size-[22px]" aria-hidden="true" />
+          {daVedere > 0 && <Pallino numero={daVedere} className="absolute top-1 right-0.5" />}
         </button>
         <ListChecks className="size-[22px] shrink-0 text-girasole" aria-hidden="true" />
         <h1 className="ml-1 text-lg font-semibold tracking-[0.01em]">Projects</h1>
@@ -137,6 +147,7 @@ export function App() {
       <MenuLaterale
         aperto={menuAperto}
         corrente={rotta}
+        avvisi={{ foresta: daVedere }}
         onChiudi={chiudiMenu}
         onNuova={() => {
           setMenuAperto(false)
@@ -179,7 +190,7 @@ export function App() {
         {rotta === 'valigia' && <PaginaValigia onAvviso={mostraAvviso} />}
         {rotta === 'foresta' && (
           <ConAttivita stato={stato} onRiprova={ricarica}>
-            {(attivita) => <PaginaForesta attivita={attivita} />}
+            {(attivita) => <PaginaForesta attivita={attivita} arbusti={arbusti} />}
           </ConAttivita>
         )}
         {rotta === 'cestino' && (

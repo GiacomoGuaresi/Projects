@@ -121,6 +121,22 @@
   /* Le piante cambiate oggi: un alone che pulsa e scintille che brillano a turno. */
   --animate-alone: alone 1.8s ease-in-out infinite alternate;
   --animate-scintilla: scintilla 2.4s ease-in-out infinite;
+  /* Il pallino rosso delle novità nel menu: un battito ogni tanto. */
+  --animate-richiamo: richiamo 2.6s ease-in-out infinite;
+
+  @keyframes richiamo {
+    0%,
+    70%,
+    100% {
+      transform: scale(1);
+    }
+    80% {
+      transform: scale(1.25);
+    }
+    90% {
+      transform: scale(0.95);
+    }
+  }
 
   @keyframes entra {
     from {
