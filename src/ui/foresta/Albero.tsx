@@ -1,6 +1,8 @@
 import type { Stagione } from '../../dominio/ambiente'
 import { generatore } from '../../dominio/caso'
 import { SPECIE, type Specie } from '../../dominio/foresta'
+import type { Festa } from '../../dominio/feste'
+import { DecoroAlbero } from './Feste'
 import type { Stato } from '../../dominio/tipi'
 
 // Alberi, arbusti e rocce disegnati in SVG (doc/08-interfaccia.md, "Foresta"):
@@ -26,6 +28,12 @@ interface PropsAlbero {
   stagione: Stagione
   /** La specie del boschetto; `null` (gli Sparsi) la sceglie il seed. */
   specie: Specie | null
+  /** La festa di oggi: qualche albero si decora. */
+  festa?: Festa | null
+  /** La stella di Natale in cima: una per famiglia, la sceglie la scena. */
+  stella?: boolean
+  /** Di notte le luci delle decorazioni brillano. */
+  accese?: boolean
 }
 
 /**
@@ -35,12 +43,15 @@ interface PropsAlbero {
  * dal seed (l'id dell'attività), quindi l'alberello diventa proprio
  * quell'albero.
  */
-export function Albero({ seed, stato, stagione, specie }: PropsAlbero) {
+export function Albero({ seed, stato, stagione, specie, festa = null, stella = false, accese = false }: PropsAlbero) {
   if (stato === 'da_fare') return <Germoglio seed={seed} stagione={stagione} />
   return (
     <AlberoVivo
       seed={seed}
       specie={specie}
+      festa={festa}
+      stella={stella}
+      accese={accese}
       stagione={stagione}
       crescita={stato === 'completo' ? 1 : 0.55}
       frutti={stato === 'completo' && generatore(seed + 202)() < 0.35 && (stagione === 'estate' || stagione === 'autunno')}
@@ -103,12 +114,18 @@ function RamiSpogli({ alto, legno, neve }: { alto: number; legno: string; neve: 
 function AlberoVivo({
   seed,
   specie: delBoschetto,
+  festa,
+  stella,
+  accese,
   stagione,
   crescita,
   frutti,
 }: {
   seed: number
   specie: Specie | null
+  festa: Festa | null
+  stella: boolean
+  accese: boolean
   stagione: Stagione
   crescita: number
   frutti: boolean
@@ -184,6 +201,7 @@ function AlberoVivo({
         {specie === 'larice' && <Larice stagione={stagione} h={h} s={s} l={l} />}
         {specie === 'ciliegio' && <Ciliegio chioma={chiomaCiliegio(stagione, h, s, l, casoStagione)} frutti={frutti} />}
         {specie === 'ulivo' && <Ulivo inverno={inverno} frutti={frutti} chiaro={l - 34} />}
+        {festa && <DecoroAlbero festa={festa} seed={seed} specie={specie} stella={stella} accese={accese} />}
       </g>
     </g>
   )

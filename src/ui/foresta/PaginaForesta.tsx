@@ -11,6 +11,7 @@ import { Cielo, copertura } from './Cielo'
 import { OverlaySfondo } from './OverlaySfondo'
 import { Particelle } from './Particelle'
 import { Scena } from './Scena'
+import { PioggiaDiFesta } from './Feste'
 import { nomiAmbiente, SelettoreAmbiente } from './SelettoreAmbiente'
 import { useGesti, ZOOM_MASSIMO, ZOOM_MINIMO } from './useGesti'
 import { comandiConsole, useAmbiente, type ComandiForesta } from './useAmbiente'
@@ -144,7 +145,7 @@ export function PaginaForesta({ attivita, arbusti: conto, sfondo: opzioniSfondo 
     <div
       className={`relative overflow-hidden bg-fondo ${sfondo ? 'h-dvh' : 'h-[calc(100dvh-45px-env(safe-area-inset-top))] min-h-[360px] lg:h-[calc(100dvh-44px)]'}`}
     >
-      <Cielo luce={ambiente.luce} meteo={ambiente.meteo} vento={ambiente.vento} luna={ambiente.luna} />
+      <Cielo luce={ambiente.luce} meteo={ambiente.meteo} vento={ambiente.vento} luna={ambiente.luna} festa={ambiente.festa} />
 
       <div
         ref={gesti.contenitore}
@@ -166,6 +167,8 @@ export function PaginaForesta({ attivita, arbusti: conto, sfondo: opzioniSfondo 
             (ambiente.meteo.cielo === 'sereno' || ambiente.meteo.cielo === 'nuvoloso')
           }
           ingrandimento={gesti.zoom}
+          festa={ambiente.festa}
+          notte={ambiente.luce.buio > 0.5}
           etichetta={`La foresta: ${plurale(alberi, 'albero', 'alberi')} in ${plurale(gruppi.length, 'boschetto', 'boschetti')}${arbusti ? ` e ${plurale(arbusti, 'arbusto', 'arbusti')}` : ''}.`}
         />
       </div>
@@ -196,6 +199,7 @@ export function PaginaForesta({ attivita, arbusti: conto, sfondo: opzioniSfondo 
         />
       )}
       <Particelle meteo={ambiente.meteo} stagione={ambiente.stagione} luce={ambiente.luce} vento={ambiente.vento} />
+      <PioggiaDiFesta festa={ambiente.festa} luce={ambiente.luce} />
 
       {opzioniSfondo && opzioniSfondo.pannelli.length > 0 && (
         <OverlaySfondo opzioni={opzioniSfondo} ambiente={ambiente} numeri={numeri} />

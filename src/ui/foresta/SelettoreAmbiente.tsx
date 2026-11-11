@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { CIELI, FASI, STAGIONI } from '../../dominio/ambiente'
+import { FESTE, NOMI_FESTE } from '../../dominio/feste'
 import type { Forzature } from './useAmbiente'
 
 /** I nomi da mostrare di stagioni, fasi e cieli. */
@@ -19,6 +20,8 @@ export const nomiAmbiente: Record<string, string> = {
   pioggia: 'Pioggia',
   temporale: 'Temporale',
   neve: 'Neve',
+  ...NOMI_FESTE,
+  nessuna: 'Nessuna',
 }
 
 const VENTI = [
@@ -37,7 +40,7 @@ interface Props {
 /**
  * Il selettore nascosto della Foresta (doc/08, "Foresta"): si apre tenendo
  * premuto il titolo (o con Alt+Shift+F) e forza stagione, ora, meteo e vento
- * per provarli. "Vero" torna a quello reale. Vale solo in questa scheda del
+ * e festa per provarli. "Vero" torna a quello reale. Vale solo in questa scheda del
  * browser e non va a nessun server.
  */
 export function SelettoreAmbiente({ forza, onForza, onChiudi }: Props) {
@@ -49,7 +52,7 @@ export function SelettoreAmbiente({ forza, onForza, onChiudi }: Props) {
     return () => document.removeEventListener('keydown', esc)
   }, [onChiudi])
 
-  const gruppo = <K extends 'stagione' | 'fase' | 'cielo'>(chiave: K, titolo: string, valori: readonly NonNullable<Forzature[K]>[]) => (
+  const gruppo = <K extends 'stagione' | 'fase' | 'cielo' | 'festa'>(chiave: K, titolo: string, valori: readonly NonNullable<Forzature[K]>[]) => (
     <fieldset className="flex flex-col gap-1">
       <legend className="mb-1 text-xs font-semibold text-testo-tenue">{titolo}</legend>
       <div className="flex flex-wrap gap-1">
@@ -75,7 +78,7 @@ export function SelettoreAmbiente({ forza, onForza, onChiudi }: Props) {
 
   return (
     <section
-      aria-label="Prova stagione, ora e meteo"
+      aria-label="Prova stagione, ora, meteo e festa"
       className="animate-compari absolute top-2 left-2 z-1 flex max-w-[calc(100%-16px)] flex-col gap-3 rounded-xl bg-white/95 p-3 shadow-lg backdrop-blur-sm sm:max-w-sm"
     >
       <div className="flex items-center justify-between">
@@ -92,6 +95,7 @@ export function SelettoreAmbiente({ forza, onForza, onChiudi }: Props) {
       {gruppo('stagione', 'Stagione', STAGIONI)}
       {gruppo('fase', 'Ora', FASI)}
       {gruppo('cielo', 'Meteo', CIELI)}
+      {gruppo('festa', 'Festa', [...FESTE, 'nessuna'])}
       <fieldset className="flex flex-col gap-1">
         <legend className="mb-1 text-xs font-semibold text-testo-tenue">Vento</legend>
         <div className="flex flex-wrap gap-1">

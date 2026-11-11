@@ -19,6 +19,7 @@ import {
   type Meteo,
   type Stagione,
 } from '../../dominio/ambiente'
+import { festa, FESTE, type Festa } from '../../dominio/feste'
 
 /**
  * Quello che il selettore nascosto (o la console, `foresta.*`) può forzare;
@@ -30,6 +31,8 @@ export interface Forzature {
   cielo?: Cielo
   /** Da 0 a 1. */
   vento?: number
+  /** Una festa da provare, o 'nessuna' per vedere la foresta senza decorazioni. */
+  festa?: Festa | 'nessuna'
 }
 
 const MEMORIA = 'projects_foresta_prova'
@@ -65,6 +68,8 @@ export interface Ambiente {
   temperatura: number | null
   /** Alba e tramonto di oggi. */
   sole: { alba: Date; tramonto: Date }
+  /** La festa di oggi, con le sue decorazioni; `null` nei giorni normali. */
+  festa: Festa | null
 }
 
 const OGNI_MINUTO = 60 * 1000
@@ -91,6 +96,7 @@ export function calcolaAmbiente(ora: Date, letto: MeteoLetto | null, forza: Forz
     meteoVero: letto !== null && !forza.cielo,
     temperatura: letto?.temperatura ?? null,
     sole,
+    festa: forza.festa === 'nessuna' ? null : (forza.festa ?? festa(ora)),
   }
 }
 
@@ -151,6 +157,7 @@ export interface ComandiForesta {
   ora: (valore?: Fase) => void
   meteo: (valore?: Cielo) => void
   vento: (valore?: number) => void
+  festa: (valore?: Festa | 'nessuna') => void
   reset: () => void
   stato: () => Ambiente & { forza: Forzature }
 }
@@ -165,7 +172,7 @@ export function comandiConsole(
   setForza: (cambia: (prima: Forzature) => Forzature) => void,
 ): ComandiForesta {
   const scegli =
-    <K extends 'stagione' | 'fase' | 'cielo'>(chiave: K, ammessi: readonly NonNullable<Forzature[K]>[]) =>
+    <K extends 'stagione' | 'fase' | 'cielo' | 'festa'>(chiave: K, ammessi: readonly NonNullable<Forzature[K]>[]) =>
     (valore?: Forzature[K]) => {
       if (valore !== undefined && !ammessi.includes(valore as NonNullable<Forzature[K]>)) {
         console.warn(`foresta: "${String(valore)}" non va bene. Si può usare: ${ammessi.join(', ')} (o niente per il vero).`)
@@ -177,6 +184,7 @@ export function comandiConsole(
     stagione: scegli('stagione', STAGIONI),
     ora: scegli('fase', FASI),
     meteo: scegli('cielo', CIELI),
+    festa: scegli('festa', [...FESTE, 'nessuna']),
     vento: (valore) => {
       if (valore !== undefined && !(valore >= 0 && valore <= 1)) {
         console.warn('foresta: il vento va da 0 (calma) a 1 (forte), o niente per il vero.')

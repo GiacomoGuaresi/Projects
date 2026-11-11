@@ -1,7 +1,9 @@
 import { memo } from 'react'
 import type { Luce, Meteo } from '../../dominio/ambiente'
+import type { Festa } from '../../dominio/feste'
 import { generatore } from '../../dominio/caso'
 import { mescola } from '../../dominio/colori'
+import { CieloDiFesta } from './Feste'
 
 // Il cielo della Foresta (doc/08-interfaccia.md, "Foresta"): colore dall'ora
 // e dal meteo, sole di giorno, luna con la sua fase e stelle di notte, nuvole
@@ -127,10 +129,12 @@ interface Props {
   /** Da 0 a 1: le nuvole corrono di più. */
   vento: number
   luna: number
+  /** I fuochi di Capodanno, la Befana, i pipistrelli di Halloween. */
+  festa: Festa | null
 }
 
 /** Lo sfondo della scena: sta sotto l'isola e non si tocca. */
-export const Cielo = memo(function Cielo({ luce, meteo, vento, luna }: Props) {
+export const Cielo = memo(function Cielo({ luce, meteo, vento, luna, festa }: Props) {
   const [sopra, sotto] = coloriCielo(luce, meteo)
   const coperto = copertura(meteo)
   const { quante, colore } = nuvole(meteo)
@@ -193,6 +197,8 @@ export const Cielo = memo(function Cielo({ luce, meteo, vento, luna }: Props) {
             <Stormo quanti={s.quanti} />
           </div>
         ))}
+
+      <CieloDiFesta festa={festa} luce={luce} />
 
       {POSTI_NUVOLE.slice(0, quante).map((n, i) => (
         <div

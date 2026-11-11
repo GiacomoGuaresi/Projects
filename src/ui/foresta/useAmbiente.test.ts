@@ -39,6 +39,13 @@ describe('calcolaAmbiente', () => {
     expect(a.luce.fase).toBe('notte')
   })
 
+  it('la festa segue il calendario, e si può forzare o spegnere', () => {
+    expect(calcolaAmbiente(ora, letto, {}).festa).toBeNull()
+    expect(calcolaAmbiente(new Date(2026, 11, 25, 12), letto, {}).festa).toBe('natale')
+    expect(calcolaAmbiente(ora, letto, { festa: 'halloween' }).festa).toBe('halloween')
+    expect(calcolaAmbiente(new Date(2026, 11, 25, 12), letto, { festa: 'nessuna' }).festa).toBeNull()
+  })
+
   it('anche il vento si può forzare', () => {
     expect(calcolaAmbiente(ora, letto, { vento: 0 }).vento).toBe(0)
     expect(calcolaAmbiente(ora, letto, { cielo: 'temporale', vento: 0.1 }).vento).toBe(0.1)
@@ -63,6 +70,19 @@ describe('comandiConsole', () => {
     comandi.vento(0.9)
     expect(forza()).toEqual({ stagione: 'inverno', cielo: 'neve', fase: 'notte', vento: 0.9 })
     expect(comandi.stato()).toMatchObject({ stagione: 'inverno', meteo: { cielo: 'neve' }, vento: 0.9 })
+  })
+
+  it('forza la festa, anche nessuna, e rifiuta quelle che non ci sono', () => {
+    const avviso = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { comandi, forza } = prova()
+    comandi.festa('pasqua')
+    expect(comandi.stato().festa).toBe('pasqua')
+    comandi.festa('nessuna')
+    expect(comandi.stato().festa).toBeNull()
+    comandi.festa('ferragosto' as never)
+    expect(forza()).toEqual({ festa: 'nessuna' })
+    expect(avviso).toHaveBeenCalledOnce()
+    avviso.mockRestore()
   })
 
   it('senza argomento torna al vero; reset toglie tutto', () => {

@@ -121,6 +121,12 @@
   /* Le piante cambiate oggi: un alone che pulsa e scintille che brillano a turno. */
   --animate-alone: alone 1.8s ease-in-out infinite alternate;
   --animate-scintilla: scintilla 2.4s ease-in-out infinite;
+  /* Le feste (doc/08, "Feste"): fuochi che scoppiano, la Befana e i
+     pipistrelli che attraversano il cielo, coriandoli che cadono, cuori che salgono. */
+  --animate-scoppia: scoppia 3.2s ease-out infinite;
+  --animate-viaggio: volo 60s linear infinite;
+  --animate-cade: cade 12s linear infinite;
+  --animate-sale: sale 18s linear infinite;
   /* Il pallino rosso delle novità nel menu: un battito ogni tanto. */
   --animate-richiamo: richiamo 2.6s ease-in-out infinite;
 
@@ -213,6 +219,39 @@
       rotate: 45deg;
     }
   }
+  @keyframes scoppia {
+    0% {
+      scale: 0.2;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    60% {
+      scale: 1;
+      opacity: 1;
+    }
+    100% {
+      scale: 1.1;
+      opacity: 0;
+    }
+  }
+  @keyframes cade {
+    from {
+      top: -4%;
+    }
+    to {
+      top: 104%;
+    }
+  }
+  @keyframes sale {
+    from {
+      top: 104%;
+    }
+    to {
+      top: -4%;
+    }
+  }
   @keyframes cresci {
     from {
       transform: scale(0);
@@ -260,6 +299,14 @@ body {
   .animate-ondeggia,
   .animate-alone,
   .animate-scintilla {
+    animation: none !important;
+  }
+  /* Le decorazioni delle feste invece restano, ferme dove sono: la foto dello sfondo le vuole. */
+  .animate-scoppia,
+  .animate-viaggio,
+  .animate-cade,
+  .animate-sale,
+  .animate-batti {
     animation: none !important;
   }
   /* Uccelli e farfalle fermi non hanno senso: spariscono. */

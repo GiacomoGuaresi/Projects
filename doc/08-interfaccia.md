@@ -157,7 +157,23 @@ L'ambiente (`src/dominio/ambiente.ts`, `src/ui/foresta/useAmbiente.ts`) segue il
 - **Vento**: alberi e arbusti ondeggiano dalla base, ognuno col suo ritmo; l'ampiezza e la velocità delle nuvole vengono dal vento vero (`--vento`, 0–1).
 - **Animaletti**: stormi di uccelli che attraversano il cielo di giorno quando non piove; farfalle attorno ai boschetti (una per famiglia) in primavera ed estate.
 - Pioggia, neve, foglie, petali, lucciole e lampi sono un solo `<canvas>` (`src/ui/foresta/Particelle.tsx`); il resto sono animazioni CSS e SVG. Con **"riduci movimento"** il canvas non parte, nuvole e stelle stanno ferme, uccelli e farfalle spariscono.
-- **Prova la foresta** (override temporaneo, mai inviato al server): tenendo premuto il pannello del titolo, o con **Alt+Shift+F**, si apre un selettore con stagione, ora (alba, giorno, tramonto, notte), meteo e vento (calma, brezza, forte) da forzare; "Vero" torna al reale. Dalla **console dei DevTools**, finché la Foresta è aperta: `foresta.stagione('inverno')`, `foresta.ora('notte')`, `foresta.meteo('temporale')`, `foresta.vento(0.8)` (da 0 a 1); senza argomento un comando torna al vero, `foresta.reset()` toglie tutto, `foresta.stato()` mostra l'ambiente attuale. Un valore sbagliato è segnalato in console con quelli ammessi. L'override sta in `sessionStorage`: sopravvive al ricaricamento ma finisce chiudendo la scheda.
+- **Prova la foresta** (override temporaneo, mai inviato al server): tenendo premuto il pannello del titolo, o con **Alt+Shift+F**, si apre un selettore con stagione, ora (alba, giorno, tramonto, notte), meteo, vento (calma, brezza, forte) e festa (le sette, o *Nessuna* per vederla senza decorazioni) da forzare; "Vero" torna al reale. Dalla **console dei DevTools**, finché la Foresta è aperta: `foresta.stagione('inverno')`, `foresta.ora('notte')`, `foresta.meteo('temporale')`, `foresta.vento(0.8)` (da 0 a 1), `foresta.festa('natale')` (o `'nessuna'`); senza argomento un comando torna al vero, `foresta.reset()` toglie tutto, `foresta.stato()` mostra l'ambiente attuale. Un valore sbagliato è segnalato in console con quelli ammessi. L'override sta in `sessionStorage`: sopravvive al ricaricamento ma finisce chiudendo la scheda.
+
+### Feste
+
+Nei giorni di festa la foresta si decora (`src/dominio/feste.ts` per il calendario, `src/ui/foresta/Feste.tsx` per il disegno). La festa si ricava dalla data del dispositivo, quindi vale anche nello **sfondo** di ProjectsWallpaper; se due feste si sovrappongono **vince la più breve**.
+
+| Festa | Quando | Decorazioni |
+|---|---|---|
+| **Natale** | 8 dicembre – 6 gennaio | palline e lucine su circa due alberi su cinque (di notte le lucine brillano), una **stella** in cima al primo albero completo di ogni famiglia, **pacchi** sul prato |
+| **Capodanno** | 31 dicembre – 1 gennaio (vince su Natale) | **fuochi d'artificio** di notte, **coriandoli dorati** di giorno |
+| **Epifania** | 6 gennaio (vince su Natale) | la **Befana** sulla scopa in cielo, **calze** appese a qualche albero |
+| **Carnevale** (ambrosiano) | i dieci giorni fino al sabato dopo le Ceneri (da Pasqua − 52 a Pasqua − 43) | **coriandoli** che cadono, **stelle filanti** tra le chiome |
+| **San Valentino** | 14 febbraio (vince sul Carnevale) | **cuoricini** che salgono, cuori tra le chiome |
+| **Pasqua** | dalla Domenica delle Palme a Pasquetta | **uova** colorate sul prato e un **coniglietto** |
+| **Halloween** | 24 – 31 ottobre | **zucche** intagliate sul prato (accese di notte), **ragnatele** su qualche albero, **pipistrelli** dalla sera |
+
+La Pasqua si calcola con l'algoritmo di Meeus. Quali alberi e quali caselle si decorano lo sceglie il seed: le caselle sono quelle di prato libere a due passi dalla foresta, una ogni otto alberi (da 3 a 24), quindi la foto dello sfondo non cambia da un'ora all'altra. Con meno movimento (lo sfondo) fuochi, Befana, pipistrelli, coriandoli e cuori restano fermi dove sono, ma si vedono.
 
 ### Modalità sfondo
 

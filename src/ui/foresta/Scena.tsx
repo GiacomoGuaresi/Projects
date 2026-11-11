@@ -1,9 +1,12 @@
 import { memo, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { GRADINO, inProfondita, LATO, proietta, verdeZolla, type Foresta } from '../../dominio/foresta'
 import type { Stagione } from '../../dominio/ambiente'
+import { postiDecori, type Festa } from '../../dominio/feste'
+import { famigliaProgetto } from '../../dominio/progetto'
 import type { Stato } from '../../dominio/tipi'
 import { LIVELLI, sorteggio, type CasellaTerreno } from '../../dominio/terreno'
 import { Albero, Arbusto, Roccia } from './Albero'
+import { DecoroPrato, SEED_PRATO } from './Feste'
 
 // La scena della Foresta (doc/08-interfaccia.md, "Foresta"): l'isola in
 // rilievo con le sue caselle, e sopra alberi, arbusti e rocce. Caselle e
@@ -267,10 +270,44 @@ interface Props {
   etichetta: string
   /** Quanto è ingrandita: 1 riempie lo spazio. */
   ingrandimento: number
+  /** La festa di oggi, con le sue decorazioni. */
+  festa: Festa | null
+  /** Di notte le luci delle feste brillano e le zucche si accendono. */
+  notte: boolean
+}
+
+/**
+ * Gli alberi con la stella di Natale: in ogni famiglia il primo albero
+ * completo piantato (per data di creazione), così la stella non salta.
+ */
+function conLaStella(foresta: Foresta): Set<number> {
+  const primi = new Map<string, { id: number; creata: string }>()
+  for (const e of foresta.elementi) {
+    if (e.tipo !== 'albero' || e.albero.stato !== 'completo') continue
+    const famiglia = famigliaProgetto(e.chiave)
+    const primo = primi.get(famiglia)
+    const creata = e.albero.creata_il
+    if (!primo || creata < primo.creata || (creata === primo.creata && e.albero.id < primo.id)) {
+      primi.set(famiglia, { id: e.albero.id, creata })
+    }
+  }
+  return new Set([...primi.values()].map((p) => p.id))
 }
 
 /** L'isola: il disegno è pesante, quindi si rifà solo se cambia qualcosa che conta. */
-export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onScegli, stagione, farfalle, etichetta, ingrandimento }: Props) {
+export const Scena = memo(function Scena({
+  foresta,
+  bosco,
+  visti,
+  diOggi,
+  onScegli,
+  stagione,
+  farfalle,
+  etichetta,
+  ingrandimento,
+  festa,
+  notte,
+}: Props) {
   const { minCol, maxCol, minRiga, maxRiga } = foresta.limiti
   const alto = proietta(minCol - 0.5, minRiga - 0.5)
   const destra = proietta(maxCol + 0.5, minRiga - 0.5)
@@ -346,6 +383,23 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
       )
     }
 
+    const stelle = festa === 'natale' ? conLaStella(foresta) : new Set<number>()
+    const seedPrato = festa ? SEED_PRATO[festa] : undefined
+    const decori = festa && seedPrato !== undefined ? postiDecori(foresta, seedPrato) : []
+    const decoro = (d: (typeof decori)[number], i: number): ReactNode => {
+      const { x, y } = proietta(d.col, d.riga, d.altezza)
+      return (
+        <g
+          key={`f${d.col},${d.riga}`}
+          transform={`translate(${x} ${y})`}
+          opacity={bosco !== null ? 0.45 : 1}
+          className="pointer-events-none transition-opacity duration-200"
+        >
+          <DecoroPrato festa={festa!} seed={d.seed} primo={i === 0} notte={notte} />
+        </g>
+      )
+    }
+
     let ordine = 0
     const oggetto = (e: Foresta['elementi'][number]): ReactNode => {
       const { x, y } = proietta(e.col, e.riga, e.altezza)
@@ -387,7 +441,15 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
             style={nuovo ? { animationDelay: `${Math.min(ordine++ * 40, 1500)}ms` } : undefined}
           >
             <Vento seed={e.albero.id}>
-              <Albero seed={e.albero.id} stato={e.albero.stato} stagione={stagione} specie={e.specie} />
+              <Albero
+                seed={e.albero.id}
+                stato={e.albero.stato}
+                stagione={stagione}
+                specie={e.specie}
+                festa={festa}
+                stella={stelle.has(e.albero.id)}
+                accese={notte}
+              />
             </Vento>
           </g>
           {oggi && <Scintille seed={e.albero.id} taglia={TAGLIA[e.albero.stato]} />}
@@ -399,9 +461,10 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
     const strati = [
       ...foresta.caselle.map((c) => ({ c, o: 0 as const, disegna: () => casella(c) })),
       ...foresta.elementi.map((e) => ({ c: e, o: 1 as const, disegna: () => oggetto(e) })),
+      ...decori.map((d, i) => ({ c: d, o: 1 as const, disegna: () => decoro(d, i) })),
     ].sort((a, b) => inProfondita(a.c, b.c) || a.o - b.o)
     return strati.map((s) => s.disegna())
-  }, [foresta, bosco, visti, diOggi, stagione, onScegli])
+  }, [foresta, bosco, visti, diOggi, stagione, onScegli, festa, notte])
 
   return (
     <svg
