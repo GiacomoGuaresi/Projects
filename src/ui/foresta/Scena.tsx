@@ -55,15 +55,100 @@ function colorePiano(c: CasellaTerreno, bosco: string | null, stagione: Stagione
     case 'acqua':
       if (inverno) return pari ? '#d3e8f3' : '#c8e1ef'
       return pari ? '#86bfdc' : '#7db7d6'
-    case 'sentiero':
-      if (inverno) return pari ? '#e4dfd6' : '#ddd7cc'
-      return pari ? '#dcc79d' : '#d5bf93'
     default: {
+      // Anche sotto il sentiero, che è una striscia sopra il prato.
       // Più in alto, un filo più chiaro: aiuta a leggere le colline.
       const [h, s, l] = ERBA[stagione]
       return `hsl(${h}, ${s}%, ${Math.min((pari ? l + 2 : l - 1) + c.altezza * 1.5, 98)}%)`
     }
   }
+}
+
+/** La terra battuta del sentiero; d'inverno innevata. */
+const TERRA_SENTIERO = { estate: '#d8c398', inverno: '#e2ddd3' }
+
+type Punto2 = [number, number]
+const tre = (n: number) => Math.round(n * 1000) / 1000
+const pt = ([x, y]: Punto2) => `${tre(x)},${tre(y)}`
+
+/**
+ * Un tratto di sentiero da `da` ad `a` che ondeggia a S: passa a un terzo e a
+ * due terzi della corda scostandosi di `onda` da una parte e dall'altra. Parte
+ * lungo `verso` e arriva lungo `arrivo` (versori), così due caselle si
+ * raccordano senza spigoli.
+ */
+function tratto(da: Punto2, a: Punto2, verso: Punto2, arrivo: Punto2, onda: number): string {
+  const corda: Punto2 = [a[0] - da[0], a[1] - da[1]]
+  const lunga = Math.hypot(...corda) || 1
+  const u: Punto2 = [corda[0] / lunga, corda[1] / lunga]
+  const n: Punto2 = [-u[1], u[0]]
+  const p1: Punto2 = [da[0] + corda[0] / 3 + n[0] * onda, da[1] + corda[1] / 3 + n[1] * onda]
+  const p2: Punto2 = [da[0] + (corda[0] * 2) / 3 - n[0] * onda, da[1] + (corda[1] * 2) / 3 - n[1] * onda]
+  const k = lunga / 6
+  const piu = (p: Punto2, v: Punto2, m: number): Punto2 => [p[0] + v[0] * m, p[1] + v[1] * m]
+  return (
+    `M${pt(da)}` +
+    `C${pt(piu(da, verso, k))} ${pt(piu(p1, u, -k))} ${pt(p1)}` +
+    `C${pt(piu(p1, u, k))} ${pt(piu(p2, u, -k))} ${pt(p2)}` +
+    `C${pt(piu(p2, u, k))} ${pt(piu(a, arrivo, -k))} ${pt(a)}`
+  )
+}
+
+/**
+ * Il sentiero su una casella: una striscia larga mezza casella verso le
+ * caselle di sentiero accanto (in diagonale solo se non ci si arriva per
+ * lato), che dentro la casella ondeggia un po' a S. Se ci passa e basta va da
+ * un bordo all'altro; se si dirama o finisce, ogni tratto parte dal centro.
+ * Ai bordi esce sempre dritta verso la vicina, quindi le caselle si
+ * raccordano. Disegnata nel piano della griglia, quindi schiacciata come il
+ * prato; da sola, un tondo al centro.
+ */
+function Sentiero({ c, sentieri, stagione }: { c: CasellaTerreno; sentieri: ReadonlySet<string>; stagione: Stagione }) {
+  const { col, riga, altezza } = c
+  const accanto = (dc: number, dr: number) => sentieri.has(`${col + dc},${riga + dr}`)
+  const { x, y } = proietta(col, riga, altezza)
+  const verso: Punto2[] = (
+    [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ] as Punto2[]
+  ).filter(([dc, dr]) => accanto(dc, dr))
+  for (const [dc, dr] of [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ]) {
+    if (accanto(dc, dr) && !accanto(dc, 0) && !accanto(0, dr)) verso.push([dc, dr])
+  }
+  // Quanto e da che parte ondeggia: fisso per casella.
+  const onda = (0.07 + sorteggio(col, riga, 211) * 0.08) * (sorteggio(col, riga, 223) < 0.5 ? -1 : 1)
+  // Il punto sul bordo verso la vicina (a metà strada: l'altra metà la disegna lei) e la direzione.
+  const bordo = ([dc, dr]: Punto2): Punto2 => [dc / 2, dr / 2]
+  const versore = ([dc, dr]: Punto2): Punto2 => [dc / Math.hypot(dc, dr), dr / Math.hypot(dc, dr)]
+  const indietro = ([vx, vy]: Punto2): Punto2 => [-vx, -vy]
+
+  let d = 'M0,0L0,0'
+  if (verso.length === 2) {
+    const [a, b] = verso
+    d = tratto(bordo(a), bordo(b), indietro(versore(a)), versore(b), onda)
+  } else if (verso.length > 0) {
+    d = verso.map((v) => tratto([0, 0], bordo(v), versore(v), versore(v), onda / 2)).join('')
+  }
+  return (
+    <path
+      d={d}
+      transform={`matrix(${LATO / 2} ${LATO / 4} ${-LATO / 2} ${LATO / 4} ${x} ${y})`}
+      fill="none"
+      stroke={stagione === 'inverno' ? TERRA_SENTIERO.inverno : TERRA_SENTIERO.estate}
+      strokeWidth={0.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="pointer-events-none"
+    />
+  )
 }
 
 /** Le pareti tra due livelli di prato, a sinistra e a destra. */
@@ -214,6 +299,7 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
   // L'isola si ridisegna solo se cambia qualcosa che conta: passare col mouse non la tocca.
   const disegno = useMemo(() => {
     const altezze = new Map(foresta.caselle.map((c) => [`${c.col},${c.riga}`, c.altezza]))
+    const sentieri = new Set(foresta.caselle.filter((c) => c.tipo === 'sentiero').map((c) => `${c.col},${c.riga}`))
     const scegli = (chiave: string) => (evento: { stopPropagation: () => void }) => {
       evento.stopPropagation()
       onScegli(chiave)
@@ -254,6 +340,7 @@ export const Scena = memo(function Scena({ foresta, bosco, visti, diOggi, onSceg
             onClick={zolla ? scegli(c.chiave!) : undefined}
             data-bosco={zolla ? c.chiave : undefined}
           />
+          {c.tipo === 'sentiero' && <Sentiero c={c} sentieri={sentieri} stagione={stagione} />}
           <Decoro c={c} stagione={stagione} {...proietta(col, riga, altezza)} />
         </g>
       )
