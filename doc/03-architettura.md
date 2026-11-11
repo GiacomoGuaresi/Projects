@@ -67,7 +67,7 @@ Nessun test end-to-end. Le policy RLS si verificano a mano con la checklist in [
 
 ```
 Projects/
-├── README.md · Q&A.md · LICENSE
+├── README.md · LICENSE
 ├── doc/
 ├── index.html · vite.config.ts · tailwind.config.ts · package.json
 ├── public/                # icone PWA

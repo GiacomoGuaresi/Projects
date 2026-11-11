@@ -48,8 +48,27 @@ A ogni push su `main` il workflow [`pubblica.yml`](.github/workflows/pubblica.ym
 | [doc/07-roadmap.md](doc/07-roadmap.md) | Fasi di sviluppo |
 | [doc/08-interfaccia.md](doc/08-interfaccia.md) | Schermate, interazioni, palette |
 | [doc/09-decisioni.md](doc/09-decisioni.md) | Registro delle decisioni |
-| [Q&A.md](Q&A.md) | Domande ancora aperte |
+| [doc/Q&A.md](doc/Q&A.md) | Domande ancora aperte |
 
 ## Origine
 
 Riscrittura da zero di un project manager usato in precedenza al lavoro, ripreso con permesso. Del vecchio progetto si riprendono solo le idee di interfaccia.
+
+## Le app di casa
+
+Projects è una di quattro app nate per casa mia. Usano lo stesso progetto Supabase e lo stesso account: una sola passphrase vale per tutte.
+
+- **[Grocery](https://github.com/GiacomoGuaresi/Grocery)**: la lista della spesa di due settimane, generata dalla routine dei pasti.
+- **Projects** (questa): le attività di casa raggruppate per progetto, ognuna col suo diario.
+- **[Adventures](https://github.com/GiacomoGuaresi/Adventures)**: trekking e avventure da fare, su elenco e mappa.
+- **[Logger](https://github.com/GiacomoGuaresi/Logger)**: un diario minimo di qualunque cosa valga la pena tenere a mente.
+
+La Foresta di Projects diventa anche lo sfondo di PC e telefono, con [ProjectsWallpaper](https://github.com/GiacomoGuaresi/ProjectsWallpaper).
+
+## Uso dell'IA
+
+Sviluppata con Claude Code come assistente: 18 commit su 67 sono co-firmati. Le scelte di prodotto, l'architettura e la revisione di ogni modifica sono mie.
+
+## Licenza
+
+[MIT](LICENSE).
