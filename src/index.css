@@ -109,6 +109,12 @@
   --animate-dissolvi: dissolvi 180ms ease-out;
   /* Un albero nuovo nella Foresta spunta dal prato (doc/08, "Foresta"). */
   --animate-cresci: cresci 600ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  /* Completando un'attività il suo albero cresce davanti a te: da --da (0–1) ad
+     albero, con un rimbalzo; le foglioline saltano via. Spuntando una faccenda
+     un arbustino spunta dal pulsante e vola via. */
+  --animate-pianta: pianta 900ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  --animate-foglia: foglia 1100ms ease-out both;
+  --animate-spunta: spunta 1300ms ease-out both;
   /* Le nuvole attraversano il cielo; la durata la sceglie ogni nuvola dal vento. */
   --animate-attraversa: attraversa 180s linear infinite;
   /* Alberi e arbusti ondeggiano al vento: l'ampiezza la dà --vento (0–1). */
@@ -257,6 +263,43 @@
       transform: scale(0);
     }
   }
+  @keyframes pianta {
+    from {
+      transform: scale(var(--da, 0.5));
+    }
+  }
+  @keyframes foglia {
+    from {
+      opacity: 1;
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    to {
+      opacity: 0;
+      translate: var(--dx) var(--dy);
+      rotate: 200deg;
+    }
+  }
+  @keyframes spunta {
+    0% {
+      opacity: 0;
+      transform: translateY(0) scale(0);
+    }
+    25% {
+      opacity: 1;
+      transform: translateY(-6px) scale(1.15);
+    }
+    40% {
+      transform: translateY(-8px) scale(1);
+    }
+    75% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-26px) scale(0.9);
+    }
+  }
 }
 
 /* Chi ha chiesto meno movimento vede tutto cambiare di colpo. */
@@ -318,12 +361,14 @@ body {
 
 /* Negli SVG la trasformazione parte dalla base dell'albero, non dall'angolo. */
 .animate-cresci,
+.animate-pianta,
 .animate-ondeggia {
   transform-box: fill-box;
   transform-origin: 50% 100%;
 }
 .animate-alone,
-.animate-scintilla {
+.animate-scintilla,
+.animate-foglia {
   transform-box: fill-box;
   transform-origin: 50% 50%;
 }

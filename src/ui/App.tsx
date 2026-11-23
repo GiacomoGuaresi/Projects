@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { ListChecks, Menu, Plus, Trees } from 'lucide-react'
-import { SENZA_PROGETTO } from '../dominio/foresta'
 import { cambioProgetto, progettiInUso } from '../dominio/progetto'
 import { titoloSenzaTag } from '../dominio/tag'
 import type { Attivita, Modifica } from '../dominio/tipi'
@@ -10,6 +9,7 @@ import { Dashboard } from './Dashboard'
 import { Installa } from './Installa'
 import { installa, useInstallazione } from './installazione'
 import { DialogoProgetto } from './DialogoProgetto'
+import { AlberoPiantato } from './foresta/AlberoPiantato'
 import { PaginaForesta } from './foresta/PaginaForesta'
 import { pianta, useArbusti, useDaVedere } from './foresta/visti'
 import { MenuLaterale } from './MenuLaterale'
@@ -37,6 +37,8 @@ export function App() {
   const [menuAperto, setMenuAperto] = useState(false)
   const [nuovaAperta, setNuovaAperta] = useState(false)
   const [daCompletare, setDaCompletare] = useState<{ attivita: Attivita; modifica: Modifica } | null>(null)
+  /** L'attività appena completata: il suo albero cresce sopra la pagina. */
+  const [piantata, setPiantata] = useState<Attivita | null>(null)
   const [cambio, setCambio] = useState<{ attivita: Attivita; da: string; a: string | null; quante: number } | null>(
     null,
   )
@@ -227,8 +229,8 @@ export function App() {
           onAnnulla={() => setDaCompletare(null)}
           onConferma={() => {
             void modifica(daCompletare.attivita.id, daCompletare.modifica)
-            // La Foresta (doc/08): ogni attività completata pianta un albero.
-            mostraAvviso(`🌳 Albero piantato in ${daCompletare.attivita.progetto ?? SENZA_PROGETTO}`)
+            // La Foresta (doc/08): ogni attività completata pianta un albero, e lo si vede crescere.
+            setPiantata(daCompletare.attivita)
             setDaCompletare(null)
           }}
         >
@@ -237,6 +239,14 @@ export function App() {
             come completa? L'avanzamento va al 100%.
           </p>
         </Conferma>
+      )}
+      {piantata && (
+        <AlberoPiantato
+          key={piantata.id}
+          attivita={piantata}
+          tutte={stato.fase === 'pronto' ? stato.attivita : []}
+          onChiudi={() => setPiantata(null)}
+        />
       )}
       {cambio && (
         <DialogoProgetto

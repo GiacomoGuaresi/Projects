@@ -1,8 +1,11 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Broom, Circle, CircleCheck, Repeat, Trash2 } from 'lucide-react'
+import { stagione } from '../dominio/ambiente'
 import { faccendeDiOggi } from '../dominio/faccende'
 import type { Faccenda } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
+import { Arbusto } from './foresta/Albero'
 import type { useFaccende } from './useFaccende'
 
 type Faccende = ReturnType<typeof useFaccende>
@@ -29,6 +32,7 @@ export function CardFaccende({
   const tutte = stato.fase === 'pronto' ? faccendeDiOggi(stato.faccende) : []
   const fatte = tutte.filter((f) => f.completa).length
   const visibili = soloDaFare ? tutte.filter((f) => !f.completa) : tutte
+  const [arbusti, setArbusti] = useState<ArbustoNuovo[]>([])
 
   return (
     // Un post-it giallo: si distingue subito dalle card bianche dei progetti.
@@ -63,7 +67,11 @@ export function CardFaccende({
             <RigaFaccenda
               key={f.id}
               faccenda={f}
-              onSegna={(completa) => void segna(f.id, completa)}
+              onSegna={(completa, punto) => {
+                void segna(f.id, completa)
+                // La Foresta (doc/08): ogni faccenda fatta è un arbusto, e lo si vede spuntare.
+                if (completa && punto) setArbusti((prima) => [...prima, { chiave: Date.now(), seed: f.id, ...punto }])
+              }}
               onRinomina={(titolo) => void rinomina(f.id, titolo)}
               onElimina={() => void elimina(f.id)}
             />
@@ -73,13 +81,55 @@ export function CardFaccende({
           </li>
         </ul>
       )}
+      {arbusti.map((a) => (
+        <ArbustoCheSpunta
+          key={a.chiave}
+          arbusto={a}
+          onFine={() => setArbusti((prima) => prima.filter((b) => b.chiave !== a.chiave))}
+        />
+      ))}
     </section>
+  )
+}
+
+interface ArbustoNuovo {
+  chiave: number
+  seed: number
+  /** Il centro del pulsante che l'ha spuntata, sullo schermo. */
+  x: number
+  y: number
+}
+
+/**
+ * Un arbustino che spunta dal pulsante della faccenda appena fatta e vola via.
+ * Sta in un portale fisso, così resta anche se la riga sparisce (con "solo da fare").
+ */
+function ArbustoCheSpunta({ arbusto: { seed, x, y }, onFine }: { arbusto: ArbustoNuovo; onFine: () => void }) {
+  const fine = useRef(onFine)
+  useEffect(() => {
+    fine.current = onFine
+  })
+  useEffect(() => {
+    const t = window.setTimeout(() => fine.current(), 1400)
+    return () => window.clearTimeout(t)
+  }, [])
+  return createPortal(
+    <svg
+      viewBox="-10 -13 20 16"
+      className="animate-spunta pointer-events-none fixed z-50 h-8 w-10"
+      style={{ left: x - 20, top: y - 34 }}
+      aria-hidden="true"
+    >
+      <Arbusto seed={seed} stagione={stagione(new Date())} />
+    </svg>,
+    document.body,
   )
 }
 
 interface RigaFaccendaProps {
   faccenda: Faccenda
-  onSegna: (completa: boolean) => void
+  /** `punto` è il centro del pulsante, per far spuntare l'arbusto lì. */
+  onSegna: (completa: boolean, punto?: { x: number; y: number }) => void
   onRinomina: (titolo: string) => void
   onElimina: () => void
 }
@@ -121,7 +171,10 @@ function RigaFaccenda({ faccenda: f, onSegna, onRinomina, onElimina }: RigaFacce
         className={`grid size-8 shrink-0 touch-manipulation place-items-center rounded-lg ${
           f.completa ? 'bg-completo text-completo-testo' : 'bg-dafare text-dafare-testo'
         }`}
-        onClick={() => onSegna(!f.completa)}
+        onClick={(e) => {
+          const b = e.currentTarget.getBoundingClientRect()
+          onSegna(!f.completa, { x: b.left + b.width / 2, y: b.top + b.height / 2 })
+        }}
       >
         <Icona className="size-4" aria-hidden="true" />
       </button>
