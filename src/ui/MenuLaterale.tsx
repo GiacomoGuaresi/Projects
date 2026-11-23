@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Broom, Download, LayoutDashboard, Luggage, Plus, Smartphone, Trash2, Trees, X, type LucideIcon } from 'lucide-react'
 import { Pallino } from './Pallino'
 import { indirizzi, type Rotta } from './rotta'
+import { testoVersione } from './versione'
 
 /** L'APK del widget Android con la Foresta, dall'ultima Release di ProjectsWallpaper. */
 const WIDGET_ANDROID = 'https://github.com/GiacomoGuaresi/ProjectsWallpaper/releases/latest'
@@ -151,6 +152,7 @@ export function MenuLaterale({ aperto, corrente, avvisi = {}, onChiudi, onNuova,
             Installa l'app
           </button>
         )}
+        <p className="m-0 px-3 pt-2 text-xs text-testo-tenue tabular-nums">{testoVersione()}</p>
       </nav>
     </>
   )
