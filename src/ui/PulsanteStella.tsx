@@ -1,14 +1,18 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Star, StarOff, type LucideIcon } from 'lucide-react'
+import { Pin, Star, StarOff, type LucideIcon } from 'lucide-react'
 import type { Rilievo } from '../dominio/ordinamento'
 import { usePressioneLunga } from './pressioneLunga'
 
 interface Props {
   rilievo: Rilievo
+  /** La card resta anche con tutte le attività completate; indipendente dal rilievo. */
+  fissato: boolean
   /** Il nome del progetto, per le etichette. */
   nome: string
   onScegli: (rilievo: Rilievo) => void
+  /** Mette o toglie la puntina. */
+  onFissa: () => void
 }
 
 const MARGINE_PX = 8
@@ -25,14 +29,15 @@ const infoRilievi: Record<Rilievo, { etichetta: string; icona: LucideIcon; class
  * La stellina nell'intestazione di una card della Dashboard
  * (doc/08-interfaccia.md). Un tocco mette o toglie il progetto dai preferiti;
  * tenendo premuto si apre il menu Preferito / Normale / Accantonato, che si
- * usa come quello di PulsanteStato: si scorre sulla voce e si rilascia.
+ * usa come quello di PulsanteStato: si scorre sulla voce e si rilascia. Sotto
+ * una riga, **Fissato** si accende o si spegne a parte, qualunque sia il rilievo.
  */
-export function PulsanteStella({ rilievo, nome, onScegli }: Props) {
+export function PulsanteStella({ rilievo, fissato, nome, onScegli, onFissa }: Props) {
   const { etichetta, icona: Icona, classi } = infoRilievi[rilievo]
 
   const menu = useRef<HTMLDivElement>(null)
   const [aperto, setAperto] = useState(false)
-  const [sotto, setSotto] = useState<Rilievo | null>(null)
+  const [sotto, setSotto] = useState<Rilievo | 'fissa' | null>(null)
   const [posizione, setPosizione] = useState<{ left: number; top: number } | null>(null)
 
   const chiudi = () => {
@@ -41,9 +46,10 @@ export function PulsanteStella({ rilievo, nome, onScegli }: Props) {
     setPosizione(null)
   }
 
-  const rilievoNelPunto = (x: number, y: number): Rilievo | null => {
+  /** La voce sotto il dito: un rilievo, oppure 'fissa' per la puntina. */
+  const rilievoNelPunto = (x: number, y: number): Rilievo | 'fissa' | null => {
     const voce = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-rilievo]')
-    return voce && menu.current?.contains(voce) ? (voce.dataset.rilievo as Rilievo) : null
+    return voce && menu.current?.contains(voce) ? (voce.dataset.rilievo as Rilievo | 'fissa') : null
   }
 
   const {
@@ -57,7 +63,10 @@ export function PulsanteStella({ rilievo, nome, onScegli }: Props) {
     onRilascia: (e) => {
       const scelto = rilievoNelPunto(e.clientX, e.clientY)
       const punto = document.elementFromPoint(e.clientX, e.clientY)
-      if (scelto) {
+      if (scelto === 'fissa') {
+        chiudi()
+        onFissa()
+      } else if (scelto) {
         chiudi()
         if (scelto !== rilievo) onScegli(scelto)
       } else if (menu.current?.contains(punto) || pulsante.current?.contains(punto)) {
@@ -114,7 +123,7 @@ export function PulsanteStella({ rilievo, nome, onScegli }: Props) {
       <button
         ref={pulsante}
         type="button"
-        aria-label={`${nome}: ${etichetta}`}
+        aria-label={`${nome}: ${etichetta}${fissato ? ', fissato' : ''}`}
         aria-haspopup="menu"
         aria-expanded={aperto}
         title={`${rilievo === 'preferito' ? 'Togli dai preferiti' : 'Metti nei preferiti'} (tieni premuto per accantonare)`}
@@ -130,7 +139,16 @@ export function PulsanteStella({ rilievo, nome, onScegli }: Props) {
           else onScegli(rilievo === 'preferito' ? 'normale' : 'preferito')
         }}
       >
-        <Icona className={`size-4.5 ${classi}`} aria-hidden="true" />
+        <span className="relative">
+          <Icona className={`size-4.5 ${classi}`} aria-hidden="true" />
+          {/* La puntina, piccola sull'angolo della stella: si vede con qualunque rilievo. */}
+          {fissato && (
+            <Pin
+              className="absolute -right-1.5 -bottom-1 size-3 rotate-45 fill-salvia text-salvia-scura"
+              aria-hidden="true"
+            />
+          )}
+        </span>
       </button>
 
       {aperto &&
@@ -166,6 +184,29 @@ export function PulsanteStella({ rilievo, nome, onScegli }: Props) {
                 </button>
               )
             })}
+            <div className="mx-1 my-0.5 border-t border-bordo" role="separator" />
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={fissato}
+              data-rilievo="fissa"
+              title="Resta anche con tutte le attività completate"
+              className={`flex min-h-11 items-center gap-2 rounded-lg px-2 text-left ${
+                sotto === 'fissa' ? 'bg-pastello' : 'hover:bg-fondo'
+              } ${fissato ? 'font-semibold' : ''}`}
+              onClick={() => {
+                chiudi()
+                pulsante.current?.focus()
+                onFissa()
+              }}
+            >
+              <Pin
+                className={`size-4.5 shrink-0 ${fissato ? 'fill-salvia text-salvia-scura' : 'text-testo-tenue'}`}
+                aria-hidden="true"
+              />
+              <span className="flex-1">Fissato</span>
+              {fissato && <span className="text-xs font-normal text-testo-tenue">sì</span>}
+            </button>
           </div>,
           document.body,
         )}

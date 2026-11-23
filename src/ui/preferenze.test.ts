@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { leggiChiusi, leggiCookie, leggiRilievi } from './preferenze'
+import { leggiChiusi, leggiCookie, leggiFissati, leggiRilievi } from './preferenze'
 
 describe('leggiChiusi', () => {
   it('legge le chiavi, anche quella vuota di "Senza progetto", e scarta il resto', () => {
@@ -11,6 +11,17 @@ describe('leggiChiusi', () => {
     expect(leggiChiusi('')).toEqual(new Set())
     expect(leggiChiusi('projects_chiusi=%5Bnon-json')).toEqual(new Set())
     expect(leggiChiusi('projects_chiusi=%7B%7D')).toEqual(new Set())
+  })
+})
+
+describe('leggiFissati', () => {
+  it('legge il suo cookie e non quello delle card chiuse', () => {
+    const fissati = encodeURIComponent(JSON.stringify(['spesa']))
+    const chiusi = encodeURIComponent(JSON.stringify(['casa']))
+    const testo = `projects_chiusi=${chiusi}; projects_fissati=${fissati}`
+    expect(leggiFissati(testo)).toEqual(new Set(['spesa']))
+    expect(leggiChiusi(testo)).toEqual(new Set(['casa']))
+    expect(leggiFissati('projects_fissati=%5Bnon-json')).toEqual(new Set())
   })
 })
 

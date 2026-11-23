@@ -5,7 +5,7 @@ import { contieneParole, paroleRicerca } from '../dominio/ricerca'
 import type { Attivita, Modifica, NuovaAttivita } from '../dominio/tipi'
 import { AggiuntaRapida } from './AggiuntaRapida'
 import { CardFaccende } from './CardFaccende'
-import { useChiusi, useInterruttore, useRilievi } from './preferenze'
+import { useChiusi, useFissati, useInterruttore, useRilievi } from './preferenze'
 import { usePressioneLunga } from './pressioneLunga'
 import { ProgettoConIcona } from './ProgettoConIcona'
 import { PulsanteDiario } from './PulsanteDiario'
@@ -40,14 +40,18 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
   const [mostraCompleti, setMostraCompleti] = useInterruttore('projects_completi', true)
   const [rilievi, cambiaRilievo] = useRilievi()
   const [chiusi, alternaChiuso] = useChiusi()
+  const [fissati, alternaFissato] = useFissati()
   // La ricerca non si ricorda: a ogni apertura la Dashboard è intera.
   const [ricerca, setRicerca] = useState('')
   const parole = paroleRicerca(ricerca)
   const cercando = parole.length > 0
   // "In corso" vince sugli altri interruttori; e mostra solo le card che ne hanno.
-  // I progetti con tutte le attività completate compaiono solo con "Completi" acceso.
+  // I progetti con tutte le attività completate compaiono solo con "Completi" acceso,
+  // tranne i fissati: elenchi che si svuotano spesso, restano sempre (anche con "In corso").
   const mostrate = schedeProgetti(attivita, rilievi)
-    .filter((scheda) => mostraCompleti || scheda.completate < scheda.attivita.length)
+    .filter(
+      (scheda) => mostraCompleti || fissati.has(scheda.chiave) || scheda.completate < scheda.attivita.length,
+    )
     .map((scheda) => {
       const nome = scheda.progetto ?? ''
       // Se il nome del progetto basta alla ricerca la card resta intera; altrimenti
@@ -64,7 +68,10 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
         visibili: intera ? filtrate : filtrate.filter((a) => contieneParole(`${nome} ${a.titolo}`, parole)),
       }
     })
-    .filter((scheda) => !(soloInCorso || cercando) || scheda.visibili.length > 0)
+    .filter(
+      (scheda) =>
+        !(soloInCorso || cercando) || scheda.visibili.length > 0 || (!cercando && fissati.has(scheda.chiave)),
+    )
   // La prima card delle colonne, larga come le altre. Gli interruttori valgono
   // anche qui: "In corso" acceso o "Completi" spento nascondono le fatte.
   // Mentre si cerca non c'è: la ricerca riguarda progetti e attività.
@@ -178,9 +185,11 @@ export function Dashboard({ attivita, faccende, onDettagli, onDiario, onModifica
                   >
                     {scheda.completate}/{scheda.attivita.length}
                   </span>
-                  {/* Tocco: preferito sì/no; pressione lunga: anche "Accantonato", in fondo alla pagina. */}
+                  {/* Tocco: preferito sì/no; pressione lunga: anche "Accantonato", in fondo alla pagina, e la puntina "Fissato". */}
                   <PulsanteStella
                     rilievo={scheda.rilievo}
+                    fissato={fissati.has(scheda.chiave)}
+                    onFissa={() => alternaFissato(scheda.chiave)}
                     nome={scheda.progetto ?? 'Senza progetto'}
                     onScegli={(rilievo) => cambiaRilievo(scheda.chiave, rilievo)}
                   />

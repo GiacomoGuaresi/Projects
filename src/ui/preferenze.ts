@@ -67,10 +67,11 @@ export function useRilievi(): [Record<string, Rilievo>, (chiave: string, rilievo
 }
 
 const COOKIE_CHIUSI = 'projects_chiusi'
+const COOKIE_FISSATI = 'projects_fissati'
 
-/** Le chiavi delle card chiuse salvate nel cookie (JSON array di stringhe); un valore rovinato vale vuoto. */
-export function leggiChiusi(testo: string): Set<string> {
-  const salvato = leggiCookie(testo, COOKIE_CHIUSI)
+/** Un insieme di chiavi salvato nel cookie `nome` (JSON array di stringhe); un valore rovinato vale vuoto. */
+function leggiChiavi(testo: string, nome: string): Set<string> {
+  const salvato = leggiCookie(testo, nome)
   if (salvato === null) return new Set()
   try {
     const dati: unknown = JSON.parse(salvato)
@@ -81,17 +82,31 @@ export function leggiChiusi(testo: string): Set<string> {
   }
 }
 
-/** Le card della Dashboard chiuse, per chiave del progetto, salvate nel cookie `projects_chiusi`. */
-export function useChiusi(): [Set<string>, (chiave: string) => void] {
-  const [chiusi, setChiusi] = useState(() => leggiChiusi(document.cookie))
+/** Un insieme di chiavi di progetto nel cookie `nome`, con la funzione che ne mette o toglie una. */
+function useChiavi(nome: string): [Set<string>, (chiave: string) => void] {
+  const [chiavi, setChiavi] = useState(() => leggiChiavi(document.cookie, nome))
 
   const alterna = (chiave: string) => {
-    const nuovi = leggiChiusi(document.cookie)
-    if (nuovi.has(chiave)) nuovi.delete(chiave)
-    else nuovi.add(chiave)
-    setChiusi(nuovi)
-    document.cookie = `${COOKIE_CHIUSI}=${encodeURIComponent(JSON.stringify([...nuovi]))}; path=${import.meta.env.BASE_URL}; max-age=${DURATA}; SameSite=Lax`
+    const nuove = leggiChiavi(document.cookie, nome)
+    if (nuove.has(chiave)) nuove.delete(chiave)
+    else nuove.add(chiave)
+    setChiavi(nuove)
+    document.cookie = `${nome}=${encodeURIComponent(JSON.stringify([...nuove]))}; path=${import.meta.env.BASE_URL}; max-age=${DURATA}; SameSite=Lax`
   }
 
-  return [chiusi, alterna]
+  return [chiavi, alterna]
 }
+
+/** Le chiavi delle card chiuse salvate nel cookie. */
+export const leggiChiusi = (testo: string) => leggiChiavi(testo, COOKIE_CHIUSI)
+/** Le card della Dashboard chiuse, per chiave del progetto, salvate nel cookie `projects_chiusi`. */
+export const useChiusi = () => useChiavi(COOKIE_CHIUSI)
+
+/** Le chiavi dei progetti fissati salvate nel cookie. */
+export const leggiFissati = (testo: string) => leggiChiavi(testo, COOKIE_FISSATI)
+/**
+ * I progetti fissati, per chiave, salvati nel cookie `projects_fissati`: la
+ * loro card resta anche con tutte le attività completate. Indipendente dal
+ * rilievo (si può essere fissati e preferiti, o fissati e accantonati).
+ */
+export const useFissati = () => useChiavi(COOKIE_FISSATI)
